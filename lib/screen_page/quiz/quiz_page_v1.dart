@@ -150,6 +150,28 @@ class _QuizPageV1State extends State<QuizPageV1> {
     return (correctCount / totalQuestions) * 100;
   }
 
+  bool isCorrectAnswer(String answer) {
+    int inde = currentQuestionIndex;
+    return questions[inde-1].questionAnswers[0] == answer;
+  }
+
+  void showFeedbackSnackbar(BuildContext context, String message, bool isCorrect) {
+    final snackBar = SnackBar(
+      content: Text(
+        message,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      ),
+      backgroundColor: isCorrect ? Colors.green : Colors.red,
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 2),
+      margin: const EdgeInsets.all(16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
   @override
   Widget build(BuildContext context) {
     var currentQuestion = currentQuestionIndex < questions.length ? questions[currentQuestionIndex] : questions[questions.length - 1];
@@ -227,6 +249,11 @@ class _QuizPageV1State extends State<QuizPageV1> {
                     isSelected: isSelected,
                     onPressed: () {
                       answerQuestion(answer, currentQuestion.questionTitle, currentQuestionIndex);
+                      if (isCorrectAnswer(answer)) {
+                        showFeedbackSnackbar(context,"Correct!",true);
+                      } else {
+                        showFeedbackSnackbar(context,"Wrong!",false);
+                      }
                     },
                   );
                 }).toList(),
