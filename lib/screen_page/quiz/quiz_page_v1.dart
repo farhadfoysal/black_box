@@ -3,20 +3,20 @@ import 'package:flutter/material.dart';
 
 import '../../data/quiz/questions.dart';
 
-class QuizPage extends StatefulWidget {
-  final void Function(String answer, String questionText) onSelectedAnswer;
-  final List<String> selectedAnswers;
+class QuizPageV1 extends StatefulWidget {
+  final void Function(String answer, String questionText, int currentQuestionIndex) onSelectedAnswer;
+  final Map<int, String> selectedAnswers;
   final void Function() switchResult;
-  const QuizPage({
+  const QuizPageV1({
     super.key,
     required this.onSelectedAnswer, required this.selectedAnswers, required this.switchResult,
   });
 
   @override
-  State<QuizPage> createState() => _QuizPageState();
+  State<QuizPageV1> createState() => _QuizPageV1State();
 }
 
-class _QuizPageState extends State<QuizPage> {
+class _QuizPageV1State extends State<QuizPageV1> {
 
   var currentQuestionIndex = 0;
   List<String> _shuffledAnswers = [];
@@ -51,12 +51,12 @@ class _QuizPageState extends State<QuizPage> {
     });
   }
 
-  void answerQuestion(String answer, String questionText) {
+  void answerQuestion(String answer, String questionText, int index) {
     setState(() {
       if (currentQuestionIndex < questions.length) {
         if (!selectedAnswersMap.containsKey(currentQuestionIndex)) {
           selectedAnswersMap[currentQuestionIndex] = answer;
-          widget.onSelectedAnswer(answer, questionText);
+          widget.onSelectedAnswer(answer, questionText,index);
           currentQuestionIndex++;
         }
       }
@@ -226,7 +226,7 @@ class _QuizPageState extends State<QuizPage> {
                     optionText: answer,
                     isSelected: isSelected,
                     onPressed: () {
-                      answerQuestion(answer, currentQuestion.questionTitle);
+                      answerQuestion(answer, currentQuestion.questionTitle, currentQuestionIndex);
                     },
                   );
                 }).toList(),
@@ -340,20 +340,20 @@ class QuizOption extends StatelessWidget {
 //
 // import '../../data/quiz/questions.dart';
 //
-// class QuizPage extends StatefulWidget {
+// class QuizPageV1 extends StatefulWidget {
 //   final void Function(String answer, String questionText) onSelectedAnswer;
 //   final List<String> selectedAnswers;
 //   final void Function() switchResult;
-//   const QuizPage({
+//   const QuizPageV1({
 //     super.key,
 //     required this.onSelectedAnswer, required this.selectedAnswers, required this.switchResult,
 //   });
 //
 //   @override
-//   State<QuizPage> createState() => _QuizPageState();
+//   State<QuizPageV1> createState() => _QuizPageV1State();
 // }
 //
-// class _QuizPageState extends State<QuizPage> {
+// class _QuizPageV1State extends State<QuizPageV1> {
 //
 //   var currentQuestionIndex = 0;
 //   List<String> _shuffledAnswers = [];
@@ -750,14 +750,14 @@ class QuizOption extends StatelessWidget {
 
 // import 'package:flutter/material.dart';
 
-// class QuizPage extends StatefulWidget {
-//   const QuizPage({super.key, required void Function(String answer) onSelectedAnswer});
+// class QuizPageV1 extends StatefulWidget {
+//   const QuizPageV1({super.key, required void Function(String answer) onSelectedAnswer});
 
 //   @override
-//   State<QuizPage> createState() => _QuizPageState();
+//   State<QuizPageV1> createState() => _QuizPageV1State();
 // }
 
-// class _QuizPageState extends State<QuizPage> {
+// class _QuizPageV1State extends State<QuizPageV1> {
 //   @override
 //   Widget build(BuildContext context) {
 //     return Scaffold(

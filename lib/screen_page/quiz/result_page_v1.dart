@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import '../../data/quiz/questions.dart';
 
-class ResultPage extends StatefulWidget {
+class ResultPageV1 extends StatefulWidget {
   final void Function() switchScreen;
-  final List<String> selectedAnswer;
+  final Map<int, String> selectedAnswer; // Changed to non-nullable String
 
-  const ResultPage({
+  const ResultPageV1({
     super.key,
     required this.switchScreen,
     required this.selectedAnswer,
   });
 
   @override
-  State<ResultPage> createState() => _ResultPageState();
+  State<ResultPageV1> createState() => _ResultPageV1State();
 }
 
-class _ResultPageState extends State<ResultPage> {
+class _ResultPageV1State extends State<ResultPageV1> {
   List<QuestionResult> selectedAnswers = [];
+  int correctCount = 0;
+  int incorrectCount = 0;
+  int uncheckedCount = 0;
+  double percentage = 0;
 
   // Calculate the percentage based on correct answers
   double getPercentage() {
@@ -36,7 +40,7 @@ class _ResultPageState extends State<ResultPage> {
 
   // Get the count of unanswered questions
   int getUncheckedCount() {
-    return selectedAnswers.where((result) => result.selectedAnswer == "").length;
+    return selectedAnswers.where((result) => result.selectedAnswer.isEmpty).length;
   }
 
   // Generate the summary of quiz results
@@ -48,10 +52,8 @@ class _ResultPageState extends State<ResultPage> {
         'question_number': i + 1,
         'question_title': questions[i].questionTitle,
         'correct_answer': questions[i].questionAnswers[0],
-        'selected_answer': selectedAnswers[i],
-        'color': selectedAnswers[i] == questions[i].questionAnswers[0]
-            ? Colors.greenAccent
-            : Colors.redAccent
+        'selected_answer': selectedAnswers[i].selectedAnswer,
+        'color': selectedAnswers[i].isCorrect ? Colors.greenAccent : Colors.redAccent
       });
     }
 
@@ -60,13 +62,16 @@ class _ResultPageState extends State<ResultPage> {
 
   // Populate the selected answers for each question
   void getResult() {
-    for (var i = 0; i < widget.selectedAnswer.length; i++) {
+    for (var i = 0; i < questions.length; i++) {
+      // for (var i = 0; i < widget.selectedAnswer.length; i++) {
+
       selectedAnswers.add(
         QuestionResult(
           questionText: questions[i].questionTitle,
-          selectedAnswer: widget.selectedAnswer[i],
+          selectedAnswer: widget.selectedAnswer[i] ?? '', // Use an empty string if the selected answer is null
           correctAnswer: questions[i].questionAnswers[0],
           explanation: questions[i].explanation,
+          isUnChecked: widget.selectedAnswer[i] == null,
           isCorrect: widget.selectedAnswer[i] == questions[i].questionAnswers[0],
         ),
       );
@@ -97,7 +102,7 @@ class _ResultPageState extends State<ResultPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              "Score: ${getPercentage().toStringAsFixed(2)}% Correct: ${getCorrectCount()} | Incorrect: ${getIncorrectCount()} | Unanswered: ${getUncheckedCount()}",
+              "Score: ${getPercentage().toStringAsFixed(2)}% Correct: ${getCorrectCount()} | NOT: ${getIncorrectCount()} | UN: ${getUncheckedCount()}",
               style: const TextStyle(
                 color: Colors.black54,
                 fontSize: 16,
@@ -143,6 +148,7 @@ class _ResultPageState extends State<ResultPage> {
   }
 }
 
+
 class ResultCard extends StatelessWidget {
   final QuestionResult question;
   final VoidCallback onFavoriteToggle;
@@ -171,11 +177,13 @@ class ResultCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            Text( question.isUnChecked
+                ? "UNCHECKED" :
               "Your Answer: ${question.selectedAnswer}",
               style: TextStyle(
                 fontSize: 16,
-                color: question.isCorrect ? Colors.green : Colors.red,
+                color: question.isCorrect ? Colors.green : question.isUnChecked
+                    ? Colors.orange : Colors.red,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -212,11 +220,13 @@ class ResultCard extends StatelessWidget {
     );
   }
 }
+
 class QuestionResult {
   final String questionText;
   final String selectedAnswer;
   final String correctAnswer;
   final String explanation;
+  bool isUnChecked;
   bool isCorrect;
   bool isFavorite;
 
@@ -225,6 +235,7 @@ class QuestionResult {
     required this.selectedAnswer,
     required this.correctAnswer,
     required this.explanation,
+    required this.isUnChecked,
     required this.isCorrect,
     this.isFavorite = false,
   });
@@ -233,25 +244,24 @@ class QuestionResult {
 
 
 
-
 // import 'package:flutter/material.dart';
 //
 // import '../../data/quiz/questions.dart';
 //
-// class ResultPage extends StatefulWidget {
+// class ResultPageV1 extends StatefulWidget {
 //
 //   final void Function() switchScreen;
 //   final List<String> selectedAnswer;
-//   const ResultPage({
+//   const ResultPageV1({
 //     super.key,
 //     required this.switchScreen, required this.selectedAnswer,
 //   });
 //
 //   @override
-//   State<ResultPage> createState() => _ResultPageState();
+//   State<ResultPageV1> createState() => _ResultPageV1State();
 // }
 //
-// class _ResultPageState extends State<ResultPage> {
+// class _ResultPageV1State extends State<ResultPageV1> {
 //   List<QuestionResult> selectedAnswers = [];
 //
 //   double getPercentage() {
@@ -464,20 +474,20 @@ class QuestionResult {
 // import 'package:class_organizer/admin/quiz/questions.dart';
 // import 'package:flutter/material.dart';
 
-// class ResultPage extends StatefulWidget {
+// class ResultPageV1 extends StatefulWidget {
 
 //   final void Function() switchScreen;
 //   final List<String> selectedAnswer;
-//   const ResultPage({
+//   const ResultPageV1({
 //     super.key,
 //     required this.switchScreen, required this.selectedAnswer,
 //   });
 
 //   @override
-//   State<ResultPage> createState() => _ResultPageState();
+//   State<ResultPageV1> createState() => _ResultPageV1State();
 // }
 
-// class _ResultPageState extends State<ResultPage> {
+// class _ResultPageV1State extends State<ResultPageV1> {
 //   List<QuestionResult> selectedAnswers = [];
 
 //   List<Map<String, Object>> getQuizSummary() {
