@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "905377210116",
+    "project_id": "blackbox-31f96",
+    "storage_bucket": "blackbox-31f96.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:905377210116:android:d18e1b9d1586c1339b7a51",
+        "android_client_info": {
+          "package_name": "com.edu.black_box"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7OjAZOurYx-5fKxFh1kC5i0jAK75rqGM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
