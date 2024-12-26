@@ -10,6 +10,7 @@ import 'package:black_box/quiz/quiz_main_v1.dart';
 import 'package:black_box/quiz/quiz_screen.dart';
 import 'package:black_box/extra/quiz/quiz_three.dart';
 import 'package:black_box/extra/quiz/quiz_two.dart';
+import 'package:black_box/screen_page/onboarding/on_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:lottie/lottie.dart';
@@ -17,7 +18,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../utility/asset_path.dart';
 import '../signin/admin_login.dart';
-import '../signin/sign_in_screen.dart';
 
 class Splash extends StatefulWidget{
 
@@ -117,6 +117,6 @@ class SplashScreenState extends State<Splash>{
     Timer(
         const Duration(seconds: 4),
             () => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => onboarding ? (userType=="user"?  SignInScreen() :  AdminLogin()) : SignInOrRegister())));
+            MaterialPageRoute(builder: (context) => onboarding ? (userType=="user"?  SignInOrRegister() :  AdminLogin()) : OnScreen())));
   }
 }

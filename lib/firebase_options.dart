@@ -54,6 +54,7 @@ class DefaultFirebaseOptions {
     appId: '1:905377210116:android:d18e1b9d1586c1339b7a51',
     messagingSenderId: '905377210116',
     projectId: 'blackbox-31f96',
+    databaseURL: 'https://blackbox-31f96-default-rtdb.firebaseio.com',
     storageBucket: 'blackbox-31f96.firebasestorage.app',
   );
 
@@ -62,7 +63,9 @@ class DefaultFirebaseOptions {
     appId: '1:905377210116:ios:48937f3ac57e782e9b7a51',
     messagingSenderId: '905377210116',
     projectId: 'blackbox-31f96',
+    databaseURL: 'https://blackbox-31f96-default-rtdb.firebaseio.com',
     storageBucket: 'blackbox-31f96.firebasestorage.app',
     iosBundleId: 'com.edu.blackBox',
   );
+
 }

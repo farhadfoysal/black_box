@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'Register.dart';
-import 'login.dart';
+import '../../screen_page/signup/Register.dart';
+import '../../screen_page/signin/login.dart';
 
 class SignInOrRegister extends StatefulWidget {
   @override
