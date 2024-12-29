@@ -113,183 +113,222 @@ class _LoginState extends State<Login> {
     }
   }
 
-  Future<void> signIn() async {
+  void signIn()  {
 
-    signInApiInProgress = true;
-    if (mounted) {
-      setState(() {});
-    }
-
-
-    String email = emailController.text.trim();
-    String password = passwordController.text.trim();
-
-    if(selectedRole=="4"){
-      uType = 4;
-    }else if(selectedRole=="3") {
-      uType = 3;
-    }else
-    {
-      uType = 2;
-    }
-
-    if(await InternetConnectionChecker.instance.hasConnection){
-
-      try {
-        UserCredential userCredential = await FirebaseAuth.instance
-            .signInWithEmailAndPassword(email: email, password: password);
-
-        User? firebaseUser = userCredential.user;
-
-        if (firebaseUser != null) {
-          DatabaseReference userRef = FirebaseDatabase.instance
-              .ref()
-              .child('users')
-              .child(firebaseUser.uid);
-
-          final snapshot = await userRef.get();
-
-          if (snapshot.exists) {
-            Map<String, dynamic> userData = Map<String, dynamic>.from(snapshot.value as Map);
-            local.User user = local.User.fromMap(userData);
-
-            if (mounted) {
-              if(selectedRole=="4"){
-                uType = 4;
-                if(uType==user.utype){
-
-                  await Logout().setLoggedIn(true);
-                  await Logout().setUserType(uType);
-                  await Logout().saveUser(user.toMap(), key: "user_logged_in");
-                  await Logout().saveUserDetails(user, key: "user_data");
-
-
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HomeScreen(),
-                    ),
-                  );
-                }else{
-                  showSnackBarMsg(context, 'You are the wrong guy!');
-                }
-              }
-              else if(selectedRole=="3"){
-                uType = 3;
-                if(uType==user.utype){
-
-                  await Logout().setLoggedIn(true);
-                  await Logout().setUserType(uType);
-                  await Logout().saveUser(user.toMap(), key: "user_logged_in");
-                  await Logout().saveUserDetails(user, key: "user_data");
-
-
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HomeScreen(),
-                    ),
-                  );
-                }else{
-                  showSnackBarMsg(context, 'You are the wrong guy!');
-                }
-              }else{
-                uType = 2;
-                if(uType==user.utype){
-                  await Logout().setLoggedIn(true);
-                  await Logout().setUserType(uType);
-                  await Logout().saveUser(user.toMap(), key: "user_logged_in");
-                  await Logout().saveUserDetails(user, key: "user_data");
-
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const QuizMainV1(),
-                    ),
-                  );
-                }else{
-                  showSnackBarMsg(context, 'You are the wrong guy!');
-                }
-              }
-            }
-          } else {
-            showSnackBarMsg(context, 'User data not found!');
-          }
-        }
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'user-not-found') {
-          showSnackBarMsg(context, 'No user found for that email.');
-        } else if (e.code == 'wrong-password') {
-          showSnackBarMsg(context, 'Wrong password provided.');
-        } else {
-          showSnackBarMsg(context, e.message ?? 'An error occurred.');
-        }
-      } finally {
-        setState(() {
-          signInApiInProgress = false;
-        });
-      }
-
-    }else{
-      // User? user = await DatabaseHelper().checkUserByPhone(email, password);
-
-      local.User? user = await DatabaseManager().checkUserLogin(email, password,uType);
-
+    setState(() {
+      loading = true;
+    });
+    Future.delayed(Duration(seconds: 2), () async{
       signInApiInProgress = true;
       if (mounted) {
         setState(() {});
       }
 
-      if (user != null) {
 
-        if (mounted) {
+      String email = emailController.text.trim();
+      String password = passwordController.text.trim();
 
-          if(selectedRole=="3"){
-            uType = 3;
-            if(uType==user.utype){
-              await Logout().setLoggedIn(true);
-              await Logout().setUserType(uType);
-              await Logout().saveUser(user.toMap(), key: "user_logged_in");
-              await Logout().saveUserDetails(user,key: "user_data");
-
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => HomeScreen(),
-                ),
-              );
-            }else{
-              showSnackBarMsg(context, 'You are the wrong guy!!');
-            }
-          }else{
-            uType = 2;
-            if(uType==user.utype){
-              await Logout().setLoggedIn(true);
-              await Logout().setUserType(uType);
-              await Logout().saveUser(user.toMap(), key: "user_logged_in");
-              await Logout().saveUserDetails(user,key: "user_data");
-
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const QuizMainV1(),
-                ),
-              );
-            }else{
-              showSnackBarMsg(context, 'You are the wrong guy!');
-            }
-          }
-
-
-        }
-      } else {
-
-        if (mounted) {
-          showSnackBarMsg(context, 'Email or password is not correct!');
-        }
+      if(selectedRole=="4"){
+        uType = 4;
+      }else if(selectedRole=="3") {
+        uType = 3;
+      }else
+      {
+        uType = 2;
       }
 
-    }
+      if(await InternetConnectionChecker.instance.hasConnection){
+
+        try {
+          UserCredential userCredential = await FirebaseAuth.instance
+              .signInWithEmailAndPassword(email: email, password: password);
+
+          User? firebaseUser = userCredential.user;
+
+          if (firebaseUser != null) {
+            DatabaseReference userRef = FirebaseDatabase.instance
+                .ref()
+                .child('users')
+                .child(firebaseUser.uid);
+
+            final snapshot = await userRef.get();
+
+            if (snapshot.exists) {
+              Map<String, dynamic> userData = Map<String, dynamic>.from(snapshot.value as Map);
+              local.User user = local.User.fromMap(userData);
+
+              if (mounted) {
+                if(selectedRole=="4"){
+                  uType = 4;
+                  if(uType==user.utype){
+
+                    await Logout().setLoggedIn(true);
+                    await Logout().setUserType(uType);
+                    await Logout().saveUser(user.toMap(), key: "user_logged_in");
+                    await Logout().saveUserDetails(user, key: "user_data");
+
+                    setState(() {
+                      loading = false;
+                    });
+
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomeScreen(),
+                      ),
+                    );
+                  }else{
+                    showSnackBarMsg(context, 'You are the wrong guy!');
+                  }
+                }
+                else if(selectedRole=="3"){
+                  uType = 3;
+                  if(uType==user.utype){
+
+                    await Logout().setLoggedIn(true);
+                    await Logout().setUserType(uType);
+                    await Logout().saveUser(user.toMap(), key: "user_logged_in");
+                    await Logout().saveUserDetails(user, key: "user_data");
+
+                    setState(() {
+                      loading = false;
+                    });
+
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HomeScreen(),
+                      ),
+                    );
+                  }else{
+                    showSnackBarMsg(context, 'You are the wrong guy!');
+                  }
+                }else{
+                  uType = 2;
+                  if(uType==user.utype){
+                    await Logout().setLoggedIn(true);
+                    await Logout().setUserType(uType);
+                    await Logout().saveUser(user.toMap(), key: "user_logged_in");
+                    await Logout().saveUserDetails(user, key: "user_data");
+
+                    setState(() {
+                      loading = false;
+                    });
+
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const QuizMainV1(),
+                      ),
+                    );
+                  }else{
+                    showSnackBarMsg(context, 'You are the wrong guy!');
+                  }
+                }
+              }
+            } else {
+              showSnackBarMsg(context, 'User data not found!');
+            }
+          }
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'user-not-found') {
+            showSnackBarMsg(context, 'No user found for that email.');
+          } else if (e.code == 'wrong-password') {
+            showSnackBarMsg(context, 'Wrong password provided.');
+          } else {
+            showSnackBarMsg(context, e.message ?? 'An error occurred.');
+          }
+        } finally {
+          setState(() {
+            signInApiInProgress = false;
+          });
+        }
+
+      }else{
+        // User? user = await DatabaseHelper().checkUserByPhone(email, password);
+
+        local.User? user = await DatabaseManager().checkUserLogin(email, password,uType);
+
+        signInApiInProgress = true;
+        if (mounted) {
+          setState(() {});
+        }
+
+        if (user != null) {
+
+          if (mounted) {
+            if(selectedRole=="4"){
+              uType = 4;
+              if(uType==user.utype){
+                await Logout().setLoggedIn(true);
+                await Logout().setUserType(uType);
+                await Logout().saveUser(user.toMap(), key: "user_logged_in");
+                await Logout().saveUserDetails(user,key: "user_data");
+                setState(() {
+                  loading = false;
+                });
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomeScreen(),
+                  ),
+                );
+              }else{
+                showSnackBarMsg(context, 'You are the wrong guy!!');
+              }
+            }
+            else if(selectedRole=="3"){
+              uType = 3;
+              if(uType==user.utype){
+                await Logout().setLoggedIn(true);
+                await Logout().setUserType(uType);
+                await Logout().saveUser(user.toMap(), key: "user_logged_in");
+                await Logout().saveUserDetails(user,key: "user_data");
+                setState(() {
+                  loading = false;
+                });
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomeScreen(),
+                  ),
+                );
+              }else{
+                showSnackBarMsg(context, 'You are the wrong guy!!');
+              }
+            }else{
+              uType = 2;
+              if(uType==user.utype){
+                await Logout().setLoggedIn(true);
+                await Logout().setUserType(uType);
+                await Logout().saveUser(user.toMap(), key: "user_logged_in");
+                await Logout().saveUserDetails(user,key: "user_data");
+                setState(() {
+                  loading = false;
+                });
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const QuizMainV1(),
+                  ),
+                );
+              }else{
+                showSnackBarMsg(context, 'You are the wrong guy!');
+              }
+            }
+
+
+          }
+        } else {
+
+          if (mounted) {
+            showSnackBarMsg(context, 'Email or password is not correct!');
+          }
+        }
+
+      }
+    });
+
 
 
   }
@@ -415,7 +454,8 @@ class _LoginState extends State<Login> {
                       // Login Button
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
+                        child: loading ? CircularProgressIndicator(color: Colors.white)
+                            :  ElevatedButton(
                           onPressed: () {
                             if (_formKey.currentState?.validate() ?? false) {
 

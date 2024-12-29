@@ -10,6 +10,7 @@ import 'package:black_box/quiz/quiz_main_v1.dart';
 import 'package:black_box/quiz/quiz_screen.dart';
 import 'package:black_box/extra/quiz/quiz_three.dart';
 import 'package:black_box/extra/quiz/quiz_two.dart';
+import 'package:black_box/screen_page/dashboard/home_screen.dart';
 import 'package:black_box/screen_page/onboarding/on_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -117,6 +118,6 @@ class SplashScreenState extends State<Splash>{
     Timer(
         const Duration(seconds: 4),
             () => Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => onboarding ? (userType=="user"?  SignInOrRegister() :  AdminLogin()) : OnScreen())));
+            MaterialPageRoute(builder: (context) => onboarding ? (userType=="user"?  HomeScreen() :  AdminLogin()) : OnScreen())));
   }
 }

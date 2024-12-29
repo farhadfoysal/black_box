@@ -165,7 +165,7 @@ StreamSubscription<InternetConnectionStatus> checkConnectionContinuously() {
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 30),
             child: SingleChildScrollView(
-              child: Column(
+              child: Form(key: _formkey, child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   SizedBox(height: 100),
@@ -373,7 +373,7 @@ StreamSubscription<InternetConnectionStatus> checkConnectionContinuously() {
                     decoration: InputDecoration(
                       prefixIcon: Icon(Icons.verified_user, color: Colors.white70),
                       hintText: "Sign up as",
-                      hintStyle: TextStyle(color: Colors.black),
+                      hintStyle: TextStyle(color: Colors.white70),
                       filled: true,
                       fillColor: Colors.black.withOpacity(0.5),
                       border: OutlineInputBorder(
@@ -417,9 +417,9 @@ StreamSubscription<InternetConnectionStatus> checkConnectionContinuously() {
                       minimumSize: Size(double.infinity, 50),
                     ),
                     onPressed: (){
-
+                      if (_formkey.currentState?.validate() ?? false) {
                         handleRegister();
-
+                      }
                     },
                     child: Text(
                       'Register',
@@ -441,7 +441,7 @@ StreamSubscription<InternetConnectionStatus> checkConnectionContinuously() {
                     ),
                   ),
                 ],
-              ),
+              ),),
             ),
           ),
         ],
@@ -626,6 +626,9 @@ StreamSubscription<InternetConnectionStatus> checkConnectionContinuously() {
       clearfield();
     } else {
       if (mounted) {
+        setState(() {
+          loading = false;
+        });
         showSnackBarMsg(context, 'Registration Failed');
       }
     }
