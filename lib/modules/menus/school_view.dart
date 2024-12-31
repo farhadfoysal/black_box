@@ -1,18 +1,20 @@
+import 'package:black_box/components/common/photo_avatar.dart';
 import 'package:black_box/cores/cores.dart';
+import 'package:black_box/model/user/user.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as b;
-import '../../components/common/photo_avatar.dart';
-import '../../model/user/user.dart';
 
-class HomeView extends StatefulWidget {
+class SchoolView extends StatefulWidget {
 
-  const HomeView({super.key});
+  const SchoolView({super.key});
 
   @override
-  State<HomeView> createState() => _HomeViewState();
+  State<StatefulWidget> createState() {
+    return SchoolViewState();
+  }
 }
 
-class _HomeViewState extends State<HomeView> {
+class SchoolViewState extends State<SchoolView> {
   late User user;
 
   @override

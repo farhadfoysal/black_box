@@ -1,3 +1,6 @@
+import 'package:black_box/modules/menus/schedule_view.dart';
+import 'package:black_box/modules/menus/school_view.dart';
+import 'package:black_box/routes/routes.dart';
 import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
@@ -37,36 +40,44 @@ class AppNavBar extends StatelessWidget {
       title: Text("Home"),
     ),
     AppBottomBarItem(
-      icon: Icon(AppIcons.courses),
-      activeIcon: Icon(AppIcons.coursesAlt),
-      title: Text("Courses"),
+      icon: Icon(Icons.schedule),
+      activeIcon: Icon(Icons.schedule_outlined),
+      title: Text("Schedule"),
     ),
     AppBottomBarItem(
-      icon: Icon(AppIcons.live),
-      activeIcon: Icon(AppIcons.liveAlt),
-      title: Text("Live"),
+      icon: Icon(Icons.school),
+      activeIcon: Icon(Icons.school_outlined),
+      title: Text("School"),
+    ),
+    AppBottomBarItem(
+      icon: Icon(Icons.room),
+      activeIcon: Icon(Icons.room_outlined),
+      title: Text("Mess"),
     ),
     AppBottomBarItem(
       icon: Icon(AppIcons.profile),
       activeIcon: Icon(AppIcons.profileAlt),
-      title: Text("Profile"),
+      title: Text("Account"),
     )
   ];
 
   static int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.toString();
 
-    if (location.startsWith(HomeView.routeName)) {
+    if (location.startsWith(Routes.homePage)) {
       return 0;
     }
-    if (location.startsWith(HomeView.routeName)) {
+    if (location.startsWith(Routes.schedulePage)) {
       return 1;
     }
-    if (location.startsWith(ProfileView.routeName)) {
+    if (location.startsWith(Routes.schoolPage)) {
       return 2;
     }
-    if (location.startsWith(ProfileView.routeName)) {
+    if (location.startsWith(Routes.messPage)) {
       return 3;
+    }
+    if (location.startsWith(Routes.profilePage)) {
+      return 4;
     }
 
     return 0;
@@ -77,17 +88,20 @@ class AppNavBar extends StatelessWidget {
   void _onTap(BuildContext context, int index) {
     switch (index) {
       case 0:
-        GoRouter.of(context).go(HomeView.routeName);
+        GoRouter.of(context).go(Routes.homePage);
         break;
       case 1:
-        GoRouter.of(context).go(HomeView.routeName);
+        GoRouter.of(context).go(Routes.schedulePage);
         break;
       case 2:
-        GoRouter.of(context).go(ProfileView.routeName);
+        GoRouter.of(context).go(Routes.schoolPage);
         break;
       case 3:
-        GoRouter.of(context).go(ProfileView.routeName);
+        GoRouter.of(context).go(Routes.messPage);
         break;
+      case 4:
+        GoRouter.of(context).go(Routes.profilePage);
+      break;  
     }
   }
 }

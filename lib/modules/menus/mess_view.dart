@@ -11,18 +11,18 @@ import 'package:go_router/go_router.dart';
 
 import '../../preference/logout.dart';
 
-class ProfileView extends StatefulWidget {
+class MessView extends StatefulWidget {
 
 
-  const ProfileView({super.key});
+  const MessView({super.key});
 
   @override
   State<StatefulWidget> createState() {
-    return ProfileViewState();
+    return MessViewState();
   }
 }
 
-class ProfileViewState extends State<ProfileView> {
+class MessViewState extends State<MessView> {
   late User user;
 
   @override
@@ -96,14 +96,8 @@ class ProfileViewState extends State<ProfileView> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Settings(),
-                    ),
-                  );
                   // GoRouter.of(context).go(Routes.settingsPage);
-                  // context.push(Routes.settingsPage);
+                  context.go(Routes.settingsPage);
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 15),

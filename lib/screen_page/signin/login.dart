@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:black_box/db/local/database_manager.dart';
 import 'package:black_box/quiz/quiz_main_v1.dart';
+import 'package:black_box/routes/routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import '../../preference/logout.dart';
 import '../../web/internet_connectivity.dart';
@@ -47,12 +49,12 @@ class _LoginState extends State<Login> {
   @override
   void initState() {
     super.initState();
+    _initializeApp();
     SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle(statusBarColor: Colors.transparent));
-    _initializeApp();
   }
   Future<void> _initializeApp() async {
-    // await checkLoginStatus();
+    await checkLoginStatus();
 
     startListening();
     checkConnection();
@@ -96,18 +98,21 @@ class _LoginState extends State<Login> {
     passwordController.clear();
   }
 
-  void checkLoginStatus() async {
+  Future<void> checkLoginStatus() async {
 
     bool isLoggedIn = await Logout().isLoggedIn();
 
     if (isLoggedIn) {
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HomeScreen(),
-        ),
-      );
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => HomeScreen(),
+      //   ),
+      // );
+
+      context.goNamed(Routes.homePage);
+
     } else {
       // User is not logged in, stay on the sign-in screen
     }
@@ -171,12 +176,13 @@ class _LoginState extends State<Login> {
                       loading = false;
                     });
 
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => HomeScreen(),
-                      ),
-                    );
+                    context.goNamed(Routes.homePage);
+                    // Navigator.pushReplacement(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => HomeScreen(),
+                    //   ),
+                    // );
                   }else{
                     showSnackBarMsg(context, 'You are the wrong guy!');
                   }
@@ -194,12 +200,13 @@ class _LoginState extends State<Login> {
                       loading = false;
                     });
 
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => HomeScreen(),
-                      ),
-                    );
+                    // Navigator.pushReplacement(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => HomeScreen(),
+                    //   ),
+                    // );
+                          context.goNamed(Routes.homePage);
                   }else{
                     showSnackBarMsg(context, 'You are the wrong guy!');
                   }
@@ -215,12 +222,13 @@ class _LoginState extends State<Login> {
                       loading = false;
                     });
 
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const QuizMainV1(),
-                      ),
-                    );
+                    // Navigator.pushReplacement(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => HomeScreen(),
+                    //   ),
+                    // );
+                          context.goNamed(Routes.homePage);
                   }else{
                     showSnackBarMsg(context, 'You are the wrong guy!');
                   }
@@ -267,12 +275,13 @@ class _LoginState extends State<Login> {
                 setState(() {
                   loading = false;
                 });
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => HomeScreen(),
-                  ),
-                );
+                // Navigator.pushReplacement(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (context) => HomeScreen(),
+                //   ),
+                // );
+                      context.goNamed(Routes.homePage);
               }else{
                 showSnackBarMsg(context, 'You are the wrong guy!!');
               }
@@ -287,12 +296,13 @@ class _LoginState extends State<Login> {
                 setState(() {
                   loading = false;
                 });
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => HomeScreen(),
-                  ),
-                );
+                // Navigator.pushReplacement(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (context) => HomeScreen(),
+                //   ),
+                // );
+                context.goNamed(Routes.homePage);
               }else{
                 showSnackBarMsg(context, 'You are the wrong guy!!');
               }
@@ -306,12 +316,13 @@ class _LoginState extends State<Login> {
                 setState(() {
                   loading = false;
                 });
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const QuizMainV1(),
-                  ),
-                );
+                // Navigator.pushReplacement(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (context) =>  HomeScreen(),
+                //   ),
+                // );
+                      context.goNamed(Routes.homePage);
               }else{
                 showSnackBarMsg(context, 'You are the wrong guy!');
               }

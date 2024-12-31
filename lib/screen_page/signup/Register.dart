@@ -58,7 +58,7 @@ class _RegisterState extends State<Register> {
     _initializeApp();
   }
   Future<void> _initializeApp() async {
-    // await checkLoginStatus();
+    await checkLoginStatus();
 
     startListening();
     checkConnection();
@@ -104,7 +104,7 @@ StreamSubscription<InternetConnectionStatus> checkConnectionContinuously() {
     passwordController.clear();
   }
 
-  void checkLoginStatus() async {
+  Future<void> checkLoginStatus() async {
 
     bool isLoggedIn = await Logout().isLoggedIn();
 

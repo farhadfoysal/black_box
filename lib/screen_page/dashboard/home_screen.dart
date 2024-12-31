@@ -1,3 +1,6 @@
+import 'package:black_box/modules/menus/home_view.dart';
+import 'package:black_box/routes/app_nav_bar.dart';
+import 'package:black_box/screen_page/main_panel.dart';
 import 'package:flutter/material.dart';
 
 import '../../cores/cores.dart';
@@ -13,6 +16,7 @@ class HomeScreen extends StatelessWidget{
       themeMode: ThemeMode.light,
       routerConfig: AppRouter.router,
     );
+    // return MainPanel();
   }
 
 

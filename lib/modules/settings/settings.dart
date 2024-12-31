@@ -11,18 +11,18 @@ import 'package:go_router/go_router.dart';
 
 import '../../preference/logout.dart';
 
-class ProfileView extends StatefulWidget {
+class Settings extends StatefulWidget {
 
 
-  const ProfileView({super.key});
+  const Settings({super.key});
 
   @override
   State<StatefulWidget> createState() {
-    return ProfileViewState();
+    return SettingsState();
   }
 }
 
-class ProfileViewState extends State<ProfileView> {
+class SettingsState extends State<Settings> {
   late User user;
 
   @override
@@ -96,14 +96,7 @@ class ProfileViewState extends State<ProfileView> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Settings(),
-                    ),
-                  );
-                  // GoRouter.of(context).go(Routes.settingsPage);
-                  // context.push(Routes.settingsPage);
+                  GoRouter.of(context).go(Routes.settingsPage);
                 },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 15),
@@ -139,49 +132,49 @@ class _ProfileHeader extends StatelessWidget {
         children: [
           XAvatarCircle(
             photoURL:
-                "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg",
+            "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg",
             membership: "U",
             progress: 60,
             color: context.theme.primaryColor,
           ),
           Expanded(
               child: Padding(
-            padding: EdgeInsets.all(18.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 1.7),
-                  child: Text(
-                    "Farhad Foysal",
-                    style: p21.bold,
-                  ),
+                padding: EdgeInsets.all(18.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 1.7),
+                      child: Text(
+                        "Farhad Foysal",
+                        style: p21.bold,
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 6),
+                      child: Text(
+                        "mff585855075@gmail.com",
+                        style: p14.bold.grey,
+                      ),
+                    )
+                  ],
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 6),
-                  child: Text(
-                    "mff585855075@gmail.com",
-                    style: p14.bold.grey,
-                  ),
-                )
-              ],
-            ),
-          )),
+              )),
           InkWell(
             onTap: () {},
             child: Padding(
               padding: EdgeInsets.all(18.0),
               child: b.Badge(
-                  badgeStyle: b.BadgeStyle(
-                    borderSide: const BorderSide(color: Colors.white, width: 2),
-                    badgeColor: Colors.red.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(13),
-                    elevation: 0,
-                  ),
-                  badgeContent: Text("7",style: TextStyle(color: Colors.white,fontSize: 12)),
+                badgeStyle: b.BadgeStyle(
+                  borderSide: const BorderSide(color: Colors.white, width: 2),
+                  badgeColor: Colors.red.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(13),
+                  elevation: 0,
+                ),
+                badgeContent: Text("7",style: TextStyle(color: Colors.white,fontSize: 12)),
                 child: Icon(Icons.notifications,size: 40,),
+              ),
             ),
-          ),
           ),
         ],
       ),
