@@ -53,19 +53,24 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         children: [
-          XAvatarCircle(
-            photoURL:
-            "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg",
-            membership: "U",
-            progress: 60,
-            color: context.theme.primaryColor,
+          InkWell(
+            onTap: () {
+              Scaffold.of(context).openDrawer();
+            },
+            child: XAvatarCircle(
+              photoURL:
+              "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg",
+              membership: "U",
+              progress: 60,
+              color: context.theme.primaryColor,
+            ),
           ),
           Expanded(
               child: Padding(
-                padding: EdgeInsets.all(18.0),
+                padding: EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -73,11 +78,11 @@ class _ProfileHeader extends StatelessWidget {
                       padding: EdgeInsets.symmetric(vertical: 1.7),
                       child: Text(
                         "Farhad Foysal",
-                        style: p21.bold,
+                        style: p20.bold,
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.symmetric(vertical: 6),
+                      padding: EdgeInsets.symmetric(vertical: 4),
                       child: Text(
                         "mff585855075@gmail.com",
                         style: p14.bold.grey,
@@ -89,7 +94,7 @@ class _ProfileHeader extends StatelessWidget {
           InkWell(
             onTap: () {},
             child: Padding(
-              padding: EdgeInsets.all(18.0),
+              padding: EdgeInsets.all(8.0),
               child: b.Badge(
                 badgeStyle: b.BadgeStyle(
                   borderSide: const BorderSide(color: Colors.white, width: 2),
@@ -102,6 +107,20 @@ class _ProfileHeader extends StatelessWidget {
               ),
             ),
           ),
+          // SizedBox(width: 1),
+          IconButton(
+            icon: Icon(
+              AppIcons.moreCircle,
+              size: 30,
+              color: context.theme.primaryColor,
+            ),
+            onPressed: () {
+
+              Scaffold.of(context).openDrawer();
+            },
+            tooltip: 'Open Menu',
+          ),
+
         ],
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:black_box/modules/menus/schedule_view.dart';
 import 'package:black_box/modules/menus/school_view.dart';
+import 'package:black_box/modules/widget/drawer_widget.dart';
 import 'package:black_box/routes/routes.dart';
 import 'package:flutter/material.dart';
 
@@ -20,6 +21,7 @@ class AppNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: DrawerWidget(),
       body: child,
       bottomNavigationBar: AppBottomBar(
         opacity: .2,

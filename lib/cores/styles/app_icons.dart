@@ -41,4 +41,5 @@ class AppIcons {
   static const IconData delete = IconData(0xe923, fontFamily: 'EnliveIcons');
   static const IconData lock = IconData(0xe924, fontFamily: 'EnliveIcons');
   static const IconData graduate = IconData(0xe925, fontFamily: 'EnliveIcons');
+  static const IconData menu = IconData(0xe926, fontFamily: 'EnliveIcons');
 }

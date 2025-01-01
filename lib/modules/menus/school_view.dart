@@ -55,7 +55,7 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         children: [
           XAvatarCircle(
@@ -67,7 +67,7 @@ class _ProfileHeader extends StatelessWidget {
           ),
           Expanded(
               child: Padding(
-                padding: EdgeInsets.all(18.0),
+                padding: EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -79,7 +79,7 @@ class _ProfileHeader extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.symmetric(vertical: 6),
+                      padding: EdgeInsets.symmetric(vertical: 4),
                       child: Text(
                         "mff585855075@gmail.com",
                         style: p14.bold.grey,
@@ -91,7 +91,7 @@ class _ProfileHeader extends StatelessWidget {
           InkWell(
             onTap: () {},
             child: Padding(
-              padding: EdgeInsets.all(18.0),
+              padding: EdgeInsets.all(10.0),
               child: b.Badge(
                 badgeStyle: b.BadgeStyle(
                   borderSide: const BorderSide(color: Colors.white, width: 2),
