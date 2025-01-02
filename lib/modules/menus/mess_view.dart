@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:black_box/components/common/photo_avatar.dart';
 import 'package:black_box/cores/cores.dart';
 import 'package:black_box/extra/test/sign_in_or_register.dart';
@@ -11,7 +14,10 @@ import 'package:black_box/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as b;
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../model/school/school.dart';
+import '../../model/school/teacher.dart';
 import '../../preference/logout.dart';
 
 class MessView extends StatefulWidget {
@@ -24,14 +30,131 @@ class MessView extends StatefulWidget {
 }
 
 class MessViewState extends State<MessView> with SingleTickerProviderStateMixin {
+  String _userName = 'Farhad Foysal';
+  String? userName;
+  String? userPhone;
+  String? userEmail;
+  User? _user, _user_data;
+  String? sid;
+  School? school;
+  Teacher? teacher;
+  File? _selectedImage;
+  bool _showSaveButton = false;
   late User user;
   late TabController _tabController;
+  int _currentIndex1 = 0;
+  int _currentIndex2 = 0;
+
 
   @override
   void initState() {
     super.initState();
-    loadData();
+    _loadUserName();
+    _initializeData();
     _tabController = TabController(length: 3, vsync: this);
+  }
+
+  Future<void> _initializeData() async {
+    // First load user data
+    await _loadUserData();
+
+    // loadSchedules();
+    // getSchedules();
+    // _startAutomaticUpdates();
+    // Then load teacher data
+    // _loadTeacherData();
+  }
+
+  Future<void> _loadUserData() async {
+    Logout logout = Logout();
+    User? user = await logout.getUserDetails(key: 'user_data');
+
+
+    Map<String, dynamic>? userMap = await logout.getUser(key: 'user_logged_in');
+    Map<String, dynamic>? schoolMap = await logout.getSchool(key: 'school_data');
+
+
+    if (userMap != null) {
+      User user_data = User.fromMap(userMap);
+      setState(() {
+        _user_data = user_data;
+        _user = user_data;
+
+      });
+    } else {
+      print("User map is null");
+    }
+
+    if (schoolMap != null) {
+      School schoolData = School.fromMap(schoolMap);
+      setState(() {
+        _user = user;
+        school = schoolData;
+        sid = school?.sId;
+        print(schoolData.sId);
+      });
+    } else {
+      print("School data is null");
+    }
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userDataString = prefs.getString('user_logged_in');
+    String? imagePath = prefs.getString('profile_picture-${_user?.uniqueid!}');
+
+    if (userDataString != null) {
+      Map<String, dynamic> userData = jsonDecode(userDataString);
+      setState(() {
+        userName = userData['uname'];
+        userPhone = userData['phone'];
+        userEmail = userData['email'];
+        if (imagePath != null) {
+          _selectedImage = File(imagePath);
+        }
+      });
+    }
+  }
+
+  Future<void> _loadUserName() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedUserData = prefs.getString('user_logged_in');
+
+    if (savedUserData != null) {
+      Map<String, dynamic> userData = jsonDecode(savedUserData);
+      setState(() {
+        _userName = userData['uname'] ?? 'Tasnim';
+      });
+    }
+  }
+
+  Future<void> _loadUser() async {
+    Logout logout = Logout();
+    User? user = await logout.getUserDetails(key: 'user_data');
+    Map<String, dynamic>? userMap = await logout.getUser(key: 'user_logged_in');
+    User user_data = User.fromMap(userMap!);
+    setState(() {
+      _user = user;
+      _user_data = user_data;
+    });
+  }
+
+  void showSnackBarMsg(BuildContext context, String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 2),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  void _onSwipe1(int index) {
+    setState(() {
+      _currentIndex1 = index;
+    });
+  }
+
+  void _onSwipe2(int index) {
+    setState(() {
+      _currentIndex2 = index;
+    });
   }
 
   @override
@@ -40,15 +163,6 @@ class MessViewState extends State<MessView> with SingleTickerProviderStateMixin 
     super.dispose();
   }
 
-  void loadData() {
-    setState(() {
-      user = User(
-        uname: "Farhad Foysal",
-        pass: '369725',
-        phone: '01585855075',
-      );
-    });
-  }
 
   Future<void> signOut() async {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -56,7 +170,6 @@ class MessViewState extends State<MessView> with SingleTickerProviderStateMixin 
     );
     await AppRouter.logoutUser(context);
   }
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -64,9 +177,9 @@ class MessViewState extends State<MessView> with SingleTickerProviderStateMixin 
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _ProfileHeader(user: user),
+          if (_user != null) _ProfileHeader(user: _user!),
           PreferredSize(
-            preferredSize: const Size.fromHeight(48.0),
+            preferredSize: const Size.fromHeight(30.0),
             child: Container(
               color: Colors.white,
               child: Row(
@@ -74,9 +187,9 @@ class MessViewState extends State<MessView> with SingleTickerProviderStateMixin 
                   Expanded(
                     child: TabBar(
                       controller: _tabController,
-                      indicatorColor: Colors.black, // Tab indicator color
-                      labelColor: Colors.black, // Selected tab text color set to black
-                      unselectedLabelColor: Colors.black.withOpacity(0.6), // Unselected tab text color
+                      indicatorColor: Colors.black,
+                      labelColor: Colors.black,
+                      unselectedLabelColor: Colors.black.withOpacity(0.6),
                       tabs: const [
                         Tab(text: 'Tutor'),
                         Tab(text: 'Mess'),
@@ -89,48 +202,6 @@ class MessViewState extends State<MessView> with SingleTickerProviderStateMixin 
             ),
           ),
           SizedBox(height: 2),
-          // Padding(
-          //   padding: const EdgeInsets.symmetric(horizontal: 20),
-          //   child: ElevatedButton(
-          //     onPressed: signOut,
-          //     style: ElevatedButton.styleFrom(
-          //       padding: EdgeInsets.symmetric(vertical: 15),
-          //       shape: RoundedRectangleBorder(
-          //         borderRadius: BorderRadius.circular(50),
-          //       ),
-          //     ),
-          //     child: Text(
-          //       'Sign Out',
-          //       style: TextStyle(
-          //         fontSize: 16,
-          //         fontWeight: FontWeight.bold,
-          //       ),
-          //     ),
-          //   ),
-          // ),
-          // SizedBox(height: 20),
-          // Padding(
-          //   padding: const EdgeInsets.symmetric(horizontal: 20),
-          //   child: ElevatedButton(
-          //     onPressed: () {
-          //       context.go(Routes.settingsPage);
-          //     },
-          //     style: ElevatedButton.styleFrom(
-          //       padding: EdgeInsets.symmetric(vertical: 15),
-          //       shape: RoundedRectangleBorder(
-          //         borderRadius: BorderRadius.circular(50),
-          //       ),
-          //     ),
-          //     child: Text(
-          //       'Settings',
-          //       style: TextStyle(
-          //         fontSize: 16,
-          //         fontWeight: FontWeight.bold,
-          //       ),
-          //     ),
-          //   ),
-          // ),
-          // SizedBox(height: 20),
           Expanded(
             child: TabBarView(
               controller: _tabController,
@@ -145,6 +216,96 @@ class MessViewState extends State<MessView> with SingleTickerProviderStateMixin 
       ),
     );
   }
+
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   return SafeArea(
+  //     child: Column(
+  //       mainAxisSize: MainAxisSize.min,
+  //       crossAxisAlignment: CrossAxisAlignment.stretch,
+  //       children: [
+  //         _ProfileHeader(user: _user!),
+  //         PreferredSize(
+  //           preferredSize: const Size.fromHeight(30.0),
+  //           child: Container(
+  //             color: Colors.white,
+  //             child: Row(
+  //               children: [
+  //                 Expanded(
+  //                   child: TabBar(
+  //                     controller: _tabController,
+  //                     indicatorColor: Colors.black, // Tab indicator color
+  //                     labelColor: Colors.black, // Selected tab text color set to black
+  //                     unselectedLabelColor: Colors.black.withOpacity(0.6), // Unselected tab text color
+  //                     tabs: const [
+  //                       Tab(text: 'Tutor'),
+  //                       Tab(text: 'Mess'),
+  //                       Tab(text: 'Tution'),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //         SizedBox(height: 2),
+  //         // Padding(
+  //         //   padding: const EdgeInsets.symmetric(horizontal: 20),
+  //         //   child: ElevatedButton(
+  //         //     onPressed: signOut,
+  //         //     style: ElevatedButton.styleFrom(
+  //         //       padding: EdgeInsets.symmetric(vertical: 15),
+  //         //       shape: RoundedRectangleBorder(
+  //         //         borderRadius: BorderRadius.circular(50),
+  //         //       ),
+  //         //     ),
+  //         //     child: Text(
+  //         //       'Sign Out',
+  //         //       style: TextStyle(
+  //         //         fontSize: 16,
+  //         //         fontWeight: FontWeight.bold,
+  //         //       ),
+  //         //     ),
+  //         //   ),
+  //         // ),
+  //         // SizedBox(height: 20),
+  //         // Padding(
+  //         //   padding: const EdgeInsets.symmetric(horizontal: 20),
+  //         //   child: ElevatedButton(
+  //         //     onPressed: () {
+  //         //       context.go(Routes.settingsPage);
+  //         //     },
+  //         //     style: ElevatedButton.styleFrom(
+  //         //       padding: EdgeInsets.symmetric(vertical: 15),
+  //         //       shape: RoundedRectangleBorder(
+  //         //         borderRadius: BorderRadius.circular(50),
+  //         //       ),
+  //         //     ),
+  //         //     child: Text(
+  //         //       'Settings',
+  //         //       style: TextStyle(
+  //         //         fontSize: 16,
+  //         //         fontWeight: FontWeight.bold,
+  //         //       ),
+  //         //     ),
+  //         //   ),
+  //         // ),
+  //         // SizedBox(height: 20),
+  //         Expanded(
+  //           child: TabBarView(
+  //             controller: _tabController,
+  //             children: [
+  //               TutorView(),
+  //               MessCreateView(),
+  //               TutionView(),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }
 
 class _ProfileHeader extends StatelessWidget {
@@ -177,7 +338,7 @@ class _ProfileHeader extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
+                      padding: EdgeInsets.symmetric(vertical: 1.7),
                       child: Text(
                         "mff585855075@gmail.com",
                         style: p14.bold.grey,

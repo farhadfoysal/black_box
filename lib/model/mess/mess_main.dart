@@ -1,32 +1,32 @@
 class MessMain {
   int? _id;
-  String _mId;
-  String _messId;
-  String _messName;
-  String _messAddress;
-  String _messPass;
-  String _messAdminId;
-  String _mealUpdateStatus;
-  String _adminPhone;
-  DateTime _startDate;
-  String _sumOfAllTrx;
-  String _uPerm;
-  String _qr;
+  String? _mId;
+  String? _messId;
+  String? _messName;
+  String? _messAddress;
+  String? _messPass;
+  String? _messAdminId;
+  String? _mealUpdateStatus; // 1, 2, 3, 4 - d: 1
+  String? _adminPhone;
+  DateTime? _startDate;
+  String? _sumOfAllTrx; //
+  String? _uPerm; // 0,1 - d: 0
+  String? _qr;
 
   MessMain({
     int? id,
-    required String mId,
-    required String messId,
-    required String messName,
-    required String messAddress,
-    required String messPass,
-    required String messAdminId,
-    required String mealUpdateStatus,
-    required String adminPhone,
-    required DateTime startDate,
-    required String sumOfAllTrx,
-    required String uPerm,
-    required String qr,
+    String? mId,
+    String? messId,
+    String? messName,
+    String? messAddress,
+    String? messPass,
+    String? messAdminId,
+    String? mealUpdateStatus,
+    String? adminPhone,
+    DateTime? startDate,
+    String? sumOfAllTrx,
+    String? uPerm,
+    String? qr,
   })  : _id = id,
         _mId = mId,
         _messId = messId,
@@ -43,33 +43,33 @@ class MessMain {
 
   // Getters
   int? get id => _id;
-  String get mId => _mId;
-  String get messId => _messId;
-  String get messName => _messName;
-  String get messAddress => _messAddress;
-  String get messPass => _messPass;
-  String get messAdminId => _messAdminId;
-  String get mealUpdateStatus => _mealUpdateStatus;
-  String get adminPhone => _adminPhone;
-  DateTime get startDate => _startDate;
-  String get sumOfAllTrx => _sumOfAllTrx;
-  String get uPerm => _uPerm;
-  String get qr => _qr;
+  String? get mId => _mId;
+  String? get messId => _messId;
+  String? get messName => _messName;
+  String? get messAddress => _messAddress;
+  String? get messPass => _messPass;
+  String? get messAdminId => _messAdminId;
+  String? get mealUpdateStatus => _mealUpdateStatus;
+  String? get adminPhone => _adminPhone;
+  DateTime? get startDate => _startDate;
+  String? get sumOfAllTrx => _sumOfAllTrx;
+  String? get uPerm => _uPerm;
+  String? get qr => _qr;
 
   // Setters
   set id(int? id) => _id = id;
-  set mId(String mId) => _mId = mId;
-  set messId(String messId) => _messId = messId;
-  set messName(String messName) => _messName = messName;
-  set messAddress(String messAddress) => _messAddress = messAddress;
-  set messPass(String messPass) => _messPass = messPass;
-  set messAdminId(String messAdminId) => _messAdminId = messAdminId;
-  set mealUpdateStatus(String mealUpdateStatus) => _mealUpdateStatus = mealUpdateStatus;
-  set adminPhone(String adminPhone) => _adminPhone = adminPhone;
-  set startDate(DateTime startDate) => _startDate = startDate;
-  set sumOfAllTrx(String sumOfAllTrx) => _sumOfAllTrx = sumOfAllTrx;
-  set uPerm(String uPerm) => _uPerm = uPerm;
-  set qr(String qr) => _qr = qr;
+  set mId(String? mId) => _mId = mId;
+  set messId(String? messId) => _messId = messId;
+  set messName(String? messName) => _messName = messName;
+  set messAddress(String? messAddress) => _messAddress = messAddress;
+  set messPass(String? messPass) => _messPass = messPass;
+  set messAdminId(String? messAdminId) => _messAdminId = messAdminId;
+  set mealUpdateStatus(String? mealUpdateStatus) => _mealUpdateStatus = mealUpdateStatus;
+  set adminPhone(String? adminPhone) => _adminPhone = adminPhone;
+  set startDate(DateTime? startDate) => _startDate = startDate;
+  set sumOfAllTrx(String? sumOfAllTrx) => _sumOfAllTrx = sumOfAllTrx;
+  set uPerm(String? uPerm) => _uPerm = uPerm;
+  set qr(String? qr) => _qr = qr;
 
   Map<String, dynamic> toMap() {
     return {
@@ -82,7 +82,7 @@ class MessMain {
       'mess_admin_id': _messAdminId,
       'meal_update_status': _mealUpdateStatus,
       'admin_phone': _adminPhone,
-      'start_date': _startDate.toIso8601String(),
+      'start_date': _startDate?.toIso8601String(),
       'sum_of_all_trx': _sumOfAllTrx,
       'u_perm': _uPerm,
       'qr': _qr,
@@ -100,7 +100,7 @@ class MessMain {
       messAdminId: map['mess_admin_id'] ?? '',
       mealUpdateStatus: map['meal_update_status'] ?? '1',
       adminPhone: map['admin_phone'] ?? '',
-      startDate: DateTime.parse(map['start_date']),
+      startDate: map['start_date'] != null ? DateTime.tryParse(map['start_date']) : null,
       sumOfAllTrx: map['sum_of_all_trx'] ?? '0',
       uPerm: map['u_perm'] ?? '0',
       qr: map['qr'] ?? '',
@@ -118,7 +118,7 @@ class MessMain {
       'mess_admin_id': _messAdminId,
       'meal_update_status': _mealUpdateStatus,
       'admin_phone': _adminPhone,
-      'start_date': _startDate.toIso8601String(),
+      'start_date': _startDate?.toIso8601String(),
       'sum_of_all_trx': _sumOfAllTrx,
       'u_perm': _uPerm,
       'qr': _qr,
@@ -136,7 +136,7 @@ class MessMain {
       messAdminId: json['mess_admin_id'] ?? '',
       mealUpdateStatus: json['meal_update_status'] ?? '1',
       adminPhone: json['admin_phone'] ?? '',
-      startDate: DateTime.parse(json['start_date']),
+      startDate: json['start_date'] != null ? DateTime.tryParse(json['start_date']) : null,
       sumOfAllTrx: json['sum_of_all_trx'] ?? '0',
       uPerm: json['u_perm'] ?? '0',
       qr: json['qr'] ?? '',

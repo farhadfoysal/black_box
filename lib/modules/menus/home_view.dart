@@ -53,7 +53,7 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10),
+      padding: EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
           InkWell(
@@ -70,22 +70,22 @@ class _ProfileHeader extends StatelessWidget {
           ),
           Expanded(
               child: Padding(
-                padding: EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(2.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: 1.7),
                       child: Text(
-                        "Farhad Foysal",
-                        style: p20.bold,
+                        "Farhad Foysal Zibran",
+                        style: p18.bold,
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.symmetric(vertical: 4),
+                      padding: EdgeInsets.symmetric(vertical: 1.7),
                       child: Text(
                         "mff585855075@gmail.com",
-                        style: p14.bold.grey,
+                        style: p13.bold.grey,
                       ),
                     )
                   ],
@@ -94,7 +94,7 @@ class _ProfileHeader extends StatelessWidget {
           InkWell(
             onTap: () {},
             child: Padding(
-              padding: EdgeInsets.all(8.0),
+              padding: EdgeInsets.all(2.0),
               child: b.Badge(
                 badgeStyle: b.BadgeStyle(
                   borderSide: const BorderSide(color: Colors.white, width: 2),
@@ -108,18 +108,21 @@ class _ProfileHeader extends StatelessWidget {
             ),
           ),
           // SizedBox(width: 1),
-          IconButton(
-            icon: Icon(
-              AppIcons.moreCircle,
-              size: 30,
-              color: context.theme.primaryColor,
+          Padding(
+            padding: EdgeInsets.zero,
+            child: IconButton(
+              icon: Icon(
+                Icons.unfold_more,
+                size: 30,
+                color: context.theme.primaryColor,
+              ),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+              tooltip: 'Open Menu',
             ),
-            onPressed: () {
-
-              Scaffold.of(context).openDrawer();
-            },
-            tooltip: 'Open Menu',
           ),
+
 
         ],
       ),

@@ -1,4 +1,6 @@
 import 'package:black_box/db/local/database_helper.dart';
+import 'package:black_box/model/mess/mess_main.dart';
+import 'package:black_box/model/mess/mess_user.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -12,6 +14,11 @@ class DatabaseManager {
   Future<int> insertUser(User user) async {
     Database db = await DatabaseHelper().database;
     return await db.insert('User', user.toMap());
+  }
+
+  Future<int> insertMessUser(MessUser user) async {
+    Database db = await DatabaseHelper().database;
+    return await db.insert('MUser', user.toMap());
   }
 
   Future<int> updateUser(User user) async {
@@ -46,6 +53,15 @@ class DatabaseManager {
     List<Map<String, dynamic>> maps = await db.query('User', where: 'phone = ?', whereArgs: [id]);
     if (maps.isNotEmpty) {
       return User.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  Future<MessUser?> getMessUserByPhone(String id) async {
+    Database db = await DatabaseHelper().database;
+    List<Map<String, dynamic>> maps = await db.query('MUser', where: 'phone = ?', whereArgs: [id]);
+    if (maps.isNotEmpty) {
+      return MessUser.fromMap(maps.first);
     }
     return null;
   }
@@ -112,6 +128,11 @@ class DatabaseManager {
   Future<int> insertSchool(School school) async {
     Database db = await DatabaseHelper().database;
     return await db.insert('school', school.toMap());
+  }
+
+  Future<int> insertMess(MessMain mess) async {
+    Database db = await DatabaseHelper().database;
+    return await db.insert('mess', mess.toMap());
   }
 
   Future<int> updateSchool(School school) async {
