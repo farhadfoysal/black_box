@@ -173,52 +173,187 @@ class _TutorViewState extends State<TutorView> {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            ElevatedButton(
-              onPressed: () => _addStudent(context),
-              child: Text('Add Student'),
-            ),
-            SizedBox(height: 20),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              itemCount: students.length,
-              itemBuilder: (context, index) {
-                final student = students[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(vertical: 8),
-                  child: ListTile(
-                    title: Text(student.userId),
-                    subtitle: Text('Phone: ${student.phone}'),
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (value) {
-                        if (value == 'edit') {
-                          // Implement edit logic
-                        } else if (value == 'delete') {
-                          setState(() {
-                            students.removeAt(index);
-                          });
-                        }
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Main content that can scroll
+          Positioned.fill(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    SizedBox(height: 10),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: students.length,
+                      itemBuilder: (context, index) {
+                        final student = students[index];
+                        return Card(
+                          margin: EdgeInsets.symmetric(vertical: 8),
+                          child: ListTile(
+                            title: Text(student.userId),
+                            subtitle: Text('Phone: ${student.phone}'),
+                            trailing: PopupMenuButton<String>(
+                              onSelected: (value) {
+                                if (value == 'edit') {
+                                  // Implement edit logic
+                                } else if (value == 'delete') {
+                                  setState(() {
+                                    students.removeAt(index);
+                                  });
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(value: 'edit', child: Text('Edit')),
+                                PopupMenuItem(value: 'delete', child: Text('Delete')),
+                              ],
+                            ),
+                          ),
+                        );
                       },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(value: 'edit', child: Text('Edit')),
-                        PopupMenuItem(value: 'delete', child: Text('Delete')),
-                      ],
                     ),
-                  ),
-                );
-              },
+                  ],
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+
+          // Positioned button at the bottom-right corner
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: ElevatedButton(
+              onPressed: () => _addStudent(context),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white, // Text color
+                backgroundColor: Colors.blue, // Button color
+                padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25), // Rounded edges
+                ),
+                elevation: 5, // Shadow effect
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.person, size: 20),
+                  SizedBox(width: 10),
+                  Text(
+                    "Click to Add Student",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Scaffold(
+  //     body: Stack(
+  //       children: [
+  //         SingleChildScrollView(
+  //           child: Padding(
+  //             padding: const EdgeInsets.all(8.0),
+  //             child: Column(
+  //               children: [
+  //                 // ElevatedButton(
+  //                 //   onPressed: () => _addStudent(context),
+  //                 //   style: ElevatedButton.styleFrom(
+  //                 //     foregroundColor: Colors.white, backgroundColor: Colors.blue, // Text color
+  //                 //     padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+  //                 //     shape: RoundedRectangleBorder(
+  //                 //       borderRadius: BorderRadius.circular(25), // Rounded edges
+  //                 //     ),
+  //                 //     elevation: 5, // Shadow effect
+  //                 //   ),
+  //                 //   child: Row(
+  //                 //     mainAxisSize: MainAxisSize.min,
+  //                 //     children: [
+  //                 //       Icon(Icons.person, size: 20),
+  //                 //       SizedBox(width: 10),
+  //                 //       Text(
+  //                 //         "Click to Add Student",
+  //                 //         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+  //                 //       ),
+  //                 //     ],
+  //                 //   ),
+  //                 // ),
+  //                 SizedBox(height: 10),
+  //                 ListView.builder(
+  //                   shrinkWrap: true,
+  //                   physics: NeverScrollableScrollPhysics(),
+  //                   itemCount: students.length,
+  //                   itemBuilder: (context, index) {
+  //                     final student = students[index];
+  //                     return Card(
+  //                       margin: EdgeInsets.symmetric(vertical: 8),
+  //                       child: ListTile(
+  //                         title: Text(student.userId),
+  //                         subtitle: Text('Phone: ${student.phone}'),
+  //                         trailing: PopupMenuButton<String>(
+  //                           onSelected: (value) {
+  //                             if (value == 'edit') {
+  //                               // Implement edit logic
+  //                             } else if (value == 'delete') {
+  //                               setState(() {
+  //                                 students.removeAt(index);
+  //                               });
+  //                             }
+  //                           },
+  //                           itemBuilder: (context) => [
+  //                             PopupMenuItem(value: 'edit', child: Text('Edit')),
+  //                             PopupMenuItem(value: 'delete', child: Text('Delete')),
+  //                           ],
+  //                         ),
+  //                       ),
+  //                     );
+  //                   },
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //
+  //
+  //         Positioned(
+  //           bottom: 20,
+  //           right: 20,
+  //           child: ElevatedButton(
+  //             onPressed: () => _addStudent(context),
+  //             style: ElevatedButton.styleFrom(
+  //               foregroundColor: Colors.white, // Text color
+  //               backgroundColor: Colors.blue, // Button color
+  //               padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+  //               shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(25), // Rounded edges
+  //               ),
+  //               elevation: 5, // Shadow effect
+  //             ),
+  //             child: Row(
+  //               mainAxisSize: MainAxisSize.min,
+  //               children: [
+  //                 Icon(Icons.person, size: 20),
+  //                 SizedBox(width: 10),
+  //                 Text(
+  //                   "Click to Add Student",
+  //                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //
+  //       ],
+  //     ),
+  //   );
+  // }
 }
