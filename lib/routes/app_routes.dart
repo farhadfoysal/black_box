@@ -4,6 +4,9 @@ import 'package:black_box/modules/menus/schedule_view.dart';
 import 'package:black_box/modules/menus/school_view.dart';
 import 'package:black_box/modules/settings/settings.dart';
 import 'package:black_box/routes/routes.dart';
+import 'package:black_box/screen_page/mess/mess_home_admin.dart';
+import 'package:black_box/screen_page/mess/mess_home_employee.dart';
+import 'package:black_box/screen_page/mess/mess_home_member.dart';
 import 'package:black_box/screen_page/signin/login.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -145,6 +148,51 @@ class AppRoutes {
           transitionDuration: kThemeAnimationDuration,
           reverseTransitionDuration: kThemeAnimationDuration,
           child: Login(),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      name: Routes.messAdmin,
+      path: Routes.messAdmin,
+      pageBuilder: (_, state) {
+        return CustomTransitionPage<void>(
+          key: state.pageKey,
+          transitionDuration: kThemeAnimationDuration,
+          reverseTransitionDuration: kThemeAnimationDuration,
+          child: MessHomeAdmin(),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      name: Routes.messEmployee,
+      path: Routes.messEmployee,
+      pageBuilder: (_, state) {
+        return CustomTransitionPage<void>(
+          key: state.pageKey,
+          transitionDuration: kThemeAnimationDuration,
+          reverseTransitionDuration: kThemeAnimationDuration,
+          child: MessHomeEmployee(),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      name: Routes.messMember,
+      path: Routes.messMember,
+      pageBuilder: (_, state) {
+        return CustomTransitionPage<void>(
+          key: state.pageKey,
+          transitionDuration: kThemeAnimationDuration,
+          reverseTransitionDuration: kThemeAnimationDuration,
+          child: MessHomeMember(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
           },

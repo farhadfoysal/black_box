@@ -3,8 +3,12 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:black_box/db/local/database_manager.dart';
+import 'package:black_box/screen_page/mess/mess_home_admin.dart';
+import 'package:black_box/screen_page/mess/mess_home_employee.dart';
+import 'package:black_box/screen_page/mess/mess_home_member.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -17,6 +21,7 @@ import '../../model/school/school.dart';
 import '../../model/school/teacher.dart';
 import '../../model/user/user.dart';
 import '../../preference/logout.dart';
+import '../../routes/routes.dart';
 import '../../utility/unique.dart';
 
 class MessCreateView extends StatefulWidget {
@@ -67,26 +72,13 @@ class _MessCreateViewState extends State<MessCreateView> {
     if (isLoggedIn) {
       if (isUser != null) {
         if (isUser == "admin") {
-          // Navigator.pushReplacement(
-          //   context,
-          //   MaterialPageRoute(
-          //     builder: (context) => AdminPanel(),
-          //   ),
-          // );
+          context.push(Routes.messAdmin);
         } else if (isUser == "employee") {
-          // Navigator.pushReplacement(
-          //   context,
-          //   MaterialPageRoute(
-          //     builder: (context) => TeacherPanel(),
-          //   ),
-          // );
+          context.push(Routes.messEmployee);
         } else {
-          // Navigator.pushReplacement(
-          //   context,
-          //   MaterialPageRoute(
-          //     builder: (context) => HomeScreen(),
-          //   ),
-          // );
+
+          context.push(Routes.messMember);
+
         }
       }
     } else {
@@ -127,14 +119,9 @@ class _MessCreateViewState extends State<MessCreateView> {
                 setState(() {
                   // loading = false;
                 });
-                getMessData(user);
+                await getMessData(user);
                 // context.goNamed(Routes.homePage);
-                // Navigator.pushReplacement(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => HomeScreen(),
-                //   ),
-                // );
+                context.push(Routes.messMember);
 
 
               }else if(user.userType=="employee"){
@@ -147,13 +134,8 @@ class _MessCreateViewState extends State<MessCreateView> {
                   setState(() {
                     // loading = false;
                   });
-                getMessData(user);
-                  // Navigator.pushReplacement(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) => HomeScreen(),
-                  //   ),
-                  // );
+                await getMessData(user);
+                context.push(Routes.messEmployee);
                   // context.goNamed(Routes.homePage);
 
               }else{
@@ -162,18 +144,13 @@ class _MessCreateViewState extends State<MessCreateView> {
                 await Logout().setMessUserType("admin");
                 await Logout().saveMessUser(user.toMap(), key: "mess_user_logged_in");
                 await Logout().saveMessUserDetails(user, key: "mess_user_data");
-                getMessData(user);
+                await getMessData(user);
 
                   setState(() {
                     // loading = false;
                   });
 
-                  // Navigator.pushReplacement(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) => HomeScreen(),
-                  //   ),
-                  // );
+                context.push(Routes.messAdmin);
                   // context.goNamed(Routes.homePage);
 
               }
@@ -531,7 +508,7 @@ class _MessCreateViewState extends State<MessCreateView> {
         if (mounted) {
           setState(() {});
         }
-        await setUserMessOnline(_user ?? _user_data,newMess);
+        await setUserMessOnline(_user ?? _user_data,newMess,"admin");
         // Navigator.pushReplacement(
         //   context,
         //   MaterialPageRoute(
@@ -555,12 +532,7 @@ class _MessCreateViewState extends State<MessCreateView> {
           setState(() {});
         }
 
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => const AdminLogin(),
-        //   ),
-        // );
+        // context.push(Routes.messAdmin);
 
       } else {
 
@@ -571,7 +543,7 @@ class _MessCreateViewState extends State<MessCreateView> {
     }
   }
 
-  Future<void>  setUserMessOnline(User? user, MessMain newMess)async {
+  Future<void>  setUserMessOnline(User? user, MessMain newMess, String member)async {
     DatabaseReference usersRef = _databaseRef.child("musers");
     DatabaseEvent event = await usersRef.orderByChild("phone").equalTo(user?.phone).once();
     DataSnapshot snapshot = event.snapshot;
@@ -586,7 +558,7 @@ class _MessCreateViewState extends State<MessCreateView> {
       userId: user?.userid,
       phone: user?.phone,
       email: user?.email,
-      userType: "member",
+      userType: member,
       messId: newMess.messId,
       phonePass: phoneId,
     );
@@ -666,8 +638,8 @@ class _MessCreateViewState extends State<MessCreateView> {
   String generateRefer() {
 
     int randomByte = Random().nextInt(256);
-    String referr = randomByte.toRadixString(16).padLeft(2, '0').toUpperCase();
+    String refer = randomByte.toRadixString(16).padLeft(2, '0').toUpperCase();
 
-    return referr;
+    return refer;
   }
 }
