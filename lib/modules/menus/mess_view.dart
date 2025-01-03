@@ -58,11 +58,6 @@ class MessViewState extends State<MessView> with SingleTickerProviderStateMixin 
     // First load user data
     await _loadUserData();
 
-    // loadSchedules();
-    // getSchedules();
-    // _startAutomaticUpdates();
-    // Then load teacher data
-    // _loadTeacherData();
   }
 
   Future<void> _loadUserData() async {

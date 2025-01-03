@@ -1,3 +1,8 @@
+import 'package:black_box/screen_page/mess/home_navigation/bazar_list_page.dart';
+import 'package:black_box/screen_page/mess/home_navigation/meal_counter_page.dart';
+import 'package:black_box/screen_page/mess/home_navigation/mess_fee_page.dart';
+import 'package:black_box/screen_page/mess/home_navigation/payment_list_page.dart';
+import 'package:black_box/screen_page/mess/home_navigation/personal_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
 
@@ -9,6 +14,9 @@ class MessHomeAdmin extends StatefulWidget {
 }
 
 class MessHomeAdminState extends State<MessHomeAdmin> {
+  int index = 0;
+  final PageController _pageController = PageController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,7 +25,7 @@ class MessHomeAdminState extends State<MessHomeAdmin> {
           height: 35, // Specify a height for the Marquee
           child: Marquee(
             text:
-                "Mess Home Admin - Continuous scrolling text example - Farhad Foysal",
+                "MessHome Admin - Developed By - Farhad Foysal",
             style: TextStyle(fontWeight: FontWeight.bold),
             scrollAxis: Axis.horizontal,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,9 +96,61 @@ class MessHomeAdminState extends State<MessHomeAdmin> {
           ],
         ),
       ),
-      body: Center(
-        child: Text("Messhome admin"),
+
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (value) {
+          setState(() {
+            index = value;
+          });
+        },
+        children: [
+          MealCounterPage(),
+          BazarListPage(),
+          PaymentListPage(),
+          MessFeePage(),
+          PersonalDetailsPage(),
+        ],
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: index,
+        onTap: (value) {
+          _pageController.jumpToPage(value);
+          setState(() {
+            index = value;
+          });
+        },
+        backgroundColor: Colors.white,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        selectedItemColor: Colors.indigoAccent,
+        unselectedItemColor: Colors.grey,
+        elevation: 3,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.class_outlined),
+            label: 'BaZar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.payment_outlined),
+            label: 'Payment',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.money_rounded),
+            label: 'Fees',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle),
+            label: 'Profile',
+          ),
+        ],
+      ),
+
+
     );
   }
 }
