@@ -1,3 +1,4 @@
+import 'package:black_box/screen_page/dashboard/home_screen.dart';
 import 'package:black_box/screen_page/signin/login.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -91,7 +92,7 @@ class GetStartState extends State<GetStart>{
                             press.setBool("onboarding", true);
                             press.setString("user_type", "user");
                             if(!mounted)return;
-                            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=> Login()));
+                            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=> HomeScreen()));
                           }, style: const ButtonStyle(
 
 

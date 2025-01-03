@@ -185,7 +185,7 @@ class _TutorViewState extends State<TutorView> {
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   children: [
-                    SizedBox(height: 10),
+                    SizedBox(height: 1),
                     ListView.builder(
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
@@ -231,7 +231,7 @@ class _TutorViewState extends State<TutorView> {
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white, // Text color
                 backgroundColor: Colors.blue, // Button color
-                padding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 10),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(25), // Rounded edges
                 ),
@@ -243,7 +243,7 @@ class _TutorViewState extends State<TutorView> {
                   Icon(Icons.person, size: 20),
                   SizedBox(width: 10),
                   Text(
-                    "Click to Add Student",
+                    "Add Student",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ],
