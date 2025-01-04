@@ -192,28 +192,75 @@ class _TutorViewState extends State<TutorView> {
                       itemCount: students.length,
                       itemBuilder: (context, index) {
                         final student = students[index];
-                        return Card(
-                          margin: EdgeInsets.symmetric(vertical: 8),
-                          child: ListTile(
-                            title: Text(student.userId),
-                            subtitle: Text('Phone: ${student.phone}'),
-                            trailing: PopupMenuButton<String>(
-                              onSelected: (value) {
-                                if (value == 'edit') {
-                                  // Implement edit logic
-                                } else if (value == 'delete') {
-                                  setState(() {
-                                    students.removeAt(index);
-                                  });
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                PopupMenuItem(value: 'edit', child: Text('Edit')),
-                                PopupMenuItem(value: 'delete', child: Text('Delete')),
-                              ],
+                        return GestureDetector(
+                          onTap: () {
+
+                          },
+                          child: Card(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            elevation: 5,
+                            margin: const EdgeInsets.all(10),
+                            color: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    margin: const EdgeInsets.only(right: 14),
+                                    width: 70,
+                                    height: 70,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      image: DecorationImage(
+                                        fit: BoxFit.cover,
+                                        image: NetworkImage(
+                                            "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg"
+                                          // items[index].img.toString(),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          student.userId.toString(),
+                                          style: const TextStyle(color: Colors.black, fontSize: 18),
+                                          maxLines: 2,
+                                        ),
+                                        const SizedBox(height: 10),
+                                        Text(
+                                          student.phone.toString(),
+                                          style: const TextStyle(color: Colors.black, fontSize: 14),
+                                          maxLines: 2,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuButton<String>(
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        // Implement edit logic
+                                      } else if (value == 'delete') {
+                                        setState(() {
+                                          students.remove(student); // Assuming `students` is your list
+                                        });
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                                      const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
+
                         );
+
                       },
                     ),
                   ],

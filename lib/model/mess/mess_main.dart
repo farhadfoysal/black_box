@@ -12,6 +12,7 @@ class MessMain {
   String? _sumOfAllTrx; //
   String? _uPerm; // 0,1 - d: 0
   String? _qr;
+  String? _currentMonth;
 
   MessMain({
     int? id,
@@ -27,6 +28,7 @@ class MessMain {
     String? sumOfAllTrx,
     String? uPerm,
     String? qr,
+    String? currentMonth,
   })  : _id = id,
         _mId = mId,
         _messId = messId,
@@ -39,7 +41,8 @@ class MessMain {
         _startDate = startDate,
         _sumOfAllTrx = sumOfAllTrx,
         _uPerm = uPerm,
-        _qr = qr;
+        _qr = qr,
+        _currentMonth = currentMonth;
 
   // Getters
   int? get id => _id;
@@ -55,6 +58,7 @@ class MessMain {
   String? get sumOfAllTrx => _sumOfAllTrx;
   String? get uPerm => _uPerm;
   String? get qr => _qr;
+  String? get currentMonth => _currentMonth;
 
   // Setters
   set id(int? id) => _id = id;
@@ -70,6 +74,7 @@ class MessMain {
   set sumOfAllTrx(String? sumOfAllTrx) => _sumOfAllTrx = sumOfAllTrx;
   set uPerm(String? uPerm) => _uPerm = uPerm;
   set qr(String? qr) => _qr = qr;
+  set currentMonth(String? currentMonth) => _currentMonth = currentMonth;
 
   Map<String, dynamic> toMap() {
     return {
@@ -86,6 +91,7 @@ class MessMain {
       'sum_of_all_trx': _sumOfAllTrx,
       'u_perm': _uPerm,
       'qr': _qr,
+      'currentMonth': _currentMonth,
     };
   }
 
@@ -104,6 +110,7 @@ class MessMain {
       sumOfAllTrx: map['sum_of_all_trx'] ?? '0',
       uPerm: map['u_perm'] ?? '0',
       qr: map['qr'] ?? '',
+      currentMonth: map['currentMonth'] ?? '',
     );
   }
 
@@ -122,6 +129,7 @@ class MessMain {
       'sum_of_all_trx': _sumOfAllTrx,
       'u_perm': _uPerm,
       'qr': _qr,
+      'currentMonth': _currentMonth,
     };
   }
 
@@ -140,6 +148,7 @@ class MessMain {
       sumOfAllTrx: json['sum_of_all_trx'] ?? '0',
       uPerm: json['u_perm'] ?? '0',
       qr: json['qr'] ?? '',
+      currentMonth: json['currentMonth'] ?? '',
     );
   }
 }

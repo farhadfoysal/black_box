@@ -1,5 +1,5 @@
 import 'package:black_box/modules/menus/home_view.dart';
-import 'package:black_box/modules/menus/profile_app_bar.dart';
+import 'package:black_box/modules/widget/profile_app_bar.dart';
 import 'package:black_box/modules/menus/profile_view.dart';
 import 'package:black_box/modules/menus/schedule_view.dart';
 import 'package:black_box/modules/menus/school_view.dart';
