@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:black_box/screen_page/tutor/tutor_student_month.dart';
+import 'package:black_box/screen_page/tutor/tutor_student_monthly.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:black_box/model/tutor/tutor_week_day.dart';
@@ -962,12 +963,27 @@ class _TutorViewState extends State<TutorView> {
 
 
                                               });
+                                            } else if (value == 'go') {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => TutorStudentMonthly(student: student),
+                                                ),
+                                              );
+                                              setState(() {
+
+
+
+                                              });
                                             }
                                           },
                                           itemBuilder: (context) => [
                                             const PopupMenuItem(
                                                 value: 'profile',
                                                 child: Text('Profile')),
+                                            const PopupMenuItem(
+                                                value: 'go',
+                                                child: Text('Attendance')),
                                             const PopupMenuItem(
                                                 value: 'edit',
                                                 child: Text('Edit')),
@@ -1188,6 +1204,9 @@ class _TutorViewState extends State<TutorView> {
             isLoading = false;
           });
         }
+        setState(() {
+          students.add(student);
+        });
         await setUserTutorStudentOnline(
             _user ?? _user_data, student, "student");
         // Navigator.pushReplacement(
@@ -1213,7 +1232,9 @@ class _TutorViewState extends State<TutorView> {
             isLoading = false;
           });
         }
-
+        setState(() {
+          students.add(student);
+        });
         // context.push(Routes.messAdmin);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1222,7 +1243,7 @@ class _TutorViewState extends State<TutorView> {
       }
     }
 
-    students.add(student);
+
     Future.delayed(Duration(seconds: 3), () {
       setState(() {
         isLoading = false;

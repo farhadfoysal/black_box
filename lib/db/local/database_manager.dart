@@ -1,12 +1,14 @@
 import 'package:black_box/db/local/database_helper.dart';
 import 'package:black_box/model/mess/mess_main.dart';
 import 'package:black_box/model/mess/mess_user.dart';
+import 'package:black_box/model/tutor/tutor_month.dart';
 import 'package:black_box/model/tutor/tutor_student.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../../model/schedule/schedule_item.dart';
 import '../../model/school/school.dart';
+import '../../model/tutor/tutor_date.dart';
 import '../../model/user/admin.dart';
 import '../../model/user/u_data.dart';
 import '../../model/user/user.dart';
@@ -139,6 +141,59 @@ class DatabaseManager {
   Future<int> insertTutorStudent(TutorStudent tutorStudent) async {
     Database db = await DatabaseHelper().database;
     return await db.insert('tutor_student', tutorStudent.toMap());
+  }
+
+  // Insert TutorMonth and associated TutorDates
+  Future<int> insertTutorMonth(TutorMonth tutorMonth) async {
+    Database db = await DatabaseHelper().database;
+
+    // Start a transaction to ensure atomicity
+    return await db.transaction((txn) async {
+      // Insert the TutorMonth into the tutor_month table
+      int monthInsertId = await txn.insert('tutor_month', tutorMonth.toMap());
+
+      // Insert TutorDate records for the inserted TutorMonth
+      for (TutorDate date in tutorMonth.dates!) {
+        // Set the monthId in the TutorDate to the uniqueId of the inserted TutorMonth
+        date.monthId = tutorMonth.uniqueId;
+        await txn.insert('tutor_date', date.toMap());
+      }
+
+      return monthInsertId;
+    });
+  }
+
+  // Method to update TutorMonth dates in SQLite
+  Future<int> updateTutorMonthDates(TutorMonth month) async {
+    Database db = await DatabaseHelper().database;
+
+    // Start a transaction to ensure atomicity
+    return await db.transaction((txn) async {
+      // Update the tutor_month table
+      int monthUpdateCount = await txn.update(
+        'tutor_month',
+        month.toMap(),
+        where: 'unique_id = ?',
+        whereArgs: [month.uniqueId],
+      );
+
+      // If the TutorMonth update is successful, update the TutorDates
+      if (monthUpdateCount > 0) {
+        // Delete the existing dates before updating
+        await txn.delete(
+          'tutor_date',
+          where: 'month_id = ?',
+          whereArgs: [month.uniqueId],
+        );
+
+        // Insert updated TutorDates
+        for (TutorDate date in month.dates!) {
+          await txn.insert('tutor_date', date.toMap());
+        }
+      }
+
+      return monthUpdateCount;
+    });
   }
 
   Future<int> updateSchool(School school) async {

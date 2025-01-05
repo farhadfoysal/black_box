@@ -109,10 +109,32 @@ class TutorMonth {
       paidTk: map['paid_tk'],
       paidBy: map['paid_by'],
       dates: (map['dates'] as List<dynamic>?)
-          ?.map((dateMap) => TutorDate.fromMap(dateMap))
+          ?.map((dateMap) => TutorDate.fromMap(Map<String, dynamic>.from(dateMap)))
           .toList(),
     );
   }
+
+
+  // Convert from Map
+  // static TutorMonth fromMap(Map<String, dynamic> map) {
+  //   return TutorMonth(
+  //     id: map['id'],
+  //     uniqueId: map['unique_id'],
+  //     studentId: map['student_id'],
+  //     userId: map['user_id'],
+  //     month: map['month'],
+  //     startDate: map['start_date'] != null ? DateTime.parse(map['start_date']) : null,
+  //     endDate: map['end_date'] != null ? DateTime.parse(map['end_date']) : null,
+  //     paidDate: map['paid_date'] != null ? DateTime.parse(map['paid_date']) : null,
+  //     paid: map['paid'],
+  //     payTk: map['pay_tk'],
+  //     paidTk: map['paid_tk'],
+  //     paidBy: map['paid_by'],
+  //     dates: (map['dates'] as List<dynamic>?)
+  //         ?.map((dateMap) => TutorDate.fromMap(dateMap))
+  //         .toList(),
+  //   );
+  // }
 
   // Convert to JSON
   Map<String, dynamic> toJson() {
@@ -133,7 +155,6 @@ class TutorMonth {
     };
   }
 
-  // Convert from JSON
   factory TutorMonth.fromJson(Map<String, dynamic> json) {
     return TutorMonth(
       id: json['id'],
@@ -149,8 +170,30 @@ class TutorMonth {
       paidTk: json['paid_tk'],
       paidBy: json['paid_by'],
       dates: (json['dates'] as List<dynamic>?)
-          ?.map((dateJson) => TutorDate.fromJson(dateJson))
+          ?.map((dateJson) => TutorDate.fromJson(Map<String, dynamic>.from(dateJson)))
           .toList(),
     );
   }
+
+
+// Convert from JSON
+  // factory TutorMonth.fromJson(Map<String, dynamic> json) {
+  //   return TutorMonth(
+  //     id: json['id'],
+  //     uniqueId: json['unique_id'],
+  //     studentId: json['student_id'],
+  //     userId: json['user_id'],
+  //     month: json['month'],
+  //     startDate: json['start_date'] != null ? DateTime.parse(json['start_date']) : null,
+  //     endDate: json['end_date'] != null ? DateTime.parse(json['end_date']) : null,
+  //     paidDate: json['paid_date'] != null ? DateTime.parse(json['paid_date']) : null,
+  //     paid: json['paid'],
+  //     payTk: json['pay_tk'],
+  //     paidTk: json['paid_tk'],
+  //     paidBy: json['paid_by'],
+  //     dates: (json['dates'] as List<dynamic>?)
+  //         ?.map((dateJson) => TutorDate.fromJson(dateJson))
+  //         .toList(),
+  //   );
+  // }
 }
