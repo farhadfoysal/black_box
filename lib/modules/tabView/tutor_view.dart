@@ -12,7 +12,7 @@ class _TutorViewState extends State<TutorView> {
 
   void _addStudent(BuildContext context) {
     final TextEditingController uniqueIdController = TextEditingController();
-    final TextEditingController userIdController = TextEditingController();
+    final TextEditingController userNameController = TextEditingController();
     final TextEditingController phoneController = TextEditingController();
     final TextEditingController guardianPhoneController = TextEditingController();
     final TextEditingController phonePassController = TextEditingController();
@@ -31,79 +31,175 @@ class _TutorViewState extends State<TutorView> {
             final TextEditingController timeController = TextEditingController();
             final TextEditingController minutesController = TextEditingController();
             String? selectedDay;
+            bool isAdding = false;
+            String message = '';
 
             showDialog(
               context: context,
-              builder: (context) => AlertDialog(
-                title: Text('Add Week Day'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButtonFormField<String>(
-                      value: selectedDay,
-                      decoration: InputDecoration(labelText: 'Day'),
-                      items: [
-                        'Monday',
-                        'Tuesday',
-                        'Wednesday',
-                        'Thursday',
-                        'Friday',
-                        'Saturday',
-                        'Sunday',
-                      ].map((day) => DropdownMenuItem(value: day, child: Text(day))).toList(),
-                      onChanged: (value) {
-                        setModalState(() {
-                          selectedDay = value;
-                        });
-                      },
+              builder: (context) => StatefulBuilder(
+                builder: (context, setDialogState) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  title: Text(
+                    'Add Week Day',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.pinkAccent,
                     ),
-                    TextField(
-                      controller: timeController,
-                      readOnly: true,
-                      decoration: InputDecoration(labelText: 'Time'),
-                      onTap: () async {
-                        TimeOfDay? selectedTime = await showTimePicker(
-                          context: context,
-                          initialTime: TimeOfDay.now(),
-                        );
-                        if (selectedTime != null) {
-                          setState(() {
-                            timeController.text = selectedTime.format(context);
+                  ),
+                  content: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Message TextField at the top
+                        if (message.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: Text(
+                              message,
+                              style: TextStyle(
+                                color: message.startsWith('Please') ? Colors.red : Colors.green,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        // Dropdown for Day
+                        DropdownButtonFormField<String>(
+                          value: selectedDay,
+                          decoration: InputDecoration(
+                            labelText: 'Day',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          items: [
+                            'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+                            'Friday', 'Saturday', 'Sunday',
+                          ].map((day) => DropdownMenuItem(value: day, child: Text(day))).toList(),
+                          onChanged: (value) {
+                            setDialogState(() {
+                              selectedDay = value;
+                              message = ''; // Clear any previous message
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 15),
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: TextField(
+                                controller: timeController,
+                                readOnly: true,
+                                decoration: InputDecoration(
+                                  labelText: 'Time',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                onTap: () async {
+                                  TimeOfDay? selectedTime = await showTimePicker(
+                                    context: context,
+                                    initialTime: TimeOfDay.now(),
+                                  );
+                                  if (selectedTime != null) {
+                                    setDialogState(() {
+                                      timeController.text = selectedTime.format(context);
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 1,
+                              child: TextField(
+                                controller: minutesController,
+                                decoration: InputDecoration(
+                                  labelText: 'Minutes',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        'Close',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.pinkAccent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      ),
+                      onPressed: isAdding
+                          ? null
+                          : () {
+                        if (selectedDay != null) {
+                          setDialogState(() {
+                            isAdding = true;
+                            message = ''; // Clear previous message
                           });
-                        }
-                      },
-                    ),
-                    TextField(
-                      controller: minutesController,
-                      decoration: InputDecoration(labelText: 'Minutes'),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      if (selectedDay != null) {
-                        setModalState(() {
-                          weekDays.add(TutorWeekDay(
+                          TutorWeekDay day = TutorWeekDay(
                             uniqueId: DateTime.now().toIso8601String(),
                             studentId: uniqueIdController.text,
-                            userId: userIdController.text,
+                            userId: userNameController.text,
                             day: selectedDay!,
                             time: timeController.text,
                             minutes: int.tryParse(minutesController.text) ?? 0,
-                          ));
-                        });
-                        Navigator.pop(context);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Please select a day')),
-                        );
-                      }
-                    },
-                    child: Text('Add'),
-                  ),
-                ],
+                          );
+                          setModalState(() {
+                            weekDays.add(day);  // Add the day to the parent list
+                          });
+                          Future.delayed(Duration(seconds: 2), () {
+                            setDialogState(() {
+                              isAdding = false;
+                              message = 'Week Day added successfully!'; // Success message
+                            });
+                          });
+                          Future.delayed(Duration(seconds: 3), () {
+                            // Navigator.pop(context);
+                          });
+                        } else {
+                          setDialogState(() {
+                            message = 'Please select a day'; // Error message
+                          });
+                        }
+                      },
+                      child: isAdding
+                          ? SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                          : Text(
+                        'Add',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }
@@ -111,61 +207,393 @@ class _TutorViewState extends State<TutorView> {
           return Padding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom,
-              left: 20,
-              right: 20,
+              left: 10,
+              right: 10,
               top: 20,
             ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Add Student', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  TextField(controller: uniqueIdController, decoration: InputDecoration(labelText: 'Unique ID')),
-                  TextField(controller: userIdController, decoration: InputDecoration(labelText: 'User ID')),
-                  TextField(controller: phoneController, decoration: InputDecoration(labelText: 'Phone')),
-                  TextField(controller: guardianPhoneController, decoration: InputDecoration(labelText: 'Guardian Phone')),
-                  TextField(controller: phonePassController, decoration: InputDecoration(labelText: 'Phone Pass')),
-                  TextField(controller: dobController, decoration: InputDecoration(labelText: 'Date of Birth')),
-                  TextField(controller: educationController, decoration: InputDecoration(labelText: 'Education')),
-                  TextField(controller: addressController, decoration: InputDecoration(labelText: 'Address')),
-                  TextField(controller: imgController, decoration: InputDecoration(labelText: 'Image URL')),
-                  SizedBox(height: 10),
-                  ElevatedButton(
-                    onPressed: _addWeekDay,
-                    child: Text('Add Week Day'),
-                  ),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: weekDays.length,
-                    itemBuilder: (context, index) => ListTile(
-                      title: Text('Day: ${weekDays[index].day}'),
-                      subtitle: Text('Time: ${weekDays[index].time}, Minutes: ${weekDays[index].minutes}'),
+            child: Card(
+              color: Colors.white,
+              margin: const EdgeInsets.fromLTRB(8, 8, 8, 30),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              elevation: 5,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      height: 50,
+                      decoration: const BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(10),
+                          topRight: Radius.circular(10),
+                        ),
+                        color: Colors.pinkAccent,
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 12),
+                          const Icon(Icons.face_retouching_natural_outlined, color: Colors.white),
+                          const SizedBox(width: 12),
+                          const Text(
+                            "Add Student",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Spacer(),
+                          IconButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();  // Close the dialog or screen
+                            },
+                            icon: Icon(Icons.close, color: Colors.white),
+                          ),
+                          const SizedBox(width: 12), // Optional, adds a little padding from the edge
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        students.add(TutorStudent(
-                          uniqueId: uniqueIdController.text,
-                          userId: userIdController.text,
-                          phone: phoneController.text,
-                          gaurdianPhone: guardianPhoneController.text,
-                          phonePass: phonePassController.text,
-                          dob: dobController.text,
-                          education: educationController.text,
-                          address: addressController.text,
-                          activeStatus: 1,
-                          admittedDate: DateTime.now(),
-                          img: imgController.text,
-                          days: weekDays,
-                        ));
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: Text('Add Student'),
-                  ),
-                ],
+                
+                    _buildTextField(userNameController, 'Name', Icons.person),
+                    _buildTextField(phoneController, 'Phone', Icons.phone),
+                    _buildTextField(guardianPhoneController, 'Guardian Phone', Icons.phone_in_talk),
+                    _buildTextField(phonePassController, 'Email', Icons.email),
+                    _buildTextField(educationController, 'Education', Icons.school),
+                    _buildTextField(addressController, 'Address', Icons.home),
+                    _buildTextField(imgController, 'Image URL', Icons.image),
+                    SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerRight, // Aligns the button to the right
+                      child: ElevatedButton(
+                        onPressed: _addWeekDay,
+                        style: ElevatedButton.styleFrom(
+                          elevation: 5, // Adds shadow
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30), // Rounded corners
+                          ),
+                          backgroundColor: Colors.pinkAccent, // Button color
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min, // Keeps the button compact
+                          children: [
+                            const Icon(Icons.add, color: Colors.white), // Icon on the left
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Add Day',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                
+                    // ListView.builder(
+                    //   shrinkWrap: true,
+                    //   itemCount: weekDays.length,
+                    //   itemBuilder: (context, index) {
+                    //     return Padding(
+                    //       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 5),
+                    //       child: Card(
+                    //         shape: RoundedRectangleBorder(
+                    //           borderRadius: BorderRadius.circular(12),
+                    //         ),
+                    //         elevation: 4,
+                    //         child: ListTile(
+                    //           contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 5),
+                    //           title: Text(
+                    //             'Day: ${weekDays[index].day}',
+                    //             style: TextStyle(
+                    //               fontWeight: FontWeight.bold,
+                    //               fontSize: 16,
+                    //             ),
+                    //           ),
+                    //           subtitle: Text(
+                    //             'Time: ${weekDays[index].time}, Minutes: ${weekDays[index].minutes}',
+                    //             style: TextStyle(
+                    //               color: Colors.grey[600],
+                    //               fontSize: 14,
+                    //             ),
+                    //           ),
+                    //           trailing: IconButton(
+                    //             onPressed: () {
+                    //               setModalState(() {
+                    //                 weekDays.removeAt(index);
+                    //               });
+                    //
+                    //               ScaffoldMessenger.of(context).showSnackBar(
+                    //                 SnackBar(
+                    //                   content: Text('Item deleted successfully'),
+                    //                   backgroundColor: Colors.redAccent,
+                    //                 ),
+                    //               );
+                    //             },
+                    //             icon: Icon(
+                    //               Icons.delete,
+                    //               color: Colors.redAccent,
+                    //             ),
+                    //           ),
+                    //         ),
+                    //       ),
+                    //     );
+                    //   },
+                    // ),
+
+                    Wrap(
+                      spacing: 8.0, // Horizontal space between items
+                      runSpacing: 6.0, // Vertical space between lines
+                      children: weekDays.map((weekDay) {
+                        return Chip(
+                          label: Row(
+                            children: [
+                              Text(
+                                'Day: ${weekDay.day}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Time: ${weekDay.time}, Minutes: ${weekDay.minutes}',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                          deleteIcon: Icon(
+                            Icons.delete,
+                            color: Colors.redAccent,
+                          ),
+                          onDeleted: () {
+                            setModalState(() {
+                              weekDays.removeAt(weekDays.indexOf(weekDay));
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Item deleted successfully'),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+                          },
+                        );
+                      }).toList(),
+                    ),
+
+                    // GridView.builder(
+                    //   shrinkWrap: true,
+                    //   physics: NeverScrollableScrollPhysics(), // Prevents nested scroll behavior
+                    //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    //     crossAxisCount: 2, // Number of columns in the grid
+                    //     crossAxisSpacing: 8, // Space between columns
+                    //     mainAxisSpacing: 8, // Space between rows
+                    //   ),
+                    //   itemCount: weekDays.length,
+                    //   itemBuilder: (context, index) {
+                    //     return Padding(
+                    //       padding: const EdgeInsets.all(8),
+                    //       child: Card(
+                    //         shape: RoundedRectangleBorder(
+                    //           borderRadius: BorderRadius.circular(12),
+                    //         ),
+                    //         elevation: 4,
+                    //         child: Column(
+                    //           mainAxisAlignment: MainAxisAlignment.center,
+                    //           children: [
+                    //             Text(
+                    //               'Day: ${weekDays[index].day}',
+                    //               style: TextStyle(
+                    //                 fontWeight: FontWeight.bold,
+                    //                 fontSize: 16,
+                    //               ),
+                    //             ),
+                    //             SizedBox(height: 8),
+                    //             Text(
+                    //               'Time: ${weekDays[index].time}, Minutes: ${weekDays[index].minutes}',
+                    //               style: TextStyle(
+                    //                 color: Colors.grey[600],
+                    //                 fontSize: 14,
+                    //               ),
+                    //             ),
+                    //             IconButton(
+                    //               onPressed: () {
+                    //                 setModalState(() {
+                    //                   weekDays.removeAt(index);
+                    //                 });
+                    //                 ScaffoldMessenger.of(context).showSnackBar(
+                    //                   SnackBar(
+                    //                     content: Text('Item deleted successfully'),
+                    //                     backgroundColor: Colors.redAccent,
+                    //                   ),
+                    //                 );
+                    //               },
+                    //               icon: Icon(
+                    //                 Icons.delete,
+                    //                 color: Colors.redAccent,
+                    //               ),
+                    //             ),
+                    //           ],
+                    //         ),
+                    //       ),
+                    //     );
+                    //   },
+                    // ),
+
+
+                    SizedBox(height: 10), // Adds some space between form and button
+                    // Container(
+                    //   alignment: Alignment.center,
+                    //   margin: const EdgeInsets.all(10),
+                    //   child: Material(
+                    //     elevation: 3,
+                    //     borderRadius: BorderRadius.circular(20),
+                    //     child: Container(
+                    //       width: MediaQuery.of(context).size.width,
+                    //       height: 50,
+                    //       decoration: BoxDecoration(
+                    //         borderRadius: BorderRadius.circular(20),
+                    //         color: Colors.white,
+                    //       ),
+                    //       child: Material(
+                    //         borderRadius: BorderRadius.circular(20),
+                    //         color: Colors.pinkAccent,
+                    //         child: InkWell(
+                    //           splashColor: Colors.pink,
+                    //           borderRadius: BorderRadius.circular(20),
+                    //           onTap: () {
+                    //             setState(() {
+                    //               students.add(TutorStudent(
+                    //                 uniqueId: uniqueIdController.text,
+                    //                 userId: userNameController.text,
+                    //                 phone: phoneController.text,
+                    //                 gaurdianPhone: guardianPhoneController.text,
+                    //                 phonePass: phonePassController.text,
+                    //                 dob: dobController.text,
+                    //                 education: educationController.text,
+                    //                 address: addressController.text,
+                    //                 activeStatus: 1,
+                    //                 admittedDate: DateTime.now(),
+                    //                 img: imgController.text,
+                    //                 days: weekDays,
+                    //               ));
+                    //             });
+                    //             Navigator.pop(context);
+                    //             ScaffoldMessenger.of(context).showSnackBar(
+                    //               const SnackBar(
+                    //                 content: Row(
+                    //                   children: [
+                    //                     Icon(
+                    //                       Icons.info_outline,
+                    //                       color: Colors.white,
+                    //                     ),
+                    //                     SizedBox(width: 10),
+                    //                     Text(
+                    //                       "Ups, foto dan inputan tidak boleh kosong!",
+                    //                       style: TextStyle(color: Colors.white),
+                    //                     ),
+                    //                   ],
+                    //                 ),
+                    //                 backgroundColor: Colors.redAccent,
+                    //                 shape: StadiumBorder(),
+                    //                 behavior: SnackBarBehavior.floating,
+                    //               ),
+                    //             );
+                    //           },
+                    //           child: const Center(
+                    //             child: Text(
+                    //               " Save Student",
+                    //               style: TextStyle(
+                    //                 color: Colors.white,
+                    //                 fontWeight: FontWeight.bold,
+                    //               ),
+                    //             ),
+                    //           ),
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
+                    Container(
+                      alignment: Alignment.center,
+                      margin: const EdgeInsets.all(10),
+                      child: Material(
+                        elevation: 3,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: Colors.white,
+                          ),
+                          child: Material(
+                            borderRadius: BorderRadius.circular(20),
+                            color: Colors.pinkAccent,
+                            child: InkWell(
+                              splashColor: Colors.pink,
+                              borderRadius: BorderRadius.circular(20),
+                              onTap: () {
+                                setState(() {
+                                  students.add(TutorStudent(
+                                    uniqueId: uniqueIdController.text,
+                                    userId: userNameController.text,
+                                    phone: phoneController.text,
+                                    gaurdianPhone: guardianPhoneController.text,
+                                    phonePass: phonePassController.text,
+                                    dob: dobController.text,
+                                    education: educationController.text,
+                                    address: addressController.text,
+                                    activeStatus: 1,
+                                    admittedDate: DateTime.now(),
+                                    img: imgController.text,
+                                    days: weekDays,
+                                  ));
+                                });
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.info_outline,
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(width: 10),
+                                        Text(
+                                          "Ups, foto dan inputan tidak boleh kosong!",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                    backgroundColor: Colors.redAccent,
+                                    shape: StadiumBorder(),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              },
+                              child: const Center(
+                                child: Text(
+                                  " Save Student",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -298,6 +726,31 @@ class _TutorViewState extends State<TutorView> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(TextEditingController controller, String labelText, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: labelText,
+          labelStyle: TextStyle(color: Colors.pinkAccent),
+          prefixIcon: Icon(icon, color: Colors.pinkAccent),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide(color: Colors.pinkAccent),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide(color: Colors.pinkAccent, width: 2),
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+        ),
       ),
     );
   }
