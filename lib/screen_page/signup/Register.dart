@@ -5,11 +5,13 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../db/local/database_helper.dart';
 import '../../preference/logout.dart';
+import '../../routes/routes.dart';
 import '../../style/color/app_color.dart';
 import '../../utility/app_constant.dart';
 import '../../utility/unique.dart';
@@ -110,12 +112,14 @@ StreamSubscription<InternetConnectionStatus> checkConnectionContinuously() {
 
     if (isLoggedIn) {
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HomeScreen(),
-        ),
-      );
+      context.goNamed(Routes.homePage);
+
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => HomeScreen(),
+      //   ),
+      // );
     } else {
       // User is not logged in, stay on the sign-in screen
     }

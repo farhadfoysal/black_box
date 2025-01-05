@@ -3,6 +3,7 @@ class Routes {
   static const String start = '/';
   static const String logout = '/login-logout';
   static const String login = '/login';
+  static const String register = '/register';
   static const String homePage = '/home';
   static const String schedulePage = '/schedule';
   static const String schoolPage = '/school';

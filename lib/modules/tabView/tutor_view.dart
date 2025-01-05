@@ -1,6 +1,24 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
+
+import 'package:black_box/screen_page/tutor/tutor_student_month.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:black_box/model/tutor/tutor_week_day.dart';
 import 'package:black_box/model/tutor/tutor_student.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../db/local/database_manager.dart';
+import '../../model/school/school.dart';
+import '../../model/school/teacher.dart';
+import '../../model/user/user.dart';
+import '../../preference/logout.dart';
+import '../../routes/app_router.dart';
+import '../../screen_page/tutor/tutor_student_profile.dart';
+import '../../utility/unique.dart';
 
 class TutorView extends StatefulWidget {
   @override
@@ -8,13 +26,227 @@ class TutorView extends StatefulWidget {
 }
 
 class _TutorViewState extends State<TutorView> {
-  final List<TutorStudent> students = [];
+  List<TutorStudent> students = [];
+
+  String _userName = 'Farhad Foysal';
+  String? userName;
+  String? userPhone;
+  String? userEmail;
+  User? _user, _user_data;
+  String? sid;
+  School? school;
+  Teacher? teacher;
+  File? _selectedImage;
+  bool _showSaveButton = false;
+
+  int _currentIndex1 = 0;
+  int _currentIndex2 = 0;
+  bool isLoading = false;
+
+  final _databaseRef = FirebaseDatabase.instance.ref();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+    setState(() {
+      isLoading = true;
+    });
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    // First load user data
+    await _loadUserData();
+
+    _loadTutorStudentsData();
+  }
+
+  Future<void> _loadTutorStudentsData() async {
+    if (await InternetConnectionChecker.instance.hasConnection) {
+      setState(() {
+        isLoading = true;
+      });
+
+      DatabaseReference teachersRef = _databaseRef.child('tutor_student');
+
+      Query query = teachersRef.orderByChild('user_id').equalTo(_user?.userid);
+
+      query.once().then((DatabaseEvent event) {
+        final dataSnapshot = event.snapshot;
+
+        if (dataSnapshot.exists) {
+          final Map<dynamic, dynamic> studentsData =
+              dataSnapshot.value as Map<dynamic, dynamic>;
+
+          setState(() {
+            students.clear();
+
+            students = studentsData.entries.map((entry) {
+              // Convert each entry's value to Map<String, dynamic>
+              final studentMap = Map<String, dynamic>.from(entry.value as Map);
+
+              return TutorStudent.fromJson(studentMap);
+            }).toList();
+
+            // Convert the students data into a list of TutorStudent objects
+            // students = studentsData.entries.map((entry) {
+            //   Map<String, dynamic> studentMap = {
+            //     'id': entry.value['id'] ?? null,
+            //     'unique_id': entry.value['unique_id'] ?? null,
+            //     'user_id': entry.value['user_id'] ?? null,
+            //     'name': entry.value['name'] ?? null,
+            //     'phone': entry.value['phone'] ?? null,
+            //     'gaurdian_phone': entry.value['gaurdian_phone'] ?? null,
+            //     'phone_pass': entry.value['phone_pass'] ?? null,
+            //     'dob': entry.value['dob'] ?? null,
+            //     'education': entry.value['education'] ?? null,
+            //     'address': entry.value['address'] ?? null,
+            //     'active_status': entry.value['active_status'] ?? null,
+            //     'admitted_date': entry.value['admitted_date'] ?? null,
+            //     'img': entry.value['img'] ?? null,
+            //     'days': entry.value['days'] != null
+            //         ? (entry.value['days'] as List)
+            //         .map((day) => TutorWeekDay.fromJson(day))
+            //         .toList()
+            //         : null,
+            //   };
+            //   return TutorStudent.fromJson(studentMap);
+            // }).toList();
+
+            isLoading = false;
+          });
+        } else {
+          print(_user?.userid);
+          print('No Student data available for the current User.');
+          setState(() {
+            isLoading = false;
+          });
+        }
+      }).catchError((error) {
+        print('Failed to load Student data: $error');
+        setState(() {
+          isLoading = false;
+        });
+      });
+    } else {
+      showSnackBarMsg(context,
+          "You are in Offline mode now, Please, connect to the Internet!");
+      setState(() {
+        // teachers = data.map((json) => Teacher.fromJson(json)).toList();
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadUserData() async {
+    Logout logout = Logout();
+    User? user = await logout.getUserDetails(key: 'user_data');
+
+    Map<String, dynamic>? userMap = await logout.getUser(key: 'user_logged_in');
+    Map<String, dynamic>? schoolMap =
+        await logout.getSchool(key: 'school_data');
+
+    if (userMap != null) {
+      User user_data = User.fromMap(userMap);
+      setState(() {
+        _user_data = user_data;
+        _user = user_data;
+      });
+    } else {
+      print("User map is null");
+    }
+
+    if (schoolMap != null) {
+      School schoolData = School.fromMap(schoolMap);
+      setState(() {
+        _user = user;
+        school = schoolData;
+        sid = school?.sId;
+        print(schoolData.sId);
+      });
+    } else {
+      print("School data is null");
+    }
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userDataString = prefs.getString('user_logged_in');
+    String? imagePath = prefs.getString('profile_picture-${_user?.uniqueid!}');
+
+    if (userDataString != null) {
+      Map<String, dynamic> userData = jsonDecode(userDataString);
+      setState(() {
+        userName = userData['uname'];
+        userPhone = userData['phone'];
+        userEmail = userData['email'];
+        if (imagePath != null) {
+          _selectedImage = File(imagePath);
+        }
+      });
+    }
+  }
+
+  Future<void> _loadUserName() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedUserData = prefs.getString('user_logged_in');
+
+    if (savedUserData != null) {
+      Map<String, dynamic> userData = jsonDecode(savedUserData);
+      setState(() {
+        _userName = userData['uname'] ?? 'Tasnim';
+      });
+    }
+  }
+
+  Future<void> _loadUser() async {
+    Logout logout = Logout();
+    User? user = await logout.getUserDetails(key: 'user_data');
+    Map<String, dynamic>? userMap = await logout.getUser(key: 'user_logged_in');
+    User user_data = User.fromMap(userMap!);
+    setState(() {
+      _user = user;
+      _user_data = user_data;
+    });
+  }
+
+  void showSnackBarMsg(BuildContext context, String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 2),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  void _onSwipe1(int index) {
+    setState(() {
+      _currentIndex1 = index;
+    });
+  }
+
+  void _onSwipe2(int index) {
+    setState(() {
+      _currentIndex2 = index;
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  Future<void> signOut() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Successfully signed out')),
+    );
+    await AppRouter.logoutUser(context);
+  }
 
   void _addStudent(BuildContext context) {
     final TextEditingController uniqueIdController = TextEditingController();
     final TextEditingController userNameController = TextEditingController();
     final TextEditingController phoneController = TextEditingController();
-    final TextEditingController guardianPhoneController = TextEditingController();
+    final TextEditingController guardianPhoneController =
+        TextEditingController();
     final TextEditingController phonePassController = TextEditingController();
     final TextEditingController dobController = TextEditingController();
     final TextEditingController educationController = TextEditingController();
@@ -28,8 +260,10 @@ class _TutorViewState extends State<TutorView> {
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           void _addWeekDay() {
-            final TextEditingController timeController = TextEditingController();
-            final TextEditingController minutesController = TextEditingController();
+            final TextEditingController timeController =
+                TextEditingController();
+            final TextEditingController minutesController =
+                TextEditingController();
             String? selectedDay;
             bool isAdding = false;
             String message = '';
@@ -60,7 +294,9 @@ class _TutorViewState extends State<TutorView> {
                             child: Text(
                               message,
                               style: TextStyle(
-                                color: message.startsWith('Please') ? Colors.red : Colors.green,
+                                color: message.startsWith('Please')
+                                    ? Colors.red
+                                    : Colors.green,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -76,9 +312,17 @@ class _TutorViewState extends State<TutorView> {
                             ),
                           ),
                           items: [
-                            'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-                            'Friday', 'Saturday', 'Sunday',
-                          ].map((day) => DropdownMenuItem(value: day, child: Text(day))).toList(),
+                            'Monday',
+                            'Tuesday',
+                            'Wednesday',
+                            'Thursday',
+                            'Friday',
+                            'Saturday',
+                            'Sunday',
+                          ]
+                              .map((day) => DropdownMenuItem(
+                                  value: day, child: Text(day)))
+                              .toList(),
                           onChanged: (value) {
                             setDialogState(() {
                               selectedDay = value;
@@ -101,13 +345,15 @@ class _TutorViewState extends State<TutorView> {
                                   ),
                                 ),
                                 onTap: () async {
-                                  TimeOfDay? selectedTime = await showTimePicker(
+                                  TimeOfDay? selectedTime =
+                                      await showTimePicker(
                                     context: context,
                                     initialTime: TimeOfDay.now(),
                                   );
                                   if (selectedTime != null) {
                                     setDialogState(() {
-                                      timeController.text = selectedTime.format(context);
+                                      timeController.text =
+                                          selectedTime.format(context);
                                     });
                                   }
                                 },
@@ -148,55 +394,60 @@ class _TutorViewState extends State<TutorView> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
                       ),
                       onPressed: isAdding
                           ? null
                           : () {
-                        if (selectedDay != null) {
-                          setDialogState(() {
-                            isAdding = true;
-                            message = ''; // Clear previous message
-                          });
-                          TutorWeekDay day = TutorWeekDay(
-                            uniqueId: DateTime.now().toIso8601String(),
-                            studentId: uniqueIdController.text,
-                            userId: userNameController.text,
-                            day: selectedDay!,
-                            time: timeController.text,
-                            minutes: int.tryParse(minutesController.text) ?? 0,
-                          );
-                          setModalState(() {
-                            weekDays.add(day);  // Add the day to the parent list
-                          });
-                          Future.delayed(Duration(seconds: 2), () {
-                            setDialogState(() {
-                              isAdding = false;
-                              message = 'Week Day added successfully!'; // Success message
-                            });
-                          });
-                          Future.delayed(Duration(seconds: 3), () {
-                            // Navigator.pop(context);
-                          });
-                        } else {
-                          setDialogState(() {
-                            message = 'Please select a day'; // Error message
-                          });
-                        }
-                      },
+                              if (selectedDay != null) {
+                                setDialogState(() {
+                                  isAdding = true;
+                                  message = ''; // Clear previous message
+                                });
+                                TutorWeekDay day = TutorWeekDay(
+                                  uniqueId: DateTime.now().toIso8601String(),
+                                  studentId: uniqueIdController.text,
+                                  userId: userNameController.text,
+                                  day: selectedDay!,
+                                  time: timeController.text,
+                                  minutes:
+                                      int.tryParse(minutesController.text) ?? 0,
+                                );
+                                setModalState(() {
+                                  weekDays.add(
+                                      day); // Add the day to the parent list
+                                });
+                                Future.delayed(Duration(seconds: 2), () {
+                                  setDialogState(() {
+                                    isAdding = false;
+                                    message =
+                                        'Week Day added successfully!'; // Success message
+                                  });
+                                });
+                                Future.delayed(Duration(seconds: 3), () {
+                                  // Navigator.pop(context);
+                                });
+                              } else {
+                                setDialogState(() {
+                                  message =
+                                      'Please select a day'; // Error message
+                                });
+                              }
+                            },
                       child: isAdding
                           ? SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
                           : Text(
-                        'Add',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                              'Add',
+                              style: TextStyle(color: Colors.white),
+                            ),
                     ),
                   ],
                 ),
@@ -234,7 +485,8 @@ class _TutorViewState extends State<TutorView> {
                       child: Row(
                         children: [
                           const SizedBox(width: 12),
-                          const Icon(Icons.face_retouching_natural_outlined, color: Colors.white),
+                          const Icon(Icons.face_retouching_natural_outlined,
+                              color: Colors.white),
                           const SizedBox(width: 12),
                           const Text(
                             "Add Student",
@@ -247,39 +499,49 @@ class _TutorViewState extends State<TutorView> {
                           Spacer(),
                           IconButton(
                             onPressed: () {
-                              Navigator.of(context).pop();  // Close the dialog or screen
+                              Navigator.of(context)
+                                  .pop(); // Close the dialog or screen
                             },
                             icon: Icon(Icons.close, color: Colors.white),
                           ),
-                          const SizedBox(width: 12), // Optional, adds a little padding from the edge
+                          const SizedBox(
+                              width:
+                                  12), // Optional, adds a little padding from the edge
                         ],
                       ),
                     ),
-                
+
                     _buildTextField(userNameController, 'Name', Icons.person),
                     _buildTextField(phoneController, 'Phone', Icons.phone),
-                    _buildTextField(guardianPhoneController, 'Guardian Phone', Icons.phone_in_talk),
+                    _buildTextField(guardianPhoneController, 'Guardian Phone',
+                        Icons.phone_in_talk),
                     _buildTextField(phonePassController, 'Email', Icons.email),
-                    _buildTextField(educationController, 'Education', Icons.school),
+                    _buildTextField(
+                        educationController, 'Education', Icons.school),
                     _buildTextField(addressController, 'Address', Icons.home),
                     _buildTextField(imgController, 'Image URL', Icons.image),
                     SizedBox(height: 10),
                     Align(
-                      alignment: Alignment.centerRight, // Aligns the button to the right
+                      alignment: Alignment
+                          .centerRight, // Aligns the button to the right
                       child: ElevatedButton(
                         onPressed: _addWeekDay,
                         style: ElevatedButton.styleFrom(
                           elevation: 5, // Adds shadow
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 15),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30), // Rounded corners
+                            borderRadius:
+                                BorderRadius.circular(30), // Rounded corners
                           ),
                           backgroundColor: Colors.pinkAccent, // Button color
                         ),
                         child: Row(
-                          mainAxisSize: MainAxisSize.min, // Keeps the button compact
+                          mainAxisSize:
+                              MainAxisSize.min, // Keeps the button compact
                           children: [
-                            const Icon(Icons.add, color: Colors.white), // Icon on the left
+                            const Icon(Icons.add,
+                                color: Colors.white), // Icon on the left
                             const SizedBox(width: 8),
                             const Text(
                               'Add Day',
@@ -293,7 +555,7 @@ class _TutorViewState extends State<TutorView> {
                         ),
                       ),
                     ),
-                
+
                     // ListView.builder(
                     //   shrinkWrap: true,
                     //   itemCount: weekDays.length,
@@ -446,8 +708,8 @@ class _TutorViewState extends State<TutorView> {
                     //   },
                     // ),
 
-
-                    SizedBox(height: 10), // Adds some space between form and button
+                    SizedBox(
+                        height: 10), // Adds some space between form and button
                     // Container(
                     //   alignment: Alignment.center,
                     //   margin: const EdgeInsets.all(10),
@@ -539,53 +801,46 @@ class _TutorViewState extends State<TutorView> {
                             child: InkWell(
                               splashColor: Colors.pink,
                               borderRadius: BorderRadius.circular(20),
-                              onTap: () {
-                                setState(() {
-                                  students.add(TutorStudent(
-                                    uniqueId: uniqueIdController.text,
-                                    userId: userNameController.text,
-                                    phone: phoneController.text,
-                                    gaurdianPhone: guardianPhoneController.text,
-                                    phonePass: phonePassController.text,
-                                    dob: dobController.text,
-                                    education: educationController.text,
-                                    address: addressController.text,
-                                    activeStatus: 1,
-                                    admittedDate: DateTime.now(),
-                                    img: imgController.text,
-                                    days: weekDays,
-                                  ));
-                                });
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.info_outline,
+                              onTap: isLoading
+                                  ? null
+                                  : () {
+                                      setModalState(() {});
+                                      setState(() {
+                                        isLoading = true;
+
+                                        TutorStudent student = TutorStudent(
+                                          name: userNameController.text,
+                                          phone: phoneController.text,
+                                          gaurdianPhone:
+                                              guardianPhoneController.text,
+                                          phonePass: phonePassController.text,
+                                          education: educationController.text,
+                                          address: addressController.text,
+                                          activeStatus: 1,
+                                          admittedDate: DateTime.now(),
+                                          img: imgController.text,
+                                          days: weekDays,
+                                        );
+                                        saveStudent(student);
+                                      });
+                                    },
+                              child: Center(
+                                child: isLoading
+                                    ? SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
                                           color: Colors.white,
+                                          strokeWidth: 2,
                                         ),
-                                        SizedBox(width: 10),
-                                        Text(
-                                          "Ups, foto dan inputan tidak boleh kosong!",
-                                          style: TextStyle(color: Colors.white),
+                                      )
+                                    : Text(
+                                        " Save Student",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
                                         ),
-                                      ],
-                                    ),
-                                    backgroundColor: Colors.redAccent,
-                                    shape: StadiumBorder(),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              },
-                              child: const Center(
-                                child: Text(
-                                  " Save Student",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                      ),
                               ),
                             ),
                           ),
@@ -601,6 +856,7 @@ class _TutorViewState extends State<TutorView> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -608,93 +864,129 @@ class _TutorViewState extends State<TutorView> {
         children: [
           // Main content that can scroll
           Positioned.fill(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    SizedBox(height: 1),
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: students.length,
-                      itemBuilder: (context, index) {
-                        final student = students[index];
-                        return GestureDetector(
-                          onTap: () {
-
-                          },
-                          child: Card(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            elevation: 5,
-                            margin: const EdgeInsets.all(10),
-                            color: Colors.white,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    margin: const EdgeInsets.only(right: 14),
-                                    width: 70,
-                                    height: 70,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      image: DecorationImage(
-                                        fit: BoxFit.cover,
-                                        image: NetworkImage(
-                                            "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg"
-                                          // items[index].img.toString(),
-                                        ),
-                                      ),
+            child: isLoading
+                ? const Center(
+                    child:
+                        CircularProgressIndicator(), // Show loading indicator
+                  )
+                : SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          SizedBox(height: 1),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: students.length,
+                            itemBuilder: (context, index) {
+                              final student = students[index];
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => TutorStudentMonth(student: student),
                                     ),
-                                  ),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                  );
+                                },
+                                child: Card(
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10)),
+                                  elevation: 5,
+                                  margin: const EdgeInsets.all(10),
+                                  color: Colors.white,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: Row(
                                       children: [
-                                        Text(
-                                          student.userId.toString(),
-                                          style: const TextStyle(color: Colors.black, fontSize: 18),
-                                          maxLines: 2,
+                                        Container(
+                                          margin:
+                                              const EdgeInsets.only(right: 14),
+                                          width: 70,
+                                          height: 70,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            image: DecorationImage(
+                                              fit: BoxFit.cover,
+                                              image: NetworkImage(
+                                                  "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg"
+                                                  // items[index].img.toString(),
+                                                  ),
+                                            ),
+                                          ),
                                         ),
-                                        const SizedBox(height: 10),
-                                        Text(
-                                          student.phone.toString(),
-                                          style: const TextStyle(color: Colors.black, fontSize: 14),
-                                          maxLines: 2,
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                student.name.toString(),
+                                                style: const TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize: 18),
+                                                maxLines: 2,
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Text(
+                                                student.phone.toString(),
+                                                style: const TextStyle(
+                                                    color: Colors.black,
+                                                    fontSize: 14),
+                                                maxLines: 2,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuButton<String>(
+                                          onSelected: (value) {
+                                            if (value == 'edit') {
+                                              // Implement edit logic
+                                            } else if (value == 'delete') {
+                                              setState(() {
+                                                students.remove(
+                                                    student); // Assuming `students` is your list
+                                              });
+                                            } else if (value == 'profile') {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => TutorStudentProfile(student: student),
+                                                ),
+                                              );
+                                              setState(() {
+
+
+
+                                              });
+                                            }
+                                          },
+                                          itemBuilder: (context) => [
+                                            const PopupMenuItem(
+                                                value: 'profile',
+                                                child: Text('Profile')),
+                                            const PopupMenuItem(
+                                                value: 'edit',
+                                                child: Text('Edit')),
+                                            const PopupMenuItem(
+                                                value: 'delete',
+                                                child: Text('Delete')),
+                                          ],
                                         ),
                                       ],
                                     ),
                                   ),
-                                  PopupMenuButton<String>(
-                                    onSelected: (value) {
-                                      if (value == 'edit') {
-                                        // Implement edit logic
-                                      } else if (value == 'delete') {
-                                        setState(() {
-                                          students.remove(student); // Assuming `students` is your list
-                                        });
-                                      }
-                                    },
-                                    itemBuilder: (context) => [
-                                      const PopupMenuItem(value: 'edit', child: Text('Edit')),
-                                      const PopupMenuItem(value: 'delete', child: Text('Delete')),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
+                                ),
+                              );
+                            },
                           ),
-
-                        );
-
-                      },
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-              ),
-            ),
+                  ),
           ),
 
           // Positioned button at the bottom-right corner
@@ -717,10 +1009,20 @@ class _TutorViewState extends State<TutorView> {
                 children: [
                   Icon(Icons.person, size: 20),
                   SizedBox(width: 10),
-                  Text(
-                    "Add Student",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
+                  isLoading
+                      ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          "Add Student",
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                 ],
               ),
             ),
@@ -730,7 +1032,8 @@ class _TutorViewState extends State<TutorView> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String labelText, IconData icon) {
+  Widget _buildTextField(
+      TextEditingController controller, String labelText, IconData icon) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: TextField(
@@ -856,4 +1159,97 @@ class _TutorViewState extends State<TutorView> {
   //     ),
   //   );
   // }
+
+  Future<void> saveStudent(TutorStudent student) async {
+    var uuid = Uuid();
+    String uniqueId = Unique().generateUniqueID();
+    int ranId =
+        Random().nextInt(1000000000) + DateTime.now().millisecondsSinceEpoch;
+    String referr = utf8.decode([Random().nextInt(256)]).toUpperCase();
+    String numberr = '$ranId$referr';
+
+    student.uniqueId = uniqueId;
+    student.userId = _user?.userid;
+
+    if (await InternetConnectionChecker.instance.hasConnection) {
+      final DatabaseReference dbRef = FirebaseDatabase.instance
+          .ref("tutor_student")
+          .child(student.uniqueId!);
+
+      try {
+        await dbRef.set(student.toMap());
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Student saved successfully!')),
+        );
+
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+        }
+        await setUserTutorStudentOnline(
+            _user ?? _user_data, student, "student");
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (context) => const AdminLogin(),
+        //   ),
+        // );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save Student: $e')),
+        );
+      }
+    } else {
+      final result = await DatabaseManager().insertTutorStudent(student);
+      if (result > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Student saved successfully!')),
+        );
+
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+        }
+
+        // context.push(Routes.messAdmin);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save Student')),
+        );
+      }
+    }
+
+    students.add(student);
+    Future.delayed(Duration(seconds: 3), () {
+      setState(() {
+        isLoading = false;
+      });
+      Navigator.pop(context);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              Icons.info_outline,
+              color: Colors.white,
+            ),
+            SizedBox(width: 10),
+            Text(
+              "Ups, Successfully Saved!",
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.redAccent,
+        shape: StadiumBorder(),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  setUserTutorStudentOnline(User? user, TutorStudent student, String s) {}
 }

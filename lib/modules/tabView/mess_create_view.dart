@@ -171,6 +171,7 @@ class _MessCreateViewState extends State<MessCreateView> {
     await _loadUserData();
     await _loadMessUserData();
 
+
   }
 
   Future<void> _loadUserData() async {
@@ -396,7 +397,7 @@ class _MessCreateViewState extends State<MessCreateView> {
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () {
-                    // Join Mess logic
+                    joinMess();
                   },
                   child: Text("Join Mess"),
                 ),
@@ -537,7 +538,7 @@ class _MessCreateViewState extends State<MessCreateView> {
       } else {
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save school')),
+          SnackBar(content: Text('Failed to save Mess')),
         );
       }
     }
@@ -634,6 +635,9 @@ class _MessCreateViewState extends State<MessCreateView> {
     }
   }
 
+  void joinMess(){
+    String mess = messCode.text.toString();
+  }
 
   String generateRefer() {
 

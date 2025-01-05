@@ -8,6 +8,7 @@ import 'package:black_box/screen_page/mess/mess_home_admin.dart';
 import 'package:black_box/screen_page/mess/mess_home_employee.dart';
 import 'package:black_box/screen_page/mess/mess_home_member.dart';
 import 'package:black_box/screen_page/signin/login.dart';
+import 'package:black_box/screen_page/signup/Register.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -148,6 +149,21 @@ class AppRoutes {
           transitionDuration: kThemeAnimationDuration,
           reverseTransitionDuration: kThemeAnimationDuration,
           child: Login(),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      name: Routes.register,
+      path: Routes.register,
+      pageBuilder: (_, state) {
+        return CustomTransitionPage<void>(
+          key: state.pageKey,
+          transitionDuration: kThemeAnimationDuration,
+          reverseTransitionDuration: kThemeAnimationDuration,
+          child: Register(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
           },

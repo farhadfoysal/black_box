@@ -1,6 +1,7 @@
 import 'package:black_box/db/local/database_helper.dart';
 import 'package:black_box/model/mess/mess_main.dart';
 import 'package:black_box/model/mess/mess_user.dart';
+import 'package:black_box/model/tutor/tutor_student.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -133,6 +134,11 @@ class DatabaseManager {
   Future<int> insertMess(MessMain mess) async {
     Database db = await DatabaseHelper().database;
     return await db.insert('mess', mess.toMap());
+  }
+
+  Future<int> insertTutorStudent(TutorStudent tutorStudent) async {
+    Database db = await DatabaseHelper().database;
+    return await db.insert('tutor_student', tutorStudent.toMap());
   }
 
   Future<int> updateSchool(School school) async {

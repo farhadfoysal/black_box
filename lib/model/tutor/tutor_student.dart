@@ -100,6 +100,25 @@ class TutorStudent {
   }
 
   // Convert from Map
+  // static TutorStudent fromMap(Map<String, dynamic> map) {
+  //   return TutorStudent(
+  //     id: map['id'],
+  //     uniqueId: map['unique_id'],
+  //     userId: map['user_id'],
+  //     name: map['name'],
+  //     phone: map['phone'],
+  //     gaurdianPhone: map['gaurdian_phone'],
+  //     phonePass: map['phone_pass'],
+  //     dob: map['dob'],
+  //     education: map['education'],
+  //     address: map['address'],
+  //     activeStatus: map['active_status'],
+  //     admittedDate: map['admitted_date'] != null ? DateTime.parse(map['admitted_date']) : null,
+  //     img: map['img'],
+  //     days: (map['days'] as List?)?.map((day) => TutorWeekDay.fromMap(day)).toList(),
+  //   );
+  // }
+
   static TutorStudent fromMap(Map<String, dynamic> map) {
     return TutorStudent(
       id: map['id'],
@@ -115,9 +134,12 @@ class TutorStudent {
       activeStatus: map['active_status'],
       admittedDate: map['admitted_date'] != null ? DateTime.parse(map['admitted_date']) : null,
       img: map['img'],
-      days: (map['days'] as List?)?.map((day) => TutorWeekDay.fromMap(day)).toList(),
+      days: (map['days'] as List<dynamic>?)
+          ?.map((day) => TutorWeekDay.fromMap(Map<String, dynamic>.from(day)))
+          .toList(),
     );
   }
+
 
   // Convert to JSON
   Map<String, dynamic> toJson() {
@@ -140,6 +162,25 @@ class TutorStudent {
   }
 
   // Convert from JSON
+  // factory TutorStudent.fromJson(Map<String, dynamic> json) {
+  //   return TutorStudent(
+  //     id: json['id'],
+  //     uniqueId: json['unique_id'],
+  //     userId: json['user_id'],
+  //     name: json['name'],
+  //     phone: json['phone'],
+  //     gaurdianPhone: json['gaurdian_phone'],
+  //     phonePass: json['phone_pass'],
+  //     dob: json['dob'],
+  //     education: json['education'],
+  //     address: json['address'],
+  //     activeStatus: json['active_status'],
+  //     admittedDate: json['admitted_date'] != null ? DateTime.parse(json['admitted_date']) : null,
+  //     img: json['img'],
+  //     days: (json['days'] as List?)?.map((day) => TutorWeekDay.fromJson(day)).toList(),
+  //   );
+  // }
+
   factory TutorStudent.fromJson(Map<String, dynamic> json) {
     return TutorStudent(
       id: json['id'],
@@ -155,7 +196,11 @@ class TutorStudent {
       activeStatus: json['active_status'],
       admittedDate: json['admitted_date'] != null ? DateTime.parse(json['admitted_date']) : null,
       img: json['img'],
-      days: (json['days'] as List?)?.map((day) => TutorWeekDay.fromJson(day)).toList(),
+      days: (json['days'] as List<dynamic>?)
+          ?.map((day) => TutorWeekDay.fromJson(Map<String, dynamic>.from(day)))
+          .toList(),
     );
   }
+
+
 }
