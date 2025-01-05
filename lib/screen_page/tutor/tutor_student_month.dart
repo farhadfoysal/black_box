@@ -35,26 +35,7 @@ class _TutorStudentMonthState extends State<TutorStudentMonth> {
           startDate: DateTime(2025, 1, 1),
           endDate: DateTime(2025, 1, 31),
           paid: 1,
-          dates: [
-            TutorDate(
-              id: 1,
-              uniqueId: "20250101_123001",
-              day: "Monday",
-              date: "2025-01-01",
-              dayDate: DateTime(2025, 1, 1),
-              attendance: 1,
-              minutes: 60,
-            ),
-            TutorDate(
-              id: 2,
-              uniqueId: "20250102_123002",
-              day: "Wednesday",
-              date: "2025-01-03",
-              dayDate: DateTime(2025, 1, 3),
-              attendance: 0,
-              minutes: 0,
-            ),
-          ],
+          dates: generateDates(DateTime(2025, 1, 1), DateTime(2025, 1, 31)),
         ),
         TutorMonth(
           id: 2,
@@ -65,11 +46,47 @@ class _TutorStudentMonthState extends State<TutorStudentMonth> {
           startDate: DateTime(2025, 2, 1),
           endDate: DateTime(2025, 2, 28),
           paid: 0,
-          dates: [],
+          dates: generateDates(DateTime(2025, 2, 1), DateTime(2025, 2, 28)),
         ),
       ];
     });
   }
+
+  List<TutorDate> generateDates(DateTime startDate, DateTime endDate) {
+    List<TutorDate> generatedDates = [];
+
+    for (DateTime date = startDate; date.isBefore(endDate.add(Duration(days: 1))); date = date.add(Duration(days: 1))) {
+      // Determine the day of the week (e.g., "Monday", "Tuesday")
+      String dayOfWeek = date.weekday == 1
+          ? "Monday"
+          : date.weekday == 2
+          ? "Tuesday"
+          : date.weekday == 3
+          ? "Wednesday"
+          : date.weekday == 4
+          ? "Thursday"
+          : date.weekday == 5
+          ? "Friday"
+          : date.weekday == 6
+          ? "Saturday"
+          : "Sunday";
+
+      generatedDates.add(
+        TutorDate(
+          id: generatedDates.length + 1,
+          uniqueId: "${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}_123${generatedDates.length + 1}",
+          day: dayOfWeek,
+          date: date.toString().split(" ")[0], // Extract date in YYYY-MM-DD format
+          dayDate: date,
+          attendance: 0, // Initially absent
+          minutes: 0,    // No minutes initially
+        ),
+      );
+    }
+
+    return generatedDates;
+  }
+
 
   @override
   Widget build(BuildContext context) {
