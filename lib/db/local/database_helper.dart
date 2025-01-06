@@ -61,6 +61,18 @@ class DatabaseHelper{
     await db.execute(DatabaseTable.NOTE);
     await db.execute(DatabaseTable.CALENDAR);
     await db.execute(DatabaseTable.ROUTINE);
+    await db.execute(DatabaseTable.TUTOR_STUDENT_TABLE);
+    await db.execute(DatabaseTable.TUTOR_WEEK_DAY);
+    await db.execute(DatabaseTable.TUTOR_MONTH);
+    await db.execute(DatabaseTable.TUTOR_DATE);
+    await db.execute(DatabaseTable.MESS_USER_TABLE);
+    await db.execute(DatabaseTable.MESS_MAIN_TABLE);
+    await db.execute(DatabaseTable.MY_MEALS_TABLE);
+    await db.execute(DatabaseTable.BAZAR_LIST_TABLE);
+    await db.execute(DatabaseTable.MESS_FEES_TABLE);
+    await db.execute(DatabaseTable.OTHERS_FEE_TABLE);
+    await db.execute(DatabaseTable.PAYMENT_TABLE);
+    await db.execute(DatabaseTable.ACCOUNT_PRINT_TABLE);
 
     print("Database Created Successfully! Welcome to EdUBox!");
   }

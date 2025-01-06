@@ -177,6 +177,8 @@ class _TutorStudentMonthlyDatesState extends State<TutorStudentMonthlyDates> {
           'dates': month.dates?.map((date) => date.toMap()).toList(),
         });
 
+        updateOfflline(month);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Tutor Month dates updated successfully!')),
         );
@@ -241,6 +243,25 @@ class _TutorStudentMonthlyDatesState extends State<TutorStudentMonthlyDates> {
     );
   }
 
+  Future<void> updateOfflline(TutorMonth month) async {
+    final result = await DatabaseManager().updateTutorMonthDates(month);
+    if (result > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Tutor Month dates updated successfully!')),
+      );
+
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to update Tutor Month dates')),
+      );
+    }
+  }
 
   @override
   void dispose() {

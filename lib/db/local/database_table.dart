@@ -604,4 +604,202 @@ class DatabaseTable {
       sync_key TEXT
     );
   ''';
+
+  static const TUTOR_STUDENT_TABLE = '''
+  CREATE TABLE IF NOT EXISTS tutor_students (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    unique_id TEXT,
+    user_id TEXT,
+    name TEXT,
+    phone TEXT,
+    gaurdian_phone TEXT,
+    phone_pass TEXT,
+    dob TEXT,
+    education TEXT,
+    address TEXT,
+    active_status INTEGER,
+    admitted_date TEXT,
+    img TEXT,
+    days TEXT
+  );
+''';
+
+
+  static const TUTOR_WEEK_DAY = '''
+  CREATE TABLE IF NOT EXISTS tutor_week_days (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    unique_id TEXT,
+    student_id TEXT,
+    user_id TEXT,
+    day TEXT,
+    time TEXT,
+    minutes INTEGER,
+    sync_status INTEGER,
+    sync_key TEXT
+  );
+''';
+
+
+  static const TUTOR_MONTH = '''
+  CREATE TABLE IF NOT EXISTS tutor_month (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    unique_id TEXT,
+    student_id TEXT,
+    user_id TEXT,
+    month TEXT,
+    start_date TEXT,
+    end_date TEXT,
+    paid_date TEXT,
+    paid INTEGER DEFAULT 0,
+    pay_tk TEXT,
+    paid_tk TEXT,
+    paid_by TEXT,
+    sync_status INTEGER DEFAULT 0,
+    sync_key TEXT
+  );
+''';
+
+
+  static const TUTOR_DATE = '''
+  CREATE TABLE IF NOT EXISTS tutor_date (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    unique_id TEXT,
+    month_id TEXT,
+    user_id TEXT,
+    day TEXT,
+    date TEXT,
+    day_date TEXT,
+    attendance INTEGER DEFAULT 0,
+    minutes INTEGER DEFAULT 0,
+    sync_status INTEGER DEFAULT 0,
+    sync_key TEXT
+  );
+''';
+
+  static const MESS_USER_TABLE = '''
+  CREATE TABLE IF NOT EXISTS mess_user (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    unique_id TEXT,
+    user_id TEXT,
+    phone TEXT,
+    email TEXT DEFAULT '',
+    user_type TEXT DEFAULT 'u',
+    phone_pass TEXT,
+    mess_id TEXT DEFAULT '',
+    active_status TEXT DEFAULT '0',
+    bazar_start TEXT,
+    bazar_end TEXT,
+    qr TEXT DEFAULT '',
+    img TEXT DEFAULT ''
+  );
+''';
+
+
+  static const MESS_MAIN_TABLE = '''
+  CREATE TABLE IF NOT EXISTS mess_main (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    m_id TEXT,
+    mess_id TEXT,
+    mess_name TEXT,
+    mess_address TEXT,
+    mess_pass TEXT,
+    mess_admin_id TEXT,
+    meal_update_status TEXT DEFAULT '1',
+    admin_phone TEXT,
+    start_date TEXT,
+    sum_of_all_trx TEXT DEFAULT '0',
+    u_perm TEXT DEFAULT '0',
+    qr TEXT,
+    currentMonth TEXT
+  );
+''';
+
+  static const MY_MEALS_TABLE = '''
+  CREATE TABLE IF NOT EXISTS my_meals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    unique_id TEXT,
+    mess_id TEXT,
+    date TEXT,
+    time TEXT,
+    morning TEXT DEFAULT '0',
+    launce TEXT DEFAULT '0',
+    dinner TEXT DEFAULT '0',
+    meal_update TEXT,
+    sum_meal TEXT,
+    meal_reset TEXT DEFAULT '0'
+  );
+''';
+
+  static const BAZAR_LIST_TABLE = '''
+  CREATE TABLE IF NOT EXISTS bazar_list (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    list_id TEXT,
+    unique_id TEXT,
+    mess_id TEXT,
+    phone TEXT,
+    list_details TEXT,
+    amount TEXT,
+    date_time TEXT,
+    admin_notify TEXT DEFAULT '0'
+  );
+''';
+
+  static const MESS_FEES_TABLE = '''
+  CREATE TABLE IF NOT EXISTS mess_fees (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mess_id TEXT,
+    fee_type TEXT,
+    amount TEXT,
+    admin_id TEXT,
+    date TEXT,
+    status TEXT DEFAULT '1'
+  );
+''';
+
+  static const OTHERS_FEE_TABLE = '''
+  CREATE TABLE IF NOT EXISTS others_fee (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    unique_id TEXT,
+    mess_id TEXT,
+    fee_type TEXT,
+    amount TEXT DEFAULT '0',
+    admin_id TEXT,
+    date TEXT,
+    status TEXT DEFAULT '1'
+  );
+''';
+
+  static const PAYMENT_TABLE = '''
+  CREATE TABLE IF NOT EXISTS payment (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    unique_id TEXT,
+    admin_id TEXT,
+    mess_id TEXT,
+    phone TEXT DEFAULT '',
+    date_m TEXT,
+    trx_id TEXT DEFAULT '',
+    amount TEXT DEFAULT '0',
+    clear_trx TEXT DEFAULT '1',
+    print INTEGER DEFAULT 0,
+    time TEXT
+  );
+''';
+
+  static const ACCOUNT_PRINT_TABLE = '''
+  CREATE TABLE IF NOT EXISTS account_print (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    unique_id TEXT,
+    user_name TEXT,
+    phone TEXT,
+    mess_month_ex TEXT,
+    my_expense TEXT,
+    meal_expense TEXT,
+    my_month_meal TEXT,
+    pay_or_recieve TEXT,
+    trx_clear_id TEXT DEFAULT '0'
+  );
+''';
+
+
+
 }

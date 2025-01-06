@@ -9,6 +9,7 @@ import 'package:sqflite/sqflite.dart';
 import '../../model/schedule/schedule_item.dart';
 import '../../model/school/school.dart';
 import '../../model/tutor/tutor_date.dart';
+import '../../model/tutor/tutor_week_day.dart';
 import '../../model/user/admin.dart';
 import '../../model/user/u_data.dart';
 import '../../model/user/user.dart';
@@ -138,48 +139,793 @@ class DatabaseManager {
     return await db.insert('mess', mess.toMap());
   }
 
-  Future<int> insertTutorStudent(TutorStudent tutorStudent) async {
-    Database db = await DatabaseHelper().database;
-    return await db.insert('tutor_student', tutorStudent.toMap());
+  Future<int> insertTutorStudent(TutorStudent student) async {
+    final db = await DatabaseHelper().database;
+
+    return await db.insert(
+      'tutor_students', // Table name
+      student.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
-  // Insert TutorMonth and associated TutorDates
-  Future<int> insertTutorMonth(TutorMonth tutorMonth) async {
-    Database db = await DatabaseHelper().database;
+  Future<int> insertTutorStudentDay(TutorStudent tutorStudent) async {
+    final db = await DatabaseHelper().database;
 
-    // Start a transaction to ensure atomicity
-    return await db.transaction((txn) async {
-      // Insert the TutorMonth into the tutor_month table
-      int monthInsertId = await txn.insert('tutor_month', tutorMonth.toMap());
+    try {
+      return await db.transaction((txn) async {
+        // Prepare the TutorStudent data without the 'days' field
+        Map<String, dynamic> studentData = {
+          'id': tutorStudent.id,
+          'unique_id': tutorStudent.uniqueId,
+          'user_id': tutorStudent.userId,
+          'name': tutorStudent.name,
+          'phone': tutorStudent.phone,
+          'gaurdian_phone': tutorStudent.gaurdianPhone,
+          'phone_pass': tutorStudent.phonePass,
+          'dob': tutorStudent.dob,
+          'education': tutorStudent.education,
+          'address': tutorStudent.address,
+          'active_status': tutorStudent.activeStatus,
+          'admitted_date': tutorStudent.admittedDate?.toIso8601String(),
+          'img': tutorStudent.img,
+        };
 
-      // Insert TutorDate records for the inserted TutorMonth
-      for (TutorDate date in tutorMonth.dates!) {
-        // Set the monthId in the TutorDate to the uniqueId of the inserted TutorMonth
-        date.monthId = tutorMonth.uniqueId;
-        await txn.insert('tutor_date', date.toMap());
+        // Insert the TutorStudent data into the tutor_students table (inside the transaction)
+        int result = await txn.insert(
+          'tutor_students',
+          studentData,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+
+        // If TutorStudent has days, insert associated TutorWeekDay records into the tutor_week_days table (inside the transaction)
+        if (tutorStudent.days != null && tutorStudent.days!.isNotEmpty) {
+          for (var day in tutorStudent.days!) {
+            await txn.insert(
+              'tutor_week_days',
+              day.toMap(),
+              conflictAlgorithm: ConflictAlgorithm.replace,
+            );
+          }
+        }
+
+        return result;
+      });
+    } catch (e) {
+      print('Error inserting TutorStudent: $e');
+      rethrow;
+    }
+  }
+
+
+  Future<int> insertTutorStudentDayNot(TutorStudent tutorStudent) async {
+    final db = await DatabaseHelper().database;
+
+    try {
+      // Prepare the TutorStudent data without the 'days' field
+      Map<String, dynamic> studentData = {
+        'id': tutorStudent.id,
+        'unique_id': tutorStudent.uniqueId,
+        'user_id': tutorStudent.userId,
+        'name': tutorStudent.name,
+        'phone': tutorStudent.phone,
+        'gaurdian_phone': tutorStudent.gaurdianPhone,
+        'phone_pass': tutorStudent.phonePass,
+        'dob': tutorStudent.dob,
+        'education': tutorStudent.education,
+        'address': tutorStudent.address,
+        'active_status': tutorStudent.activeStatus,
+        'admitted_date': tutorStudent.admittedDate?.toIso8601String(),
+        'img': tutorStudent.img,
+      };
+
+      // Insert the TutorStudent data into the tutor_students table (without the 'days' field)
+      int result = await db.insert(
+        'tutor_students',
+        studentData,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      // If TutorStudent has days, insert associated TutorWeekDay records into the tutor_week_days table
+      if (tutorStudent.days != null && tutorStudent.days!.isNotEmpty) {
+        // Insert each day asynchronously into the tutor_week_days table
+        for (var day in tutorStudent.days!) {
+          await db.insert(
+            'tutor_week_days',
+            day.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
       }
 
-      return monthInsertId;
-    });
+      return result;
+    } catch (e) {
+      print('Error inserting TutorStudent: $e');
+      rethrow;
+    }
   }
 
-  // Method to update TutorMonth dates in SQLite
-  Future<int> updateTutorMonthDates(TutorMonth month) async {
+  Future<int> updateTutorStudentDay(TutorStudent tutorStudent) async {
+    final db = await DatabaseHelper().database;
+
+    // Prepare TutorStudent data excluding 'days' for the update operation
+    Map<String, dynamic> studentData = {
+      'unique_id': tutorStudent.uniqueId,
+      'user_id': tutorStudent.userId,
+      'name': tutorStudent.name,
+      'phone': tutorStudent.phone,
+      'gaurdian_phone': tutorStudent.gaurdianPhone,
+      'phone_pass': tutorStudent.phonePass,
+      'dob': tutorStudent.dob,
+      'education': tutorStudent.education,
+      'address': tutorStudent.address,
+      'active_status': tutorStudent.activeStatus,
+      'admitted_date': tutorStudent.admittedDate?.toIso8601String(),
+      'img': tutorStudent.img,
+    };
+
+    try {
+      return await db.transaction((txn) async {
+        // Update the tutor_students table excluding 'days' field
+        int studentUpdateCount = await txn.update(
+          'tutor_students',
+          studentData,
+          where: 'unique_id = ?',
+          whereArgs: [tutorStudent.uniqueId],
+        );
+
+        // If tutorStudent.days is provided, delete old TutorWeekDay records and re-insert updated ones
+        if (tutorStudent.days != null && tutorStudent.days!.isNotEmpty) {
+          // Delete the existing TutorWeekDay records for this student
+          await txn.delete(
+            'tutor_week_days',
+            where: 'student_id = ?',
+            whereArgs: [tutorStudent.uniqueId],
+          );
+
+          // Insert updated TutorWeekDay records
+          for (TutorWeekDay day in tutorStudent.days!) {
+            await txn.insert(
+              'tutor_week_days',
+              day.toMap(),
+              conflictAlgorithm: ConflictAlgorithm.replace,
+            );
+          }
+        }
+
+        return studentUpdateCount;
+      });
+    } catch (e) {
+      print('Error updating TutorStudent: $e');
+      rethrow;
+    }
+  }
+
+
+  Future<int> updateTutorStudentDayNott(TutorStudent tutorStudent) async {
+    final db = await DatabaseHelper().database;
+
+    // Prepare TutorStudent data excluding 'days' for the update operation
+    Map<String, dynamic> studentData = {
+      'unique_id': tutorStudent.uniqueId,
+      'user_id': tutorStudent.userId,
+      'name': tutorStudent.name,
+      'phone': tutorStudent.phone,
+      'gaurdian_phone': tutorStudent.gaurdianPhone,
+      'phone_pass': tutorStudent.phonePass,
+      'dob': tutorStudent.dob,
+      'education': tutorStudent.education,
+      'address': tutorStudent.address,
+      'active_status': tutorStudent.activeStatus,
+      'admitted_date': tutorStudent.admittedDate?.toIso8601String(),
+      'img': tutorStudent.img,
+    };
+
+    try {
+      // Update the tutor_students table excluding 'days' field
+      int studentUpdateCount = await db.update(
+        'tutor_students',
+        studentData,
+        where: 'unique_id = ?',
+        whereArgs: [tutorStudent.uniqueId],
+      );
+
+      // If tutorStudent.days is provided, delete old TutorWeekDay records and re-insert updated ones
+      if (tutorStudent.days != null && tutorStudent.days!.isNotEmpty) {
+        // Delete the existing TutorWeekDay records for this student
+        await db.delete(
+          'tutor_week_days',
+          where: 'student_id = ?',
+          whereArgs: [tutorStudent.uniqueId],
+        );
+
+        // Insert updated TutorWeekDay records
+        for (TutorWeekDay day in tutorStudent.days!) {
+          await db.insert(
+            'tutor_week_days',
+            day.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      }
+
+      return studentUpdateCount;
+    } catch (e) {
+      print('Error updating TutorStudent: $e');
+      rethrow;
+    }
+  }
+
+
+  Future<int> updateTutorStudentDayNot(TutorStudent tutorStudent) async {
+    final db = await DatabaseHelper().database;
+
+    // Update the main TutorStudent data
+    int r = await db.update(
+      'tutor_students',
+      tutorStudent.toMap(),
+      where: 'unique_id = ?',
+      whereArgs: [tutorStudent.uniqueId],
+    );
+
+    // First, delete the existing TutorWeekDay records for this student
+    r = await db.delete(
+      'tutor_week_days',
+      where: 'student_id = ?',
+      whereArgs: [tutorStudent.uniqueId],
+    );
+
+    // Re-insert the updated TutorWeekDay records
+    if(tutorStudent.days!=null){
+      for (TutorWeekDay day in tutorStudent.days!) {
+        await db.insert(
+          'tutor_week_days',
+          day.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    }
+    return r;
+  }
+
+
+  Future<int> deleteTutorStudent(String uniqueId) async {
+    final db = await DatabaseHelper().database;
+
+    // Delete associated TutorWeekDay records
+    int r = await db.delete(
+      'tutor_week_days',
+      where: 'student_id = ?',
+      whereArgs: [uniqueId],
+    );
+
+    // Delete the TutorStudent record
+    r = await db.delete(
+      'tutor_students',
+      where: 'unique_id = ?',
+      whereArgs: [uniqueId],
+    );
+    return r;
+  }
+
+
+  Future<TutorStudent?> getTutorStudentDay(String uniqueId) async {
+    final db = await DatabaseHelper().database;
+
+    // Query the tutor_students table for the specific student
+    final List<Map<String, dynamic>> studentMaps = await db.query(
+      'tutor_students',
+      where: 'unique_id = ?',
+      whereArgs: [uniqueId],
+    );
+
+    if (studentMaps.isEmpty) return null;
+
+    // Create the TutorStudent object
+    TutorStudent tutorStudent = TutorStudent.fromMap(studentMaps.first);
+
+    // Query the tutor_week_days table for the associated days
+    final List<Map<String, dynamic>> daysMaps = await db.query(
+      'tutor_week_days',
+      where: 'student_id = ?',
+      whereArgs: [uniqueId],
+    );
+
+    // Map the days to TutorWeekDay objects
+    tutorStudent.days = daysMaps.map((dayMap) => TutorWeekDay.fromMap(dayMap)).toList();
+
+    return tutorStudent;
+  }
+
+  Future<int> insertTutorStudentDays(TutorStudent tutorStudent) async {
+    final db = await DatabaseHelper().database;
+
+    try {
+      return await db.transaction((txn) async {
+        // Prepare the TutorStudent data without the 'days' field
+        Map<String, dynamic> studentData = {
+          'id': tutorStudent.id,
+          'unique_id': tutorStudent.uniqueId,
+          'user_id': tutorStudent.userId,
+          'name': tutorStudent.name,
+          'phone': tutorStudent.phone,
+          'gaurdian_phone': tutorStudent.gaurdianPhone,
+          'phone_pass': tutorStudent.phonePass,
+          'dob': tutorStudent.dob,
+          'education': tutorStudent.education,
+          'address': tutorStudent.address,
+          'active_status': tutorStudent.activeStatus,
+          'admitted_date': tutorStudent.admittedDate?.toIso8601String(),
+          'img': tutorStudent.img,
+        };
+
+        // Insert the TutorStudent data into the tutor_students table (without the 'days' field)
+        int result = await txn.insert(
+          'tutor_students',
+          studentData,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+
+        // If TutorStudent has days, insert associated TutorWeekDay records into the tutor_week_days table
+        if (tutorStudent.days != null && tutorStudent.days!.isNotEmpty) {
+          // Insert each day into the tutor_week_days table as part of the transaction
+          for (var day in tutorStudent.days!) {
+            await txn.insert(
+              'tutor_week_days',
+              day.toMap(),
+              conflictAlgorithm: ConflictAlgorithm.replace,
+            );
+          }
+        }
+
+        return result;
+      });
+    } catch (e) {
+      print('Error inserting TutorStudent: $e');
+      rethrow;
+    }
+  }
+
+
+  Future<int> insertTutorStudentDaysNott(TutorStudent tutorStudent) async {
+    final db = await DatabaseHelper().database;
+
+    try {
+      // Prepare the TutorStudent data without the 'days' field
+      Map<String, dynamic> studentData = {
+        'id': tutorStudent.id,
+        'unique_id': tutorStudent.uniqueId,
+        'user_id': tutorStudent.userId,
+        'name': tutorStudent.name,
+        'phone': tutorStudent.phone,
+        'gaurdian_phone': tutorStudent.gaurdianPhone,
+        'phone_pass': tutorStudent.phonePass,
+        'dob': tutorStudent.dob,
+        'education': tutorStudent.education,
+        'address': tutorStudent.address,
+        'active_status': tutorStudent.activeStatus,
+        'admitted_date': tutorStudent.admittedDate?.toIso8601String(),
+        'img': tutorStudent.img,
+      };
+
+      // Insert the TutorStudent data into the tutor_students table (without the 'days' field)
+      int result = await db.insert(
+        'tutor_students',
+        studentData,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      // If TutorStudent has days, insert associated TutorWeekDay records into the tutor_week_days table
+      if (tutorStudent.days != null && tutorStudent.days!.isNotEmpty) {
+        // Insert each day asynchronously into the tutor_week_days table
+        for (var day in tutorStudent.days!) {
+          await db.insert(
+            'tutor_week_days',
+            day.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      }
+
+      return result;
+    } catch (e) {
+      print('Error inserting TutorStudent: $e');
+      rethrow;
+    }
+  }
+
+
+  Future<int> insertTutorStudentDaysNot(TutorStudent tutorStudent) async {
+    final db = await DatabaseHelper().database;
+
+    // Insert the main TutorStudent data into the tutor_students table
+    int r = await db.insert(
+      'tutor_students',
+      tutorStudent.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+
+    // Insert associated TutorWeekDay records into the tutor_week_days table if days is not null
+    if (tutorStudent.days != null && tutorStudent.days!.isNotEmpty) {
+      // Perform the insert operations for all days asynchronously
+      for (var day in tutorStudent.days!) {
+        await db.insert(
+          'tutor_week_days',
+          day.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    }
+
+    return r;
+  }
+
+  Future<int> updateTutorStudent(TutorStudent student) async {
+    final db = await DatabaseHelper().database;
+
+    // Prepare the map with the fields to be updated, excluding 'days'
+    Map<String, dynamic> updateData = {
+      // 'unique_id': student.uniqueId,
+      // 'user_id': student.userId,
+      'name': student.name,
+      'phone': student.phone,
+      'gaurdian_phone': student.gaurdianPhone,
+      'phone_pass': student.phonePass,
+      'dob': student.dob,
+      'education': student.education,
+      'address': student.address,
+      'active_status': student.activeStatus,
+      'admitted_date': student.admittedDate?.toIso8601String(),
+      'img': student.img,
+      // Exclude 'days' as you don't want to update it
+    };
+
+    return await db.update(
+      'tutor_students', // Table name
+      updateData,
+      where: 'unique_id = ?', // Update based on the `id`
+      whereArgs: [student.uniqueId],
+    );
+  }
+
+
+  Future<int> updateTutorStudentNot(TutorStudent student) async {
+    final db = await DatabaseHelper().database;
+
+    return await db.update(
+      'tutor_students', // Table name
+      student.toMap(),
+      where: 'id = ?', // Update based on the `id`
+      whereArgs: [student.id],
+    );
+  }
+
+  Future<int> updateTutorStudentMonth(TutorMonth month) async {
+    final db = await DatabaseHelper().database;
+
+    // Prepare the map with all the fields to be updated, excluding 'dates'
+    Map<String, dynamic> updateData = {
+      // 'unique_id': month.uniqueId,  // Ensure you are updating based on unique_id
+      // 'student_id': month.studentId, // Optional, include if you want to update student_id
+      // 'user_id': month.userId,       // Optional, include if you want to update user_id
+      'month': month.month,          // Include the month field
+      'start_date': month.startDate?.toIso8601String(), // Include start_date if needed
+      'end_date': month.endDate?.toIso8601String(),     // Include end_date if needed
+      'paid_date': month.paidDate?.toIso8601String(),   // Optional, include if you want to update paid_date
+      'paid': month.paid,            // Optional, include if you want to update paid amount
+      'pay_tk': month.payTk,        // Include pay_tk to be updated
+      'paid_tk': month.paidTk,      // Include paid_tk to be updated
+      'paid_by': month.paidBy,      // Include paid_by to be updated
+    };
+
+    return await db.update(
+      'tutor_month', // Table name
+      updateData,
+      where: 'unique_id = ?', // Update based on the unique_id
+      whereArgs: [month.uniqueId],
+    );
+  }
+
+
+  Future<int> updateTutorStudentMonthNot(TutorMonth month) async {
+    final db = await DatabaseHelper().database;
+
+    return await db.update(
+      'tutor_month', // Table name
+      month.toMap(),
+      where: 'unique_id = ?', // Update based on the `id`
+      whereArgs: [month.uniqueId],
+    );
+  }
+
+  Future<TutorStudent?> getTutorStudent(int id) async {
+    final db = await DatabaseHelper().database;
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      'tutor_students', // Table name
+      where: 'id = ?',  // Filter by `id`
+      whereArgs: [id],
+    );
+
+    if (maps.isNotEmpty) {
+      return TutorStudent.fromMap(maps.first);
+    } else {
+      return null; // Return null if no student is found
+    }
+  }
+
+  Future<List<TutorStudent>> getTutorStudents() async {
+    final db = await DatabaseHelper().database;
+
+    final List<Map<String, dynamic>> maps = await db.query('tutor_students'); // Query all records
+
+    return maps.map((map) => TutorStudent.fromMap(map)).toList();
+  }
+
+  Future<List<TutorStudent>> getTutorStudentsDay() async {
+    final db = await DatabaseHelper().database;
+
+    // Query all tutor students
+    final List<Map<String, dynamic>> maps = await db.query('tutor_students');
+
+    // Loop through each TutorStudent and fetch their associated TutorWeekDay records
+    List<TutorStudent> tutorStudents = [];
+    for (var map in maps) {
+      // Create a TutorStudent object from the main table
+      TutorStudent tutorStudent = TutorStudent.fromMap(map);
+
+      // Query the tutor_week_days table for days associated with this tutor student
+      final List<Map<String, dynamic>> daysMaps = await db.query(
+        'tutor_week_days',
+        where: 'student_id = ?',
+        whereArgs: [tutorStudent.uniqueId], // Use the uniqueId as the foreign key
+      );
+
+      // Map the result to a list of TutorWeekDay objects
+      tutorStudent.days = daysMaps.map((dayMap) => TutorWeekDay.fromMap(dayMap)).toList();
+
+      // Add the populated TutorStudent to the list
+      tutorStudents.add(tutorStudent);
+    }
+
+    return tutorStudents;
+  }
+
+
+
+
+
+  // Method to retrieve all months with their associated dates for a student
+  Future<List<TutorMonth>> getTutorStudentMonthsWithDates(String studentId) async {
     Database db = await DatabaseHelper().database;
 
-    // Start a transaction to ensure atomicity
-    return await db.transaction((txn) async {
-      // Update the tutor_month table
-      int monthUpdateCount = await txn.update(
-        'tutor_month',
-        month.toMap(),
-        where: 'unique_id = ?',
+    // Step 1: Retrieve all months for the given student ID
+    List<Map<String, dynamic>> monthMaps = await db.query(
+      'tutor_month',
+      where: 'student_id = ?', // Assuming "student_id" is a column in the tutor_month table
+      whereArgs: [studentId],
+    );
+
+    // Convert the result to a list of TutorMonth objects
+    List<TutorMonth> months = monthMaps.map((monthMap) {
+      return TutorMonth.fromMap(monthMap); // Ensure TutorMonth has a fromMap method
+    }).toList();
+
+    // Step 2: Retrieve associated dates for each month
+    for (TutorMonth month in months) {
+      // Query the tutor_date table for the current month's uniqueId
+      List<Map<String, dynamic>> dateMaps = await db.query(
+        'tutor_date',
+        where: 'month_id = ?', // Assuming "month_id" links dates to their month
         whereArgs: [month.uniqueId],
       );
 
-      // If the TutorMonth update is successful, update the TutorDates
-      if (monthUpdateCount > 0) {
-        // Delete the existing dates before updating
+      // Convert the result to a list of TutorDate objects and assign to the month
+      month.dates = dateMaps.map((dateMap) {
+        return TutorDate.fromMap(dateMap); // Ensure TutorDate has a fromMap method
+      }).toList();
+    }
+
+    return months;
+  }
+
+  Future<int> insertTutorMonth(TutorMonth tutorMonth) async {
+    Database db = await DatabaseHelper().database;
+
+    try {
+      return await db.transaction((txn) async {
+        // Prepare the data without the dates field
+        Map<String, dynamic> monthData = {
+          'id': tutorMonth.id,
+          'unique_id': tutorMonth.uniqueId,
+          'student_id': tutorMonth.studentId,
+          'user_id': tutorMonth.userId,
+          'month': tutorMonth.month,
+          'start_date': tutorMonth.startDate?.toIso8601String(),
+          'end_date': tutorMonth.endDate?.toIso8601String(),
+          'paid_date': tutorMonth.paidDate?.toIso8601String(),
+          'paid': tutorMonth.paid,
+          'pay_tk': tutorMonth.payTk,
+          'paid_tk': tutorMonth.paidTk,
+          'paid_by': tutorMonth.paidBy,
+        };
+
+        // Insert the TutorMonth data into the tutor_month table (without the 'dates' field)
+        int monthInsertId = await txn.insert('tutor_month', monthData);
+
+        if (tutorMonth.dates != null && tutorMonth.dates!.isNotEmpty) {
+          // Insert each day into the tutor_date table using the transaction object
+          for (var date in tutorMonth.dates!) {
+            await txn.insert(
+              'tutor_date',
+              date.toMap(),
+              conflictAlgorithm: ConflictAlgorithm.replace,
+            );
+          }
+        }
+
+        return monthInsertId;
+      });
+    } catch (e) {
+      print('Error inserting TutorMonth: $e');
+      rethrow;
+    }
+  }
+
+
+  Future<int> insertTutorMonthNott(TutorMonth tutorMonth) async {
+    Database db = await DatabaseHelper().database;
+
+    try {
+      return await db.transaction((txn) async {
+        // Prepare the data without the dates field
+        Map<String, dynamic> monthData = {
+          'id': tutorMonth.id,
+          'unique_id': tutorMonth.uniqueId,
+          'student_id': tutorMonth.studentId,
+          'user_id': tutorMonth.userId,
+          'month': tutorMonth.month,
+          'start_date': tutorMonth.startDate?.toIso8601String(),
+          'end_date': tutorMonth.endDate?.toIso8601String(),
+          'paid_date': tutorMonth.paidDate?.toIso8601String(),
+          'paid': tutorMonth.paid,
+          'pay_tk': tutorMonth.payTk,
+          'paid_tk': tutorMonth.paidTk,
+          'paid_by': tutorMonth.paidBy,
+        };
+
+        // Insert the TutorMonth data into the tutor_month table (without the 'dates' field)
+        int monthInsertId = await txn.insert('tutor_month', monthData);
+
+        if (tutorMonth.dates != null && tutorMonth.dates!.isNotEmpty) {
+          // Insert each day asynchronously into the tutor_week_days table
+          for (var date in tutorMonth.dates!) {
+            await db.insert(
+              'tutor_date',
+              date.toMap(),
+              conflictAlgorithm: ConflictAlgorithm.replace,
+            );
+          }
+        }
+
+        return monthInsertId;
+      });
+    } catch (e) {
+      print('Error inserting TutorMonth: $e');
+      rethrow;
+    }
+  }
+
+
+  // Insert TutorMonth and associated TutorDates
+  Future<int> insertTutorMonthNot(TutorMonth tutorMonth) async {
+    Database db = await DatabaseHelper().database;
+
+    try {
+      return await db.transaction((txn) async {
+        int monthInsertId = await txn.insert('tutor_month', tutorMonth.toMap());
+        for (TutorDate date in tutorMonth.dates!) {
+          date.monthId = tutorMonth.uniqueId;
+          await txn.insert('tutor_date', date.toMap());
+        }
+        return monthInsertId;
+      });
+    } catch (e) {
+      print('Error inserting TutorMonth: $e');
+      rethrow;
+    }
+
+
+    // Start a transaction to ensure atomicity
+    // return await db.transaction((txn) async {
+    //   // Insert the TutorMonth into the tutor_month table
+    //   int monthInsertId = await txn.insert('tutor_month', tutorMonth.toMap());
+    //
+    //   // Insert TutorDate records for the inserted TutorMonth
+    //   for (TutorDate date in tutorMonth.dates!) {
+    //     // Set the monthId in the TutorDate to the uniqueId of the inserted TutorMonth
+    //     date.monthId = tutorMonth.uniqueId;
+    //     await txn.insert('tutor_date', date.toMap());
+    //   }
+    //
+    //   return monthInsertId;
+    // });
+  }
+
+  Future<int> updateTutorMonthDates(TutorMonth month) async {
+    Database db = await DatabaseHelper().database;
+
+    // Validate if dates are provided, since we need them for further processing
+    if (month.dates == null || month.dates!.isEmpty) {
+      throw Exception('Cannot update TutorMonth without dates.');
+    }
+
+    try {
+      return await db.transaction((txn) async {
+        // Prepare TutorMonth data excluding 'dates' for the update operation
+        Map<String, dynamic> monthData = {
+          'unique_id': month.uniqueId,
+          'student_id': month.studentId,
+          'user_id': month.userId,
+          'month': month.month,
+          'start_date': month.startDate?.toIso8601String(),
+          'end_date': month.endDate?.toIso8601String(),
+          'paid_date': month.paidDate?.toIso8601String(),
+          'paid': month.paid,
+          'pay_tk': month.payTk,
+          'paid_tk': month.paidTk,
+          'paid_by': month.paidBy,
+        };
+
+        // Update the tutor_month table excluding the 'dates' field
+        int monthUpdateCount = await txn.update(
+          'tutor_month',
+          monthData,
+          where: 'unique_id = ?',
+          whereArgs: [month.uniqueId],
+        );
+
+        // Proceed to delete old TutorDate records related to this month
+        await txn.delete(
+          'tutor_date',
+          where: 'month_id = ?',
+          whereArgs: [month.uniqueId],
+        );
+
+        // Insert updated TutorDate records
+        for (TutorDate date in month.dates!) {
+          // Set the 'month_id' field in the date to associate it with the correct TutorMonth
+          date.monthId = month.uniqueId;  // Ensure 'monthId' is set in each date
+          await txn.insert('tutor_date', date.toMap());
+        }
+
+        return monthUpdateCount;
+      });
+    } catch (e) {
+      print('Error updating TutorMonth: $e');
+      rethrow;
+    }
+  }
+
+
+  Future<int> updateTutorMonthDatesNot(TutorMonth month) async {
+    Database db = await DatabaseHelper().database;
+
+    if (month.dates == null || month.dates!.isEmpty) {
+      throw Exception('Cannot update TutorMonth without dates.');
+    }
+
+    try {
+      return await db.transaction((txn) async {
+        // Update the tutor_month table
+        int monthUpdateCount = await txn.update(
+          'tutor_month',
+          month.toMap(),
+          where: 'unique_id = ?',
+          whereArgs: [month.uniqueId],
+        );
+
+        // Proceed to update dates regardless of whether the month itself was updated
         await txn.delete(
           'tutor_date',
           where: 'month_id = ?',
@@ -190,11 +936,48 @@ class DatabaseManager {
         for (TutorDate date in month.dates!) {
           await txn.insert('tutor_date', date.toMap());
         }
-      }
 
-      return monthUpdateCount;
-    });
+        return monthUpdateCount;
+      });
+    } catch (e) {
+      print('Error updating TutorMonth: $e');
+      rethrow;
+    }
   }
+
+
+
+  // Future<int> updateTutorMonthDates(TutorMonth month) async {
+  //   Database db = await DatabaseHelper().database;
+  //
+  //   // Start a transaction to ensure atomicity
+  //   return await db.transaction((txn) async {
+  //     // Update the tutor_month table
+  //     int monthUpdateCount = await txn.update(
+  //       'tutor_month',
+  //       month.toMap(),
+  //       where: 'unique_id = ?',
+  //       whereArgs: [month.uniqueId],
+  //     );
+  //
+  //     // If the TutorMonth update is successful, update the TutorDates
+  //     if (monthUpdateCount > 0) {
+  //       // Delete the existing dates before updating
+  //       await txn.delete(
+  //         'tutor_date',
+  //         where: 'month_id = ?',
+  //         whereArgs: [month.uniqueId],
+  //       );
+  //
+  //       // Insert updated TutorDates
+  //       for (TutorDate date in month.dates!) {
+  //         await txn.insert('tutor_date', date.toMap());
+  //       }
+  //     }
+  //
+  //     return monthUpdateCount;
+  //   });
+  // }
 
   Future<int> updateSchool(School school) async {
     Database db = await DatabaseHelper().database;

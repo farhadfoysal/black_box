@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:black_box/screen_page/tutor/tutor_student_monthly_dates.dart';
+import 'package:black_box/screen_page/tutor/tutor_student_payment.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
@@ -384,7 +385,7 @@ class _TutorStudentMonthState extends State<TutorStudentMonth> {
         setState(() {
           tutorMonths.add(month);
         });
-
+        saveTutorMonthOffline(month);
         // Navigator.pushReplacement(
         //   context,
         //   MaterialPageRoute(
@@ -445,6 +446,30 @@ class _TutorStudentMonthState extends State<TutorStudentMonth> {
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  Future<void> saveTutorMonthOffline(TutorMonth month) async {
+    final result = await DatabaseManager().insertTutorMonth(month);
+    if (result > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Month saved successfully!')),
+      );
+
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+      setState(() {
+        // tutorMonths.add(month);
+      });
+
+      // context.push(Routes.messAdmin);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save Month')),
+      );
+    }
   }
 
   Future<void> updateTutorMonthDates(TutorMonth month) async {
@@ -870,8 +895,15 @@ class _TutorStudentMonthState extends State<TutorStudentMonth> {
                                     children: [
                                       ElevatedButton.icon(
                                         onPressed: () {
-                                          // Handle Payment action
-                                          print("Payment for ${month.month}");
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => TutorStudentPayment(
+                                                student: widget.student,
+                                                month: month,
+                                              ),
+                                            ),
+                                          );
                                         },
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: Colors.pink,

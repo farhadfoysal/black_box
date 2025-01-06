@@ -887,7 +887,8 @@ class _TutorViewState extends State<TutorView> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => TutorStudentMonth(student: student),
+                                      builder: (context) =>
+                                          TutorStudentMonth(student: student),
                                     ),
                                   );
                                 },
@@ -955,26 +956,22 @@ class _TutorViewState extends State<TutorView> {
                                               Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                  builder: (context) => TutorStudentProfile(student: student),
+                                                  builder: (context) =>
+                                                      TutorStudentProfile(
+                                                          student: student),
                                                 ),
                                               );
-                                              setState(() {
-
-
-
-                                              });
+                                              setState(() {});
                                             } else if (value == 'go') {
                                               Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
-                                                  builder: (context) => TutorStudentMonthly(student: student),
+                                                  builder: (context) =>
+                                                      TutorStudentMonthly(
+                                                          student: student),
                                                 ),
                                               );
-                                              setState(() {
-
-
-
-                                              });
+                                              setState(() {});
                                             }
                                           },
                                           itemBuilder: (context) => [
@@ -1221,7 +1218,7 @@ class _TutorViewState extends State<TutorView> {
         );
       }
     } else {
-      final result = await DatabaseManager().insertTutorStudent(student);
+      final result = await DatabaseManager().insertTutorStudentDays(student);
       if (result > 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Student saved successfully!')),
@@ -1242,7 +1239,6 @@ class _TutorViewState extends State<TutorView> {
         );
       }
     }
-
 
     Future.delayed(Duration(seconds: 3), () {
       setState(() {
@@ -1272,5 +1268,31 @@ class _TutorViewState extends State<TutorView> {
     );
   }
 
-  setUserTutorStudentOnline(User? user, TutorStudent student, String s) {}
+  setUserTutorStudentOnline(User? user, TutorStudent student, String s) async {
+    // int result = await DatabaseManager().insertTutorStudentDay(student);
+    int result = await DatabaseManager().insertTutorStudentDays(student);
+
+    if (mounted) {
+      setState(() {});
+    }
+
+    if (result > 0) {
+      if (mounted) {
+        showSnackBarMsg(context, 'Registration Successful');
+
+        Future.delayed(const Duration(seconds: 0), () {
+          setState(() {
+            isLoading = false;
+          });
+        });
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        showSnackBarMsg(context, 'Registration Failed');
+      }
+    }
+  }
 }
