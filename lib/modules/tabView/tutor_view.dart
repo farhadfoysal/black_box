@@ -1190,8 +1190,9 @@ class _TutorViewState extends State<TutorView> {
     String uniqueId = Unique().generateUniqueID();
     int ranId =
         Random().nextInt(1000000000) + DateTime.now().millisecondsSinceEpoch;
-    String referr = utf8.decode([Random().nextInt(256)]).toUpperCase();
-    String numberr = '$ranId$referr';
+    // String referr = String.fromCharCode(65 + Random().nextInt(26));
+    // String referr = utf8.decode([Random().nextInt(256)]).toUpperCase();
+    // String numberr = '$ranId$referr';
 
     student.uniqueId = uniqueId;
     student.userId = _user?.userid;
