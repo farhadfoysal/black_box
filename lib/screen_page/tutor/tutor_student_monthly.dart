@@ -113,12 +113,22 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
         });
       });
     } else {
-      showSnackBarMsg(context,
-          "You are in Offline mode now, Please, connect to the Internet!");
-      setState(() {
-        // teachers = data.map((json) => Teacher.fromJson(json)).toList();
-        isLoading = false;
-      });
+      List<TutorMonth> monthList = await DatabaseManager().getTutorStudentMonthsWithDates(widget.student.uniqueId??"");
+
+      if(!monthList.isEmpty){
+        setState(() {
+          tutorMonths.clear();
+          tutorMonths = monthList;
+          isLoading = false;
+        });
+      }else{
+        showSnackBarMsg(context,
+            "You are in Offline mode now, Please, connect to the Internet!");
+        setState(() {
+          // teachers = data.map((json) => Teacher.fromJson(json)).toList();
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -241,7 +251,7 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
   //   });
   // }
 
-  List<TutorDate> generateDates(DateTime startDate, DateTime endDate) {
+  List<TutorDate> generateDates(DateTime startDate, DateTime endDate, String uniqueId, String userId) {
     List<TutorDate> generatedDates = [];
 
     for (DateTime date = startDate;
@@ -267,6 +277,8 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
           id: generatedDates.length + 1,
           uniqueId:
           "${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}_123${generatedDates.length + 1}",
+          monthId: uniqueId,
+          userId: userId,
           day: dayOfWeek,
           date: date
               .toString()
@@ -334,16 +346,18 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
     DateTime startDate = DateTime(year, month, 1);
     DateTime endDate = DateTime(year, month + 1, 0);
 
+    String uniqueId = Unique().generateUniqueID();
+    String unId = "${startDate.year}${startDate.month.toString().padLeft(2, '0')}_123${tutorMonths.length + 1}_${uniqueId}";
+
     TutorMonth newMonth = TutorMonth(
-      uniqueId:
-      "${startDate.year}${startDate.month.toString().padLeft(2, '0')}_123${tutorMonths.length + 1}",
+      uniqueId: unId,
       studentId: widget.student.uniqueId,
       userId: _user?.userid,
       month: "${selectedMonth} ${year}",
       startDate: startDate,
       endDate: endDate,
       paid: 0,
-      dates: generateDates(startDate, endDate),
+      dates: generateDates(startDate, endDate, unId, _user!.userid??""),
     );
 
     await saveTutorMonth(newMonth);
@@ -363,8 +377,8 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
     // String referr = utf8.decode([Random().nextInt(256)]).toUpperCase();
     // String numberr = '$ranId$referr';
 
-    month.uniqueId = uniqueId;
-    month.userId = _user?.userid;
+    // month.uniqueId = uniqueId;
+    // month.userId = _user?.userid;
 
     if (await InternetConnectionChecker.instance.hasConnection) {
       final DatabaseReference dbRef =
@@ -462,7 +476,7 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
         });
       }
       setState(() {
-        tutorMonths.add(month);
+        // tutorMonths.add(month);
       });
 
       // context.push(Routes.messAdmin);

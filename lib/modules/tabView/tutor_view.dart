@@ -10,6 +10,7 @@ import 'package:black_box/model/tutor/tutor_week_day.dart';
 import 'package:black_box/model/tutor/tutor_student.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../db/local/database_manager.dart';
@@ -870,6 +871,24 @@ class _TutorViewState extends State<TutorView> {
     );
   }
 
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+    if (await canLaunchUrl(phoneUri)) {
+      await launchUrl(phoneUri);
+    } else {
+      print('Could not launch phone call for $phoneNumber');
+    }
+  }
+
+  Future<void> _openWhatsApp(String phoneNumber) async {
+    final Uri whatsappUri = Uri.parse('https://wa.me/$phoneNumber');
+    if (await canLaunchUrl(whatsappUri)) {
+      await launchUrl(whatsappUri);
+    } else {
+      print('Could not launch WhatsApp for $phoneNumber');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -959,6 +978,10 @@ class _TutorViewState extends State<TutorView> {
                                           onSelected: (value) {
                                             if (value == 'edit') {
                                               // Implement edit logic
+                                            } else if (value == 'call') {
+                                              _makePhoneCall(student.phone??"");
+                                            } else if (value == 'whatsapp') {
+                                              _openWhatsApp(student.phone??"");
                                             } else if (value == 'delete') {
                                               setState(() {
                                                 students.remove(
@@ -987,6 +1010,12 @@ class _TutorViewState extends State<TutorView> {
                                             }
                                           },
                                           itemBuilder: (context) => [
+                                            const PopupMenuItem(
+                                                value: 'call',
+                                                child: Text('Call')),
+                                            const PopupMenuItem(
+                                                value: 'whatsapp',
+                                                child: Text('WhatsApp')),
                                             const PopupMenuItem(
                                                 value: 'profile',
                                                 child: Text('Profile')),
