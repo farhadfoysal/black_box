@@ -510,7 +510,7 @@ class _TutorStudentPaymentState extends State<TutorStudentPayment> {
           SizedBox(height: 20),
           ElevatedButton(
             onPressed: _submitPayment,
-            child: Text("Submit Payment"),
+            child: Text("Save Payment"),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.pinkAccent,
               padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
@@ -531,9 +531,7 @@ class _TutorStudentPaymentState extends State<TutorStudentPayment> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ElevatedButton(
-              onPressed: (){
-                updateTutorMonth(widget.month);
-              },
+              onPressed: _submitPayment,
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white, // Text color
                 backgroundColor: Colors.pinkAccent, // Button color
@@ -558,7 +556,7 @@ class _TutorStudentPaymentState extends State<TutorStudentPayment> {
                     ),
                   )
                       : Text(
-                    "Save Please",
+                    "Save Payment",
                     style: TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold),
                   ),

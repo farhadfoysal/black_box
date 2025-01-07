@@ -694,9 +694,56 @@ class DatabaseManager {
 
 
 
+  Future<List<TutorMonth>> getTutorStudentMonthsWithDates(String studentId) async {
+    Database db = await DatabaseHelper().database;
+
+    try {
+      // Step 1: Retrieve all months for the given student ID
+      List<Map<String, dynamic>> monthMaps = await db.query(
+        'tutor_month',
+        where: 'student_id = ?', // Assuming "student_id" is a column in the tutor_month table
+        whereArgs: [studentId],
+      );
+
+      // Convert the result to a list of TutorMonth objects
+      List<TutorMonth> months = monthMaps.map((monthMap) {
+        return TutorMonth.fromMap(monthMap); // Ensure TutorMonth has a fromMap method
+      }).toList();
+
+      if (months.isNotEmpty) {
+        // Extract all unique month IDs to fetch dates in a single query
+        List<String?> monthIds = months.map((month) => month.uniqueId).toList();
+
+        // Step 2: Retrieve all associated dates for the retrieved months in a single query
+        List<Map<String, dynamic>> dateMaps = await db.query(
+          'tutor_date',
+          where: 'month_id IN (${List.filled(monthIds.length, '?').join(', ')})',
+          whereArgs: monthIds,
+        );
+
+        // Organize the dates by month_id using a map
+        Map<String, List<TutorDate>> dateGroups = {};
+        for (var dateMap in dateMaps) {
+          TutorDate date = TutorDate.fromMap(dateMap); // Ensure TutorDate has a fromMap method
+          dateGroups.putIfAbsent(date.monthId!, () => []).add(date);
+        }
+
+        // Assign the grouped dates to their corresponding months
+        for (TutorMonth month in months) {
+          month.dates = dateGroups[month.uniqueId] ?? [];
+        }
+      }
+
+      return months;
+    } catch (e) {
+      print('Error fetching TutorMonths with dates: $e');
+      rethrow;
+    }
+  }
+
 
   // Method to retrieve all months with their associated dates for a student
-  Future<List<TutorMonth>> getTutorStudentMonthsWithDates(String studentId) async {
+  Future<List<TutorMonth>> getTutorStudentMonthsWithDatesNot(String studentId) async {
     Database db = await DatabaseHelper().database;
 
     // Step 1: Retrieve all months for the given student ID

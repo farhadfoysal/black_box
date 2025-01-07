@@ -131,12 +131,24 @@ class _TutorViewState extends State<TutorView> {
         });
       });
     } else {
-      showSnackBarMsg(context,
-          "You are in Offline mode now, Please, connect to the Internet!");
-      setState(() {
-        // teachers = data.map((json) => Teacher.fromJson(json)).toList();
-        isLoading = false;
-      });
+
+      List<TutorStudent> studentList = await DatabaseManager().getTutorStudentsDay();
+
+      if(!studentList.isEmpty){
+        setState(() {
+          students.clear();
+          students = studentList;
+          isLoading = false;
+        });
+      }else{
+        showSnackBarMsg(context,
+            "You are in Offline mode now, Please, connect to the Internet!");
+        setState(() {
+          // teachers = data.map((json) => Teacher.fromJson(json)).toList();
+          isLoading = false;
+        });
+      }
+
     }
   }
 
