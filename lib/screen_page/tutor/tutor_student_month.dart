@@ -1556,11 +1556,20 @@ class _ProfileSectionState extends State<ProfileSection> {
               children: [
                 Row(
                   children: [
+                    // CircleAvatar(
+                    //   radius: 30,
+                    //   backgroundImage: widget.student.img?.isNotEmpty == true
+                    //       ? NetworkImage(widget.student.img!)
+                    //       : AssetImage('assets/1.jpg') as ImageProvider,
+                    // ),
                     CircleAvatar(
                       radius: 30,
-                      backgroundImage: NetworkImage(
-                        widget.student.img ?? 'https://via.placeholder.com/150',
-                      ),
+                      backgroundImage: widget.student.img?.isNotEmpty == true && widget.student.img!.startsWith('http')
+                          ? NetworkImage(widget.student.img!)
+                          : AssetImage('assets/1.jpg') as ImageProvider,
+                      child: widget.student.img?.isNotEmpty == true
+                          ? null // No child if a valid image is being loaded
+                          : Icon(Icons.person, size: 30), // Fallback icon if the image fails
                     ),
                     SizedBox(width: 16),
                     Text(

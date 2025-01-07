@@ -940,14 +940,56 @@ class _TutorViewState extends State<TutorView> {
                                           height: 70,
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
-                                            image: DecorationImage(
+                                          ),
+                                          child: student.img?.isNotEmpty == true
+                                              ? ClipOval(
+                                            child: Image.network(
+                                              student.img!,
                                               fit: BoxFit.cover,
-                                              image: NetworkImage(
-                                                  "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg"
-                                                  // items[index].img.toString(),
-                                                  ),
+                                              errorBuilder: (context, error, stackTrace) {
+                                                // Fallback to asset image if there's an error
+                                                return Image.asset(
+                                                  'assets/1.jpg',
+                                                  fit: BoxFit.cover,
+                                                );
+                                              },
+                                            ),
+                                          )
+                                              : ClipOval(
+                                            child: Image.asset(
+                                              'assets/1.jpg',
+                                              fit: BoxFit.cover,
                                             ),
                                           ),
+                                          // decoration: BoxDecoration(
+                                          //   shape: BoxShape.circle,
+                                          //   image: DecorationImage(
+                                          //     fit: BoxFit.cover,
+                                          //     image: student.img?.isNotEmpty == true
+                                          //         ? NetworkImage(student.img!) // Load the network image
+                                          //         : AssetImage('assets/1.jpg') as ImageProvider, // Fallback image
+                                          //     onError: (exception, stackTrace) {
+                                          //       // This won't work in DecorationImage; use a fallback widget or logic below
+                                          //     },
+                                          //   ),
+                                          // ),
+                                          // child: student.img?.isNotEmpty != true
+                                          //     ? Icon(Icons.person, size: 50) // Placeholder icon for fallback
+                                          //     : null, // Keep null if the image is valid
+                                          // decoration: BoxDecoration(
+                                          //   shape: BoxShape.circle,
+                                          //   image: DecorationImage(
+                                          //     fit: BoxFit.cover,
+                                          //     image: student.img?.isNotEmpty == true
+                                          //         ? NetworkImage(student.img!)
+                                          //         : AssetImage('assets/1.jpg') as ImageProvider,
+                                          //
+                                          //     // image: NetworkImage(
+                                          //     //     "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg"
+                                          //     //     // items[index].img.toString(),
+                                          //     //     ),
+                                          //   ),
+                                          // ),
                                         ),
                                         Expanded(
                                           child: Column(

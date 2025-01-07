@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:black_box/screen_page/tutor/tutor_student_dates.dart';
 import 'package:black_box/screen_page/tutor/tutor_student_monthly_dates.dart';
 import 'package:black_box/screen_page/tutor/tutor_student_payment.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -765,7 +764,7 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TutorStudentDates(
+                          builder: (context) => TutorStudentMonthlyDates(
                             student: widget.student,
                             month: month,
                           ),
@@ -1557,11 +1556,20 @@ class _ProfileSectionState extends State<ProfileSection> {
               children: [
                 Row(
                   children: [
+                    // CircleAvatar(
+                    //   radius: 30,
+                    //   backgroundImage: widget.student.img?.isNotEmpty == true
+                    //       ? NetworkImage(widget.student.img!)
+                    //       : AssetImage('assets/1.jpg') as ImageProvider,
+                    // ),
                     CircleAvatar(
                       radius: 30,
-                      backgroundImage: NetworkImage(
-                        widget.student.img ?? 'https://via.placeholder.com/150',
-                      ),
+                      backgroundImage: widget.student.img?.isNotEmpty == true && widget.student.img!.startsWith('http')
+                          ? NetworkImage(widget.student.img!)
+                          : AssetImage('assets/1.jpg') as ImageProvider,
+                      child: widget.student.img?.isNotEmpty == true
+                          ? null // No child if a valid image is being loaded
+                          : Icon(Icons.person, size: 30), // Fallback icon if the image fails
                     ),
                     SizedBox(width: 16),
                     Text(
