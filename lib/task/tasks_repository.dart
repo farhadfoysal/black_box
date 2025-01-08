@@ -1,7 +1,7 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../../model/task/task_model.dart';
+import '../model/task/task_model.dart';
 
 class TasksRepository {
   String tableName = "tasks";

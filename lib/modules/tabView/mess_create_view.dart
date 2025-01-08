@@ -689,7 +689,7 @@ class _MessCreateViewState extends State<MessCreateView> {
 
   Future<void> saveMessUserOffline(MessUser messUser) async {
 
-    MessUser? existingUser = await DatabaseManager().getMessUserByPhone(messUser!.phone!);
+    MessUser? existingUser = await DatabaseManager().getMessUserByPhone(messUser.phone!);
 
     if (existingUser != null) {
 
@@ -751,17 +751,78 @@ class _MessCreateViewState extends State<MessCreateView> {
   }
 
   Future<void> joinMess() async {
-    if(await checkMessExist(messCode.text)){
-      messController.joinMess(messCode.text).then((success) {
-        if (success) {
-          showSnackBarMsg(context, "Successfully joined mess!");
-        } else {
-          showSnackBarMsg(context, "Failed to join mess. Try again.");
-        }
-      });
-    }else{
+    if(!messCode.text.isEmpty){
+      if(await checkMessExist(messCode.text)){
 
+        String phoneId = "${_user?.phone ?? ''}${generateRefer()}";
+        MessUser newMessUser = MessUser(
+          uniqueId: _user?.uniqueid,
+          userId: _user?.userid,
+          phone: _user?.phone,
+          email: _user?.email,
+          userType: "member",
+          messId: messCode.text,
+          phonePass: phoneId,
+        );
+
+        messController.currentUser.value = newMessUser;
+
+        messController.joinMess(messCode.text).then((success) {
+          if (success) {
+            showSnackBarMsg(context, "Successfully joined mess!");
+            loginMessUser();
+          } else {
+            showSnackBarMsg(context, "Failed to join mess. Try again.");
+            loginMessUser();
+          }
+        });
+      }else{
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: Colors.white,
+                ),
+                SizedBox(width: 10),
+                Text(
+                  "Mess Not Found! Mess Code Not Exist!",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.redAccent,
+            shape: StadiumBorder(),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        loginMessUser();
+      }
+    }else{
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: Colors.white,
+              ),
+              SizedBox(width: 10),
+              Text(
+                "Please enter a Mess Code!",
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.redAccent,
+          shape: StadiumBorder(),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      loginMessUser();
     }
+
   }
 
 

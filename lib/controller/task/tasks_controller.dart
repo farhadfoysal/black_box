@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../model/task/task_model.dart';
-import '../../screen_page/tutor/tasks_repository.dart';
+import '../../task/tasks_repository.dart';
 
 class TasksController extends GetxController {
   final tasks = <TaskModel>[].obs;

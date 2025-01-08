@@ -1,27 +1,27 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import '../../db/local/database_manager.dart';
 import '../../model/mess/mess_user.dart';
 
 class MessController extends GetxController {
   var currentUser = MessUser().obs;
   var isLoading = false.obs;
   var errorMessage = ''.obs;
+  final _databaseRef = FirebaseDatabase.instance.ref();
 
-  // Method to join mess locally and remotely
   Future<bool> joinMess(String messCode) async {
     try {
       isLoading.value = true;
-      errorMessage.value = ''; // Clear any previous error
+      errorMessage.value = '';
 
       // Update the MessUser locally
       currentUser.update((user) {
         user?.messId = messCode;
       });
 
-      // Save locally (e.g., SharedPreferences or local database)
       await saveLocally(currentUser.value);
 
-      // Save remotely (e.g., Firebase or API call)
       bool success = await saveRemotely(currentUser.value);
 
       if (success) {
@@ -39,20 +39,40 @@ class MessController extends GetxController {
     }
   }
 
-  // Save MessUser locally (e.g., using SharedPreferences or Hive)
   Future<void> saveLocally(MessUser user) async {
-    // Implement local save logic here, for example:
+
+    MessUser? existingUser = await DatabaseManager().getMessUserByPhone(user.phone!);
+
+    if (existingUser != null) {
+
+      return;
+    }
+    int result = await DatabaseManager().insertMessUser(user);
+    if (result > 0) {
+
+    } else {
+      return;
+    }
     print("User saved locally: ${user.toMap()}");
   }
 
-  // Save MessUser remotely (e.g., Firebase or REST API)
+
   Future<bool> saveRemotely(MessUser user) async {
+
     try {
-      // Implement remote save logic here
+      DatabaseReference usersRef = _databaseRef.child("musers");
+      DatabaseEvent event = await usersRef.orderByChild("phone").equalTo(user.phone).once();
+      DataSnapshot snapshot = event.snapshot;
+      if (snapshot.exists) {
+        return false;
+      }
+
+      await _databaseRef.child("musers").child(user.uniqueId!).set(user.toMap());
+
       print("User saved remotely: ${user.toMap()}");
       return true;
     } catch (e) {
-      print("Failed to save user remotely: $e");
+      print("User Phone number exist or  Failed to save user remotely: $e");
       return false;
     }
   }
