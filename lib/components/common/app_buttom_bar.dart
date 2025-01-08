@@ -81,7 +81,7 @@ class _BottomNavigationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = item.backgroundColor ?? context.theme.colorScheme.primary;
+    final backgroundColor = item.backgroundColor ?? context.themeD.colorScheme.primary;
 
     int size;
     Widget label;
@@ -176,7 +176,7 @@ class _TileIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor = item.iconColor ?? Colors.black54;
-    final backgroundColor = item.backgroundColor ?? context.theme.colorScheme.primary;
+    final backgroundColor = item.backgroundColor ?? context.themeD.colorScheme.primary;
 
     return Align(
       alignment: Alignment.topCenter,

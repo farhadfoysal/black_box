@@ -8,15 +8,11 @@ import 'package:black_box/screen_page/mess/mess_home_employee.dart';
 import 'package:black_box/screen_page/mess/mess_home_member.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:go_router/go_router.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
-import 'package:month_picker_dialog/month_picker_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../controller/mess/mess_controller.dart';
 import '../../cores/cores.dart';
 import '../../db/local/database_helper.dart';
 import '../../model/mess/mess_main.dart';
@@ -28,12 +24,12 @@ import '../../preference/logout.dart';
 import '../../routes/routes.dart';
 import '../../utility/unique.dart';
 
-class MessCreateView extends StatefulWidget {
+class MessMainScreen extends StatefulWidget {
   @override
-  State<MessCreateView> createState() => _MessCreateViewState();
+  State<MessMainScreen> createState() => _MessMainScreenState();
 }
 
-class _MessCreateViewState extends State<MessCreateView> {
+class _MessMainScreenState extends State<MessMainScreen> {
   // final _auth = FirebaseAuth.instance;
   final _databaseRef = FirebaseDatabase.instance.ref();
 
@@ -60,10 +56,6 @@ class _MessCreateViewState extends State<MessCreateView> {
   late TabController _tabController;
   int _currentIndex1 = 0;
   int _currentIndex2 = 0;
-  DateTime selectedDate = DateTime.now();
-  final MessController messController = Get.put(MessController());
-  String? selectedMonthYear;
-
 
   @override
   void initState() {
@@ -71,21 +63,6 @@ class _MessCreateViewState extends State<MessCreateView> {
     _loadUserName();
     _initializeData();
 
-  }
-
-  void pickMonthAndYear() async {
-    final picked = await showMonthPicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-
-    if (picked != null) {
-      setState(() {
-        selectedDate = picked;
-      });
-    }
   }
 
   void checkMessLoginStatus() async {
@@ -114,76 +91,76 @@ class _MessCreateViewState extends State<MessCreateView> {
   Future<void> loginMessUser() async {
     if(await InternetConnectionChecker.instance.hasConnection){
 
-        if(_user==null){
-          print("null");
-        }
+      if(_user==null){
+        print("null");
+      }
 
-          DatabaseReference userRef = FirebaseDatabase.instance
-              .ref()
-              .child('musers')
-              .child(_user!.userid??"");
+      DatabaseReference userRef = FirebaseDatabase.instance
+          .ref()
+          .child('musers')
+          .child(_user!.userid??"");
 
-          final snapshot = await userRef.get();
+      final snapshot = await userRef.get();
 
-          if (snapshot.exists) {
-            Map<String, dynamic> userData = Map<String, dynamic>.from(snapshot.value as Map);
-            MessUser user = MessUser.fromMap(userData);
+      if (snapshot.exists) {
+        Map<String, dynamic> userData = Map<String, dynamic>.from(snapshot.value as Map);
+        MessUser user = MessUser.fromMap(userData);
+        setState(() {
+          messUser = user;
+        });
+
+        if (mounted) {
+          if(user.userType=="member") {
+            await Logout().setMessLoggedIn(true);
+            await Logout().setMessUserType("member");
+            await Logout().saveMessUser(user.toMap(), key: "mess_user_logged_in");
+            await Logout().saveMessUserDetails(user, key: "mess_user_data");
+
             setState(() {
-              messUser = user;
+              // loading = false;
+            });
+            await getMessData(user);
+            // context.goNamed(Routes.homePage);
+            context.push(Routes.messMember);
+
+
+          }else if(user.userType=="employee"){
+
+            await Logout().setMessLoggedIn(true);
+            await Logout().setMessUserType("employee");
+            await Logout().saveMessUser(user.toMap(), key: "mess_user_logged_in");
+            await Logout().saveMessUserDetails(user, key: "mess_user_data");
+
+            setState(() {
+              // loading = false;
+            });
+            await getMessData(user);
+            context.push(Routes.messEmployee);
+            // context.goNamed(Routes.homePage);
+
+          }else{
+
+            await Logout().setMessLoggedIn(true);
+            await Logout().setMessUserType("admin");
+            await Logout().saveMessUser(user.toMap(), key: "mess_user_logged_in");
+            await Logout().saveMessUserDetails(user, key: "mess_user_data");
+            await getMessData(user);
+
+            setState(() {
+              // loading = false;
             });
 
-            if (mounted) {
-              if(user.userType=="member") {
-                await Logout().setMessLoggedIn(true);
-                await Logout().setMessUserType("member");
-                await Logout().saveMessUser(user.toMap(), key: "mess_user_logged_in");
-                await Logout().saveMessUserDetails(user, key: "mess_user_data");
+            context.push(Routes.messAdmin);
+            // context.goNamed(Routes.homePage);
 
-                setState(() {
-                  // loading = false;
-                });
-                await getMessData(user);
-                // context.goNamed(Routes.homePage);
-                context.push(Routes.messMember);
-
-
-              }else if(user.userType=="employee"){
-
-                await Logout().setMessLoggedIn(true);
-                await Logout().setMessUserType("employee");
-                await Logout().saveMessUser(user.toMap(), key: "mess_user_logged_in");
-                await Logout().saveMessUserDetails(user, key: "mess_user_data");
-
-                  setState(() {
-                    // loading = false;
-                  });
-                await getMessData(user);
-                context.push(Routes.messEmployee);
-                  // context.goNamed(Routes.homePage);
-
-              }else{
-
-                await Logout().setMessLoggedIn(true);
-                await Logout().setMessUserType("admin");
-                await Logout().saveMessUser(user.toMap(), key: "mess_user_logged_in");
-                await Logout().saveMessUserDetails(user, key: "mess_user_data");
-                await getMessData(user);
-
-                  setState(() {
-                    // loading = false;
-                  });
-
-                context.push(Routes.messAdmin);
-                  // context.goNamed(Routes.homePage);
-
-              }
-            }
-          } else {
-            showSnackBarMsg(context, 'MessUser data not found!');
-            setState(() {
-              isJoining = false;
-            });
           }
+        }
+      } else {
+        showSnackBarMsg(context, 'MessUser data not found!');
+        setState(() {
+          isJoining = false;
+        });
+      }
 
 
     }
@@ -193,7 +170,7 @@ class _MessCreateViewState extends State<MessCreateView> {
     // First load user data
     await _loadUserData();
     await _loadMessUserData();
-
+    checkMessLoginStatus();
 
   }
 
@@ -203,7 +180,7 @@ class _MessCreateViewState extends State<MessCreateView> {
 
     Map<String, dynamic>? userMap = await logout.getUser(key: 'user_logged_in');
     Map<String, dynamic>? schoolMap =
-        await logout.getSchool(key: 'school_data');
+    await logout.getSchool(key: 'school_data');
 
     if (userMap != null) {
       User user_data = User.fromMap(userMap);
@@ -249,7 +226,7 @@ class _MessCreateViewState extends State<MessCreateView> {
     MessUser? user = await logout.getMessUserDetails(key: 'mess_user_data');
 
     Map<String, dynamic>? MessUserMap =
-        await logout.getMessUser(key: 'mess_user_logged_in');
+    await logout.getMessUser(key: 'mess_user_logged_in');
     Map<String, dynamic>? messMap = await logout.getMess(key: 'mess_data');
 
     if (MessUserMap != null) {
@@ -396,59 +373,10 @@ class _MessCreateViewState extends State<MessCreateView> {
                   obscureText: true,
                 ),
                 SizedBox(height: 20),
-                GestureDetector(
-                  onTap: () async {
-                    // Use the Month-Year picker
-                    final picked = await showMonthPicker(
-                      context: context,
-                      initialDate: selectedDate,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-
-                    if (picked != null) {
-                      setState(() {
-                        selectedDate = picked;
-                        selectedMonthYear =
-                        "${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}";
-                      });
-                    }
-                  },
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          selectedMonthYear ?? "Select Month and Year",
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        Icon(Icons.calendar_today),
-                      ],
-                    ),
-                  ),
+                ElevatedButton(
+                  onPressed: saveMess,
+                  child: Text("Create Mess"),
                 ),
-                SizedBox(height: 20),
-                Obx(() {
-                  if (messController.isLoading.value) {
-                    return CircularProgressIndicator();
-                  } else if (messController.errorMessage.value.isNotEmpty) {
-                    return Text(messController.errorMessage.value, style: TextStyle(color: Colors.red));
-                  } else {
-                    return ElevatedButton(
-                      onPressed: saveMess,
-                      child: Text("Create Mess"),
-                    );
-                  }
-                }),
-                // ElevatedButton(
-                //   onPressed: saveMess,
-                //   child: Text("Create Mess"),
-                // ),
               ] else ...[
                 TextFormField(
                   controller: messCode,
@@ -540,48 +468,6 @@ class _MessCreateViewState extends State<MessCreateView> {
     );
   }
 
-  Future<bool> checkMessExist(String messId) async {
-    if (await InternetConnectionChecker.instance.hasConnection){
-      try {
-        final DatabaseReference dbRef = FirebaseDatabase.instance.ref("mess").child(messId);
-
-        final snapshot = await dbRef.get();
-
-        if (snapshot.exists) {
-          return true;
-        } else {
-          return false;
-        }
-      } catch (e) {
-        print("Error checking mess existence: $e");
-        return false;
-      }
-    }else{
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Row(
-            children: [
-              Icon(
-                Icons.info_outline,
-                color: Colors.white,
-              ),
-              SizedBox(width: 10),
-              Text(
-                "You are in Offline mode now, Please, connect to the Internet!",
-                style: TextStyle(color: Colors.white),
-              ),
-            ],
-          ),
-          backgroundColor: Colors.redAccent,
-          shape: StadiumBorder(),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return false;
-    }
-
-  }
-
 
   Future<void> saveMess() async {
     var uuid = Uuid();
@@ -603,7 +489,6 @@ class _MessCreateViewState extends State<MessCreateView> {
       startDate: DateTime.now(),
       mealUpdateStatus: "1",
       uPerm: "0",
-      currentMonth: "${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}",
     );
     setState(() {
       messMain = newMess;
@@ -612,7 +497,7 @@ class _MessCreateViewState extends State<MessCreateView> {
 
     if (await InternetConnectionChecker.instance.hasConnection) {
       final DatabaseReference dbRef =
-          FirebaseDatabase.instance.ref("mess").child(newMess.messId!);
+      FirebaseDatabase.instance.ref("mess").child(newMess.messId!);
 
       try {
         await dbRef.set(newMess.toMap());
@@ -750,20 +635,9 @@ class _MessCreateViewState extends State<MessCreateView> {
     }
   }
 
-  Future<void> joinMess() async {
-    if(await checkMessExist(messCode.text)){
-      messController.joinMess(messCode.text).then((success) {
-        if (success) {
-          showSnackBarMsg(context, "Successfully joined mess!");
-        } else {
-          showSnackBarMsg(context, "Failed to join mess. Try again.");
-        }
-      });
-    }else{
-
-    }
+  void joinMess(){
+    String mess = messCode.text.toString();
   }
-
 
   String generateRefer() {
 

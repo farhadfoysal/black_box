@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:black_box/screen_page/tutor/tutor_student_dates.dart';
 import 'package:black_box/screen_page/tutor/tutor_student_monthly_dates.dart';
 import 'package:black_box/screen_page/tutor/tutor_student_payment.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -764,7 +765,7 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => TutorStudentMonthlyDates(
+                          builder: (context) => TutorStudentDates(
                             student: widget.student,
                             month: month,
                           ),

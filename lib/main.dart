@@ -16,4 +16,7 @@ Future<void> main() async {
 
   Get.put(ThemeController());
   runApp(const BlackBoxApp());
+  // runApp(MaterialApp(
+  //   home: BlackBoxApp(),
+  // ));
 }

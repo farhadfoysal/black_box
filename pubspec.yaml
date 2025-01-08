@@ -45,7 +45,8 @@ dependencies:
   shared_preferences: ^2.3.4
   smooth_page_indicator:
   lottie: ^3.3.0
-  intl: ^0.17.0
+#  intl: ^0.17.0
+  intl: ^0.20.1
   uuid: ^4.5.1
   avatar_glow: ^3.0.1
   flutter_svg: ^2.0.16
@@ -64,6 +65,9 @@ dependencies:
   iconsax: ^0.0.8
   image_picker: ^1.1.2
   marquee: ^2.3.0
+  permission_handler: ^11.3.1
+  flex_color_picker: ^3.7.0
+  month_picker_dialog: ^6.0.3
 
 dev_dependencies:
   flutter_test:

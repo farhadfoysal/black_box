@@ -96,6 +96,18 @@ class Logout {
     prefs.remove(key_key);
   }
 
+  Future<void> clearMessUser({String key = MESS_USER_KEY, String key_key = MESS_USER_KEY}) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove(key);
+    prefs.remove(key_key);
+  }
+
+  Future<void> clearMess({String key = MESS_KEY, String key_key = MESS_KEY}) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove(key);
+    prefs.remove(key_key);
+  }
+
   Future<void> getOut(BuildContext context) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.clear();
@@ -141,6 +153,11 @@ class Logout {
   Future<void> logoutUser() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setBool(KEY_IS_LOGGED_IN, false);
+  }
+
+  Future<void> logoutMessUser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setBool(MESS_KEY_IS_LOGGED_IN, false);
   }
 
   Future<void> setInstaller(bool isInstalled) async {

@@ -23,12 +23,12 @@ import '../../routes/app_router.dart';
 import '../../screen_page/tutor/tutor_student_profile.dart';
 import '../../utility/unique.dart';
 
-class TutorView extends StatefulWidget {
+class TutorMainScreen extends StatefulWidget {
   @override
-  _TutorViewState createState() => _TutorViewState();
+  _TutorMainScreenState createState() => _TutorMainScreenState();
 }
 
-class _TutorViewState extends State<TutorView> {
+class _TutorMainScreenState extends State<TutorMainScreen> {
   List<TutorStudent> students = [];
 
   String _userName = 'Farhad Foysal';
@@ -80,7 +80,7 @@ class _TutorViewState extends State<TutorView> {
 
         if (dataSnapshot.exists) {
           final Map<dynamic, dynamic> studentsData =
-              dataSnapshot.value as Map<dynamic, dynamic>;
+          dataSnapshot.value as Map<dynamic, dynamic>;
 
           setState(() {
             students.clear();
@@ -160,7 +160,7 @@ class _TutorViewState extends State<TutorView> {
 
     Map<String, dynamic>? userMap = await logout.getUser(key: 'user_logged_in');
     Map<String, dynamic>? schoolMap =
-        await logout.getSchool(key: 'school_data');
+    await logout.getSchool(key: 'school_data');
 
     if (userMap != null) {
       User user_data = User.fromMap(userMap);
@@ -261,7 +261,7 @@ class _TutorViewState extends State<TutorView> {
     final TextEditingController userNameController = TextEditingController();
     final TextEditingController phoneController = TextEditingController();
     final TextEditingController guardianPhoneController =
-        TextEditingController();
+    TextEditingController();
     final TextEditingController phonePassController = TextEditingController();
     final TextEditingController dobController = TextEditingController();
     final TextEditingController educationController = TextEditingController();
@@ -276,9 +276,9 @@ class _TutorViewState extends State<TutorView> {
         builder: (context, setModalState) {
           void _addWeekDay() {
             final TextEditingController timeController =
-                TextEditingController();
+            TextEditingController();
             final TextEditingController minutesController =
-                TextEditingController();
+            TextEditingController();
             String? selectedDay;
             bool isAdding = false;
             String message = '';
@@ -336,7 +336,7 @@ class _TutorViewState extends State<TutorView> {
                             'Sunday',
                           ]
                               .map((day) => DropdownMenuItem(
-                                  value: day, child: Text(day)))
+                              value: day, child: Text(day)))
                               .toList(),
                           onChanged: (value) {
                             setDialogState(() {
@@ -361,7 +361,7 @@ class _TutorViewState extends State<TutorView> {
                                 ),
                                 onTap: () async {
                                   TimeOfDay? selectedTime =
-                                      await showTimePicker(
+                                  await showTimePicker(
                                     context: context,
                                     initialTime: TimeOfDay.now(),
                                   );
@@ -415,54 +415,54 @@ class _TutorViewState extends State<TutorView> {
                       onPressed: isAdding
                           ? null
                           : () {
-                              if (selectedDay != null) {
-                                setDialogState(() {
-                                  isAdding = true;
-                                  message = ''; // Clear previous message
-                                });
-                                TutorWeekDay day = TutorWeekDay(
-                                  uniqueId: DateTime.now().toIso8601String(),
-                                  studentId: uniqueIdController.text,
-                                  userId: userNameController.text,
-                                  day: selectedDay!,
-                                  time: timeController.text,
-                                  minutes:
-                                      int.tryParse(minutesController.text) ?? 0,
-                                );
-                                setModalState(() {
-                                  weekDays.add(
-                                      day); // Add the day to the parent list
-                                });
-                                Future.delayed(Duration(seconds: 2), () {
-                                  setDialogState(() {
-                                    isAdding = false;
-                                    message =
-                                        'Week Day added successfully!'; // Success message
-                                  });
-                                });
-                                Future.delayed(Duration(seconds: 3), () {
-                                  // Navigator.pop(context);
-                                });
-                              } else {
-                                setDialogState(() {
-                                  message =
-                                      'Please select a day'; // Error message
-                                });
-                              }
-                            },
+                        if (selectedDay != null) {
+                          setDialogState(() {
+                            isAdding = true;
+                            message = ''; // Clear previous message
+                          });
+                          TutorWeekDay day = TutorWeekDay(
+                            uniqueId: DateTime.now().toIso8601String(),
+                            studentId: uniqueIdController.text,
+                            userId: userNameController.text,
+                            day: selectedDay!,
+                            time: timeController.text,
+                            minutes:
+                            int.tryParse(minutesController.text) ?? 0,
+                          );
+                          setModalState(() {
+                            weekDays.add(
+                                day); // Add the day to the parent list
+                          });
+                          Future.delayed(Duration(seconds: 2), () {
+                            setDialogState(() {
+                              isAdding = false;
+                              message =
+                              'Week Day added successfully!'; // Success message
+                            });
+                          });
+                          Future.delayed(Duration(seconds: 3), () {
+                            // Navigator.pop(context);
+                          });
+                        } else {
+                          setDialogState(() {
+                            message =
+                            'Please select a day'; // Error message
+                          });
+                        }
+                      },
                       child: isAdding
                           ? SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
                           : Text(
-                              'Add',
-                              style: TextStyle(color: Colors.white),
-                            ),
+                        'Add',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ],
                 ),
@@ -521,7 +521,7 @@ class _TutorViewState extends State<TutorView> {
                           ),
                           const SizedBox(
                               width:
-                                  12), // Optional, adds a little padding from the edge
+                              12), // Optional, adds a little padding from the edge
                         ],
                       ),
                     ),
@@ -547,13 +547,13 @@ class _TutorViewState extends State<TutorView> {
                               horizontal: 20, vertical: 15),
                           shape: RoundedRectangleBorder(
                             borderRadius:
-                                BorderRadius.circular(30), // Rounded corners
+                            BorderRadius.circular(30), // Rounded corners
                           ),
                           backgroundColor: Colors.pinkAccent, // Button color
                         ),
                         child: Row(
                           mainAxisSize:
-                              MainAxisSize.min, // Keeps the button compact
+                          MainAxisSize.min, // Keeps the button compact
                           children: [
                             const Icon(Icons.add,
                                 color: Colors.white), // Icon on the left
@@ -819,43 +819,43 @@ class _TutorViewState extends State<TutorView> {
                               onTap: isLoading
                                   ? null
                                   : () {
-                                      setModalState(() {});
-                                      setState(() {
-                                        isLoading = true;
+                                setModalState(() {});
+                                setState(() {
+                                  isLoading = true;
 
-                                        TutorStudent student = TutorStudent(
-                                          name: userNameController.text,
-                                          phone: phoneController.text,
-                                          gaurdianPhone:
-                                              guardianPhoneController.text,
-                                          phonePass: phonePassController.text,
-                                          education: educationController.text,
-                                          address: addressController.text,
-                                          activeStatus: 1,
-                                          admittedDate: DateTime.now(),
-                                          img: imgController.text,
-                                          days: weekDays,
-                                        );
-                                        saveStudent(student);
-                                      });
-                                    },
+                                  TutorStudent student = TutorStudent(
+                                    name: userNameController.text,
+                                    phone: phoneController.text,
+                                    gaurdianPhone:
+                                    guardianPhoneController.text,
+                                    phonePass: phonePassController.text,
+                                    education: educationController.text,
+                                    address: addressController.text,
+                                    activeStatus: 1,
+                                    admittedDate: DateTime.now(),
+                                    img: imgController.text,
+                                    days: weekDays,
+                                  );
+                                  saveStudent(student);
+                                });
+                              },
                               child: Center(
                                 child: isLoading
                                     ? SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
                                     : Text(
-                                        " Save Student",
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                  " Save Student",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -915,191 +915,191 @@ class _TutorViewState extends State<TutorView> {
           Positioned.fill(
             child: isLoading
                 ? const Center(
-                    child:
-                        CircularProgressIndicator(), // Show loading indicator
-                  )
+              child:
+              CircularProgressIndicator(), // Show loading indicator
+            )
                 : SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          SizedBox(height: 1),
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemCount: students.length,
-                            itemBuilder: (context, index) {
-                              final student = students[index];
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          TutorStudentMonth(student: student),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    SizedBox(height: 1),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: students.length,
+                      itemBuilder: (context, index) {
+                        final student = students[index];
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    TutorStudentMonth(student: student),
+                              ),
+                            );
+                          },
+                          child: Card(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            elevation: 5,
+                            margin: const EdgeInsets.all(10),
+                            color: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    margin:
+                                    const EdgeInsets.only(right: 14),
+                                    width: 70,
+                                    height: 70,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
                                     ),
-                                  );
-                                },
-                                child: Card(
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
-                                  elevation: 5,
-                                  margin: const EdgeInsets.all(10),
-                                  color: Colors.white,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8),
-                                    child: Row(
+                                    child: student.img?.isNotEmpty == true
+                                        ? ClipOval(
+                                      child: Image.network(
+                                        student.img!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          // Fallback to asset image if there's an error
+                                          return Image.asset(
+                                            'assets/1.jpg',
+                                            fit: BoxFit.cover,
+                                          );
+                                        },
+                                      ),
+                                    )
+                                        : ClipOval(
+                                      child: Image.asset(
+                                        'assets/1.jpg',
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    // decoration: BoxDecoration(
+                                    //   shape: BoxShape.circle,
+                                    //   image: DecorationImage(
+                                    //     fit: BoxFit.cover,
+                                    //     image: student.img?.isNotEmpty == true
+                                    //         ? NetworkImage(student.img!) // Load the network image
+                                    //         : AssetImage('assets/1.jpg') as ImageProvider, // Fallback image
+                                    //     onError: (exception, stackTrace) {
+                                    //       // This won't work in DecorationImage; use a fallback widget or logic below
+                                    //     },
+                                    //   ),
+                                    // ),
+                                    // child: student.img?.isNotEmpty != true
+                                    //     ? Icon(Icons.person, size: 50) // Placeholder icon for fallback
+                                    //     : null, // Keep null if the image is valid
+                                    // decoration: BoxDecoration(
+                                    //   shape: BoxShape.circle,
+                                    //   image: DecorationImage(
+                                    //     fit: BoxFit.cover,
+                                    //     image: student.img?.isNotEmpty == true
+                                    //         ? NetworkImage(student.img!)
+                                    //         : AssetImage('assets/1.jpg') as ImageProvider,
+                                    //
+                                    //     // image: NetworkImage(
+                                    //     //     "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg"
+                                    //     //     // items[index].img.toString(),
+                                    //     //     ),
+                                    //   ),
+                                    // ),
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.center,
                                       children: [
-                                        Container(
-                                          margin:
-                                              const EdgeInsets.only(right: 14),
-                                          width: 70,
-                                          height: 70,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: student.img?.isNotEmpty == true
-                                              ? ClipOval(
-                                            child: Image.network(
-                                              student.img!,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (context, error, stackTrace) {
-                                                // Fallback to asset image if there's an error
-                                                return Image.asset(
-                                                  'assets/1.jpg',
-                                                  fit: BoxFit.cover,
-                                                );
-                                              },
-                                            ),
-                                          )
-                                              : ClipOval(
-                                            child: Image.asset(
-                                              'assets/1.jpg',
-                                              fit: BoxFit.cover,
-                                            ),
-                                          ),
-                                          // decoration: BoxDecoration(
-                                          //   shape: BoxShape.circle,
-                                          //   image: DecorationImage(
-                                          //     fit: BoxFit.cover,
-                                          //     image: student.img?.isNotEmpty == true
-                                          //         ? NetworkImage(student.img!) // Load the network image
-                                          //         : AssetImage('assets/1.jpg') as ImageProvider, // Fallback image
-                                          //     onError: (exception, stackTrace) {
-                                          //       // This won't work in DecorationImage; use a fallback widget or logic below
-                                          //     },
-                                          //   ),
-                                          // ),
-                                          // child: student.img?.isNotEmpty != true
-                                          //     ? Icon(Icons.person, size: 50) // Placeholder icon for fallback
-                                          //     : null, // Keep null if the image is valid
-                                          // decoration: BoxDecoration(
-                                          //   shape: BoxShape.circle,
-                                          //   image: DecorationImage(
-                                          //     fit: BoxFit.cover,
-                                          //     image: student.img?.isNotEmpty == true
-                                          //         ? NetworkImage(student.img!)
-                                          //         : AssetImage('assets/1.jpg') as ImageProvider,
-                                          //
-                                          //     // image: NetworkImage(
-                                          //     //     "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg"
-                                          //     //     // items[index].img.toString(),
-                                          //     //     ),
-                                          //   ),
-                                          // ),
+                                        Text(
+                                          student.name.toString(),
+                                          style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 18),
+                                          maxLines: 2,
                                         ),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                student.name.toString(),
-                                                style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 18),
-                                                maxLines: 2,
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Text(
-                                                student.phone.toString(),
-                                                style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 14),
-                                                maxLines: 2,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        PopupMenuButton<String>(
-                                          onSelected: (value) {
-                                            if (value == 'edit') {
-                                              // Implement edit logic
-                                            } else if (value == 'call') {
-                                              _makePhoneCall(student.phone??"");
-                                            } else if (value == 'whatsapp') {
-                                              _openWhatsApp(student.phone??"");
-                                            } else if (value == 'delete') {
-                                              setState(() {
-                                                students.remove(
-                                                    student); // Assuming `students` is your list
-                                              });
-                                            } else if (value == 'profile') {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      TutorStudentProfile(
-                                                          student: student),
-                                                ),
-                                              );
-                                              setState(() {});
-                                            } else if (value == 'go') {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      TutorStudentMonthly(
-                                                          student: student),
-                                                ),
-                                              );
-                                              setState(() {});
-                                            }
-                                          },
-                                          itemBuilder: (context) => [
-                                            const PopupMenuItem(
-                                                value: 'call',
-                                                child: Text('Call')),
-                                            const PopupMenuItem(
-                                                value: 'whatsapp',
-                                                child: Text('WhatsApp')),
-                                            const PopupMenuItem(
-                                                value: 'profile',
-                                                child: Text('Profile')),
-                                            const PopupMenuItem(
-                                                value: 'go',
-                                                child: Text('Attendance')),
-                                            const PopupMenuItem(
-                                                value: 'edit',
-                                                child: Text('Edit')),
-                                            const PopupMenuItem(
-                                                value: 'delete',
-                                                child: Text('Delete')),
-                                          ],
+                                        const SizedBox(height: 10),
+                                        Text(
+                                          student.phone.toString(),
+                                          style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 14),
+                                          maxLines: 2,
                                         ),
                                       ],
                                     ),
                                   ),
-                                ),
-                              );
-                            },
+                                  PopupMenuButton<String>(
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        // Implement edit logic
+                                      } else if (value == 'call') {
+                                        _makePhoneCall(student.phone??"");
+                                      } else if (value == 'whatsapp') {
+                                        _openWhatsApp(student.phone??"");
+                                      } else if (value == 'delete') {
+                                        setState(() {
+                                          students.remove(
+                                              student); // Assuming `students` is your list
+                                        });
+                                      } else if (value == 'profile') {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                TutorStudentProfile(
+                                                    student: student),
+                                          ),
+                                        );
+                                        setState(() {});
+                                      } else if (value == 'go') {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                TutorStudentMonthly(
+                                                    student: student),
+                                          ),
+                                        );
+                                        setState(() {});
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                          value: 'call',
+                                          child: Text('Call')),
+                                      const PopupMenuItem(
+                                          value: 'whatsapp',
+                                          child: Text('WhatsApp')),
+                                      const PopupMenuItem(
+                                          value: 'profile',
+                                          child: Text('Profile')),
+                                      const PopupMenuItem(
+                                          value: 'go',
+                                          child: Text('Attendance')),
+                                      const PopupMenuItem(
+                                          value: 'edit',
+                                          child: Text('Edit')),
+                                      const PopupMenuItem(
+                                          value: 'delete',
+                                          child: Text('Delete')),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
-                  ),
+                  ],
+                ),
+              ),
+            ),
           ),
 
           // Positioned button at the bottom-right corner
@@ -1124,18 +1124,18 @@ class _TutorViewState extends State<TutorView> {
                   SizedBox(width: 10),
                   isLoading
                       ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
                       : Text(
-                          "Add Student",
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
+                    "Add Student",
+                    style: TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             ),

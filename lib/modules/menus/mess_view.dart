@@ -317,7 +317,7 @@ class _ProfileHeader extends StatelessWidget {
             "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg",
             membership: "U",
             progress: 60,
-            color: context.theme.primaryColor,
+            color: context.themeD.primaryColor,
           ),
           Expanded(
               child: Padding(

@@ -43,7 +43,10 @@ class AppRouter {
 
   static Future<void> logoutUser(BuildContext context) async {
     await Logout().logoutUser();
+    await Logout().logoutMessUser();
     await Logout().clearUser(key: "user_logged_in");
+    await Logout().clearMessUser(key: "mess_user_logged_in");
+    await Logout().clearMess(key: "mess_data");
 
     context.goNamed(Routes.logout);
   }
