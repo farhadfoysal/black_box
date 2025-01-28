@@ -1,13 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:black_box/db/local/database_manager.dart';
-import 'package:black_box/screen_page/mess/mess_home_admin.dart';
-import 'package:black_box/screen_page/mess/mess_home_employee.dart';
-import 'package:black_box/screen_page/mess/mess_home_member.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:go_router/go_router.dart';
@@ -34,6 +34,19 @@ class MessCreateView extends StatefulWidget {
 }
 
 class _MessCreateViewState extends State<MessCreateView> {
+  late StreamSubscription _streamSubscription;
+  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+  bool isConnected = false;
+
+  internetConnection()=> _streamSubscription = Connectivity().onConnectivityChanged.listen((result) async {
+      isConnected = await InternetConnectionChecker.instance.hasConnection;
+      if(!isConnected){
+        showConnectivitySnackBar(isConnected);
+      }else{
+        showConnectivitySnackBar(isConnected);
+      }
+  });
+
   // final _auth = FirebaseAuth.instance;
   final _databaseRef = FirebaseDatabase.instance.ref();
 
@@ -70,7 +83,20 @@ class _MessCreateViewState extends State<MessCreateView> {
     super.initState();
     _loadUserName();
     _initializeData();
+    internetConnection();
+  }
 
+  void showConnectivitySnackBar(bool isOnline) {
+    final message = isOnline ? "Internet Connected" : "Internet Not Connected";
+    final color = isOnline ? Colors.green : Colors.red;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   void pickMonthAndYear() async {
@@ -318,6 +344,13 @@ class _MessCreateViewState extends State<MessCreateView> {
     setState(() {
       _currentIndex2 = index;
     });
+  }
+
+  @override
+  void dispose() {
+    _streamSubscription.cancel();
+    _connectivitySubscription.cancel();
+    super.dispose();
   }
 
   @override

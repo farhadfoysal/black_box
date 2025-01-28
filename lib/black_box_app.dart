@@ -1,3 +1,4 @@
+import 'package:black_box/provider/connectivity_provider.dart';
 import 'package:black_box/provider/user/user_provider.dart';
 import 'package:black_box/screen_page/splash/splash.dart';
 import 'package:black_box/utility/controller/theme_controller.dart';
@@ -17,6 +18,7 @@ class BlackBoxApp extends StatelessWidget{
     return MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => UserProvider()),
+          ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
         ],
         child: Obx(
               () => GetMaterialApp(

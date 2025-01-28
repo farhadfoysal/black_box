@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:black_box/extra/test/sign_in_or_register.dart';
+import 'package:black_box/screen_page/mess/settings/mess_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -195,7 +196,7 @@ class _MessDrawerState extends State<MessDrawer> {
           // _buildDrawerTile(Icons.bloodtype, 'C L A S S  M A N A G E R', ClassManagerPage()),
           // _buildDrawerTile(Icons.note, 'N O T E S & T A S K S', NotesScreen()),
           // _buildDrawerTile(Icons.calendar_month_outlined, 'ACADEMIC - C A L E N D A R', AcademicCalender()),
-          // _buildDrawerTile(Icons.settings, 'S E T T I N G S', const SettingScreen()),
+          _buildDrawerTile(Icons.settings, 'S E T T I N G S', MessSettings()),
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('L O G O U T'),

@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:black_box/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 
 import '../../screen_page/signup/Register.dart';
 import '../../screen_page/signin/login.dart';
+import '../../web/internet_connectivity.dart';
 
 class SignInOrRegister extends StatefulWidget {
 
@@ -13,6 +17,85 @@ class SignInOrRegister extends StatefulWidget {
 }
 
 class _SignInOrRegisterState extends State<SignInOrRegister> {
+
+  bool isConnected = false;
+  late StreamSubscription subscription;
+  final internetChecker = InternetConnectivity();
+  StreamSubscription<InternetConnectionStatus>? connectionSubscription;
+
+  bool loading = false;
+
+  @override
+  void dispose() {
+    stopListening();
+    connectionSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+    SystemChrome.setSystemUIOverlayStyle(
+        SystemUiOverlayStyle(statusBarColor: Colors.transparent));
+  }
+
+
+  Future<void> _initializeApp() async {
+
+    startListening();
+    checkConnection();
+    subscription = internetChecker.checkConnectionContinuously((status) {
+
+      isConnected = status;
+
+    });
+  }
+  void checkConnection() async {
+    bool result = await internetChecker.hasInternetConnection();
+    setState(() {
+      isConnected = result;
+    });
+  }
+
+  StreamSubscription<InternetConnectionStatus> checkConnectionContinuously() {
+    return InternetConnectionChecker.instance.onStatusChange.listen((InternetConnectionStatus status) {
+      if (status == InternetConnectionStatus.connected) {
+        isConnected = true;
+        showConnectivitySnackBar(isConnected);
+        print('Connected to the internet ff');
+
+      } else {
+        isConnected = false;
+        showConnectivitySnackBar(isConnected);
+        print('Disconnected from the internet ff');
+        // _loadSchoolData();
+      }
+    });
+  }
+
+  void showConnectivitySnackBar(bool isOnline) {
+    final message = isOnline ? "Internet Connected" : "Internet Not Connected";
+    final color = isOnline ? Colors.green : Colors.red;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+
+  void startListening() {
+    connectionSubscription = checkConnectionContinuously();
+  }
+
+  void stopListening() {
+    connectionSubscription?.cancel();
+  }
+
   @override
   Widget build(BuildContext context) {
     // This line is used to make the notification bar transparent

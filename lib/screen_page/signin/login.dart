@@ -47,21 +47,29 @@ class _LoginState extends State<Login> {
   bool loading = false;
 
   @override
+  void dispose() {
+    stopListening();
+    connectionSubscription?.cancel();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     _initializeApp();
     SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle(statusBarColor: Colors.transparent));
   }
+
   Future<void> _initializeApp() async {
     await checkLoginStatus();
 
     startListening();
     checkConnection();
     subscription = internetChecker.checkConnectionContinuously((status) {
-      setState(() {
+
         isConnected = status;
-      });
+
     });
   }
   void checkConnection() async {
@@ -75,15 +83,31 @@ class _LoginState extends State<Login> {
     return InternetConnectionChecker.instance.onStatusChange.listen((InternetConnectionStatus status) {
       if (status == InternetConnectionStatus.connected) {
         isConnected = true;
-        print('Connected to the internet');
+        showConnectivitySnackBar(isConnected);
+        print('Connected to the internet ff');
 
       } else {
         isConnected = false;
-        print('Disconnected from the internet');
+        showConnectivitySnackBar(isConnected);
+        print('Disconnected from the internet ff');
         // _loadSchoolData();
       }
     });
   }
+
+  void showConnectivitySnackBar(bool isOnline) {
+    final message = isOnline ? "Internet Connected" : "Internet Not Connected";
+    final color = isOnline ? Colors.green : Colors.red;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
 
   void startListening() {
     connectionSubscription = checkConnectionContinuously();

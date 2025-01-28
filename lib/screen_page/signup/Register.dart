@@ -57,6 +57,7 @@ class _RegisterState extends State<Register> {
   void initState() {
     super.initState();
     _initializeApp();
+
   }
 
   Future<void> _initializeApp() async {
@@ -83,10 +84,12 @@ class _RegisterState extends State<Register> {
         .listen((InternetConnectionStatus status) {
       if (status == InternetConnectionStatus.connected) {
         isConnected = true;
-        print('Connected to the internet');
+        showConnectivitySnackBar(isConnected);
+        print('Connected to the internet f');
       } else {
         isConnected = false;
-        print('Disconnected from the internet');
+        showConnectivitySnackBar(isConnected);
+        print('Disconnected from the internet f');
         // _loadSchoolData();
       }
     });
@@ -99,6 +102,20 @@ class _RegisterState extends State<Register> {
   void stopListening() {
     connectionSubscription?.cancel();
   }
+
+  void showConnectivitySnackBar(bool isOnline) {
+    final message = isOnline ? "Internet Connected" : "Internet Not Connected";
+    final color = isOnline ? Colors.green : Colors.red;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
 
   void clearfield() {
     emailController.clear();

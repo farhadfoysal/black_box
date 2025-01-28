@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-class MonthlyCalculation extends StatefulWidget{
+class MessSettings extends StatefulWidget{
   @override
   State<StatefulWidget> createState() {
-    return MonthlyCalculationState();
+    return MessSettingsState();
   }
 
 }
 
-class MonthlyCalculationState extends State<MonthlyCalculation>{
+class MessSettingsState extends State<MessSettings>{
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:black_box/extra/test/sign_in_or_register.dart';
@@ -5,6 +6,7 @@ import 'package:black_box/screen_page/mess/mess_main_screen.dart';
 import 'package:black_box/screen_page/tutor/tutor_main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -13,6 +15,7 @@ import '../../model/school/school.dart';
 import '../../model/user/user.dart';
 import '../../preference/logout.dart';
 import '../../task/task_main.dart';
+import '../../web/internet_connectivity.dart';
 
 
 class DrawerWidget extends StatefulWidget {
@@ -33,11 +36,80 @@ class _DrawerWidgetState extends State<DrawerWidget> {
   String? sid;
   School? school;
 
+  bool isConnected = false;
+  late StreamSubscription subscription;
+  final internetChecker = InternetConnectivity();
+  StreamSubscription<InternetConnectionStatus>? connectionSubscription;
+
+  bool loading = false;
+
+  @override
+  void dispose() {
+    stopListening();
+    connectionSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
+    _initializeApp();
     _loadUserData();
+  }
+
+  Future<void> _initializeApp() async {
+
+    startListening();
+    checkConnection();
+    subscription = internetChecker.checkConnectionContinuously((status) {
+
+      isConnected = status;
+
+    });
+  }
+  void checkConnection() async {
+    bool result = await internetChecker.hasInternetConnection();
+    setState(() {
+      isConnected = result;
+    });
+  }
+
+  StreamSubscription<InternetConnectionStatus> checkConnectionContinuously() {
+    return InternetConnectionChecker.instance.onStatusChange.listen((InternetConnectionStatus status) {
+      if (status == InternetConnectionStatus.connected) {
+        isConnected = true;
+        showConnectivitySnackBar(isConnected);
+        print('Connected to the internet drawer');
+
+      } else {
+        isConnected = false;
+        showConnectivitySnackBar(isConnected);
+        print('Disconnected from the internet drawer');
+        // _loadSchoolData();
+      }
+    });
+  }
+
+  void showConnectivitySnackBar(bool isOnline) {
+    final message = isOnline ? "Internet Connected" : "Internet Not Connected";
+    final color = isOnline ? Colors.green : Colors.red;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+
+  void startListening() {
+    connectionSubscription = checkConnectionContinuously();
+  }
+
+  void stopListening() {
+    connectionSubscription?.cancel();
   }
 
   Future<void> _pickImage() async {
