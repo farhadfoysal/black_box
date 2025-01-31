@@ -9,6 +9,7 @@ class AppTheme {
     scaffoldBackgroundColor: AppColors.lightScaffoldBackgroundColor,
     primaryColor: AppColors.lightPrimaryColor,
     brightness: Brightness.light,
+    fontFamily: 'Montserrat',
     textTheme: GoogleFonts.mulishTextTheme().copyWith(
       titleLarge: GoogleFonts.mulish().copyWith(fontWeight: FontWeight.bold),
     ),
@@ -49,6 +50,7 @@ class AppTheme {
   //
   static final darkTheme = ThemeData(
     useMaterial3: true,
+    fontFamily: 'Montserrat',
     scaffoldBackgroundColor: AppColors.darkPrimaryVariantColor,
     // visualDensity: VisualDensity.adaptivePlatformDensity,
     primaryColor: AppColors.darkPrimaryColor,

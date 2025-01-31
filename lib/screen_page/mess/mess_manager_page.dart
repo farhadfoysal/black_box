@@ -27,16 +27,16 @@ import '../../preference/logout.dart';
 import '../../routes/routes.dart';
 import '../../utility/unique.dart';
 
-class MessMainScreen extends StatefulWidget {
-  const MessMainScreen({super.key});
+class MessManagerPage extends StatefulWidget {
+  const MessManagerPage({super.key});
 
   @override
   State<StatefulWidget> createState() {
-    return MessMainScreenState();
+    return MessManagerPageState();
   }
 }
 
-class MessMainScreenState extends State<MessMainScreen>{
+class MessManagerPageState extends State<MessManagerPage>{
 
   late StreamSubscription _streamSubscription;
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;

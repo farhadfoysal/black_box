@@ -29,6 +29,10 @@ extension TextStyleExtension on TextStyle {
   TextStyle get lightGrey => copyWith(color: AppColors.lightGrey);
   TextStyle get grey => copyWith(color: AppColors.grey);
   TextStyle get darkGrey => copyWith(color: AppColors.darkGrey);
+  TextStyle get underline_off => copyWith(decoration: TextDecoration.none);
+  TextStyle get ff => copyWith(decoration: TextDecoration.none,
+    fontFamily: 'Lato',
+    fontWeight: FontWeight.bold,);
 }
 
 const p8 = TextStyle(fontSize: 8, height: 1.2);

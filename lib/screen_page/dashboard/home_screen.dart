@@ -13,6 +13,15 @@ class HomeScreen extends StatelessWidget{
       debugShowCheckedModeBanner: false,
       title: 'EduBlackBox',
       theme: AppTheme.lightTheme,
+      // theme: ThemeData(
+      //   textTheme: TextTheme(
+      //     bodyLarge: TextStyle(decoration: TextDecoration.none),
+      //     bodyMedium: TextStyle(decoration: TextDecoration.none),
+      //     bodySmall: TextStyle(decoration: TextDecoration.none),
+      //   ),
+      //   fontFamily: 'Montserrat', // ✅ Font family applied globally
+      // ),
+      // theme: AppTheme.lightTheme,
       themeMode: ThemeMode.light,
       routerConfig: AppRouter.router,
     );

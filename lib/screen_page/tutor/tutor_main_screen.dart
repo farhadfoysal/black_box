@@ -909,6 +909,7 @@ class _TutorMainScreenState extends State<TutorMainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('Tuition Tracker')),
       body: Stack(
         children: [
           // Main content that can scroll

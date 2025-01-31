@@ -131,6 +131,21 @@ flutter:
     - family: EnliveIcons
       fonts:
         - asset: assets/fonts/EnliveIcons.ttf
+    - family: Montserrat
+      fonts:
+        - asset: assets/fonts/Montserrat-Regular.ttf
+        - asset: assets/fonts/Montserrat-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Montserrat-Italic.ttf
+          style: italic
+
+    - family: Lato
+      fonts:
+        - asset: assets/fonts/Lato-Regular.ttf
+        - asset: assets/fonts/Lato-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Lato-Italic.ttf
+          style: italic
   #   - family: Schyler
   #     fonts:
   #       - asset: fonts/Schyler-Regular.ttf

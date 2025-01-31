@@ -1,9 +1,11 @@
 import 'package:black_box/cores/cores.dart';
+import 'package:black_box/screen_page/tutor/tutor_main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as b;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import '../../components/common/photo_avatar.dart';
 import '../../model/user/user.dart';
+import '../../screen_page/mess/mess_manager_page.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -12,17 +14,14 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Manager Blackbox',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Roboto',
-      ),
+      theme: AppTheme.lightTheme,
+      themeMode: ThemeMode.light,
       initialRoute: '/',
       routes: {
         '/': (context) => const HomePage(),
         '/tenant': (context) => const TenantManagementPage(),
         '/mess': (context) => const MessManagerPage(),
-        '/tuition-tracker': (context) => const TuitionTrackerPage(),
+        '/tuition-tracker': (context) => TutorMainScreen(),
         '/tutor-finder': (context) => const TutorFinderPage(),
         '/roommate-finder': (context) => const RoommateFinderPage(),
         '/tuition-finder': (context) => const TuitionFinderPage(),
@@ -45,7 +44,7 @@ class _HomeViewState extends State<HomePage> {
 
   final List<DashboardItem> items = [
     DashboardItem(
-      title: 'Tenant Management',
+      title: 'Property Management',
       icon: MdiIcons.officeBuilding,
       color: Colors.blue,
       route: '/tenant',
@@ -67,13 +66,13 @@ class _HomeViewState extends State<HomePage> {
     ),
     DashboardItem(
       title: 'Tutor Finder',
-      icon: MdiIcons.beach,
+      icon: MdiIcons.schoolOutline,
       color: Colors.purple,
       route: '/tutor-finder',
       subtitle: 'Find Qualified Tutors',
     ),
     DashboardItem(
-      title: 'Roommate Finder',
+      title: 'HouseRent Finder',
       icon: MdiIcons.accountGroup,
       color: Colors.red,
       route: '/roommate-finder',
@@ -166,9 +165,12 @@ class _HomeViewState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Manage All Services',
+                    'Manage, Your All Services',
                     style: TextStyle(
-                      fontSize: 24,
+                      decoration: TextDecoration.none,
+                      fontSize: 20,
+                      fontFamily: 'Lato',
+                      color: Colors.blue,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -277,14 +279,20 @@ class _ProfileHeader extends StatelessWidget {
                       padding: EdgeInsets.symmetric(vertical: 1.7),
                       child: Text(
                         "Farhad Foysal Zibran",
-                        style: p18.bold,
+                        style: TextStyle(
+                          decoration: TextDecoration.none,
+                          fontSize: 18,
+                          fontFamily: 'Lato',
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: 1.7),
                       child: Text(
                         "mff585855075@gmail.com",
-                        style: p13.bold.grey,
+                        style: p13.ff.grey,
                       ),
                     )
                   ],
@@ -354,30 +362,6 @@ class TenantManagementPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Tenant Management')),
       body: const Center(child: Text('Tenant Management Content')),
-    );
-  }
-}
-
-class MessManagerPage extends StatelessWidget {
-  const MessManagerPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Mess Manager')),
-      body: const Center(child: Text('Mess Management Content')),
-    );
-  }
-}
-
-class TuitionTrackerPage extends StatelessWidget {
-  const TuitionTrackerPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Tuition Tracker')),
-      body: const Center(child: Text('Tuition Tracking Content')),
     );
   }
 }
