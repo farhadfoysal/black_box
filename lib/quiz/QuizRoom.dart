@@ -540,7 +540,7 @@ class _QuizRoomState extends State<QuizRoom> {
                   padding: const EdgeInsets.symmetric(vertical: 16.0),
                 ),
                 child: const Text(
-                  "Submit",
+                  "SAVE",
                   style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),

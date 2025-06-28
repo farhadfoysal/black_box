@@ -100,260 +100,262 @@ class _QuizStartState extends State<QuizStart> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child:  SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Lottie Animation for Quiz
-                Lottie.asset(
-                  'animation/4.json', // Replace with your animation file
-                  width: 250,
-                  height: 250,
-                  fit: BoxFit.fill,
-                ),
-                SizedBox(height: 16),
-          
-                // Quiz Title with Dynamic Name
-                Text(
-                  "Welcome to ${widget.quiz.quizName}",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal[800],
+      body: Center(
+        child: SafeArea(
+          child:  SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Lottie Animation for Quiz
+                  Lottie.asset(
+                    'animation/4.json', // Replace with your animation file
+                    width: 250,
+                    height: 250,
+                    fit: BoxFit.fill,
                   ),
-                ),
-                SizedBox(height: 16),
-          
-                // Quiz Description
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    widget.quiz.quizDescription,
+                  SizedBox(height: 16),
+
+                  // Quiz Title with Dynamic Name
+                  Text(
+                    "Welcome to ${widget.quiz.quizName}",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[700],
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.teal[800],
                     ),
                   ),
-                ),
-                SizedBox(height: 15),
-          
-                // Quiz Duration and Created Date
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        "Duration: ${widget.quiz.minutes} minutes",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Colors.teal[600],
-                        ),
-                      ),
-                      SizedBox(height: 8),
+                  SizedBox(height: 16),
 
-                      Text(
-                        "$formattedDate  Time: $formattedTime",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.teal[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 32),
-
-                if (_isQuizPerformed)
+                  // Quiz Description
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                    child: Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      widget.quiz.quizDescription,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[700],
                       ),
-                      color: Colors.white,
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          children: [
-                            Text(
-                              "You have already performed.",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.redAccent,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(height: 16),
+                    ),
+                  ),
+                  SizedBox(height: 15),
 
-                            if (_quizResult != null)
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Your Score: ${_quizResult!.percentage}%",
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green.shade700,
-                                    ),
-                                  ),
-                                  SizedBox(height: 12),
-                                  Row(
-                                    children: [
-                                      Icon(Icons.check_circle, color: Colors.green, size: 20),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        "Correct Answers: ${_quizResult!.correctCount}",
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Icon(Icons.cancel, color: Colors.red, size: 20),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        "Incorrect Answers: ${_quizResult!.incorrectCount}",
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Icon(Icons.help_outline, color: Colors.grey, size: 20),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        "Unanswered: ${_quizResult!.uncheckedCount}",
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                  // Quiz Duration and Created Date
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          "Duration: ${widget.quiz.minutes} minutes",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.teal[600],
+                          ),
+                        ),
+                        SizedBox(height: 8),
+
+                        Text(
+                          "$formattedDate  Time: $formattedTime",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.teal[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 32),
+
+                  if (_isQuizPerformed)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+                      child: Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        color: Colors.white,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            children: [
+                              Text(
+                                "You have already performed.",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.redAccent,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                          ],
+                              SizedBox(height: 16),
+
+                              if (_quizResult != null)
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Your Score: ${_quizResult!.percentage}%",
+                                      style: TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green.shade700,
+                                      ),
+                                    ),
+                                    SizedBox(height: 12),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.check_circle, color: Colors.green, size: 20),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          "Correct Answers: ${_quizResult!.correctCount}",
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.cancel, color: Colors.red, size: 20),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          "Incorrect Answers: ${_quizResult!.incorrectCount}",
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.help_outline, color: Colors.grey, size: 20),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          "Unanswered: ${_quizResult!.uncheckedCount}",
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
 
-                //
-                // // Check if quiz has already been performed and update button state
-                // if (_isQuizPerformed)
-                //   Padding(
-                //     padding: const EdgeInsets.all(8.0),
-                //     child: Column(
-                //       children: [
-                //         Text(
-                //           "You have already performed this quiz.",
-                //           textAlign: TextAlign.center,
-                //           style: TextStyle(
-                //             fontSize: 12,
-                //             color: Colors.red,
-                //           ),
-                //         ),
-                //         SizedBox(height: 16),
-                //
-                //         // Show quiz result
-                //         if (_quizResult != null)
-                //           Column(
-                //             children: [
-                //               Text(
-                //                 "Your Score: ${_quizResult!.percentage}%",
-                //                 style: TextStyle(
-                //                   fontSize: 20,
-                //                   fontWeight: FontWeight.bold,
-                //                   color: Colors.green,
-                //                 ),
-                //               ),
-                //               SizedBox(height: 8),
-                //               Text(
-                //                 "Correct Answers: ${_quizResult!.correctCount}",
-                //                 style: TextStyle(fontSize: 16),
-                //               ),
-                //               Text(
-                //                 "Incorrect Answers: ${_quizResult!.incorrectCount}",
-                //                 style: TextStyle(fontSize: 16),
-                //               ),
-                //               Text(
-                //                 "Unanswered: ${_quizResult!.uncheckedCount}",
-                //                 style: TextStyle(fontSize: 16),
-                //               ),
-                //             ],
-                //           ),
-                //       ],
-                //     ),
-                //   ),
-                //
-                // Start Quiz Button (will be disabled if quiz is already performed)
+                  //
+                  // // Check if quiz has already been performed and update button state
+                  // if (_isQuizPerformed)
+                  //   Padding(
+                  //     padding: const EdgeInsets.all(8.0),
+                  //     child: Column(
+                  //       children: [
+                  //         Text(
+                  //           "You have already performed this quiz.",
+                  //           textAlign: TextAlign.center,
+                  //           style: TextStyle(
+                  //             fontSize: 12,
+                  //             color: Colors.red,
+                  //           ),
+                  //         ),
+                  //         SizedBox(height: 16),
+                  //
+                  //         // Show quiz result
+                  //         if (_quizResult != null)
+                  //           Column(
+                  //             children: [
+                  //               Text(
+                  //                 "Your Score: ${_quizResult!.percentage}%",
+                  //                 style: TextStyle(
+                  //                   fontSize: 20,
+                  //                   fontWeight: FontWeight.bold,
+                  //                   color: Colors.green,
+                  //                 ),
+                  //               ),
+                  //               SizedBox(height: 8),
+                  //               Text(
+                  //                 "Correct Answers: ${_quizResult!.correctCount}",
+                  //                 style: TextStyle(fontSize: 16),
+                  //               ),
+                  //               Text(
+                  //                 "Incorrect Answers: ${_quizResult!.incorrectCount}",
+                  //                 style: TextStyle(fontSize: 16),
+                  //               ),
+                  //               Text(
+                  //                 "Unanswered: ${_quizResult!.uncheckedCount}",
+                  //                 style: TextStyle(fontSize: 16),
+                  //               ),
+                  //             ],
+                  //           ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  //
+                  // Start Quiz Button (will be disabled if quiz is already performed)
 
-                _isLoading
-                    ? Center(
-                  child: Lottie.asset(
-                    'animation/ (1).json', // Your Lottie loading animation
-                    height: 120,
-                  ),
-                ) : ElevatedButton(
-                  onPressed: _isQuizPerformed ? null : () {
-                    widget.switchScreen();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal[600],
-                    padding: EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
+                  _isLoading
+                      ? Center(
+                    child: Lottie.asset(
+                      'animation/ (1).json', // Your Lottie loading animation
+                      height: 120,
                     ),
-                  ),
-                  child: Text(
-                    _isQuizPerformed ? "Quiz Already Completed" : "Start Quiz",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-          
-                // Go to Quiz Room Button
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => QuizzesResultPage(quizId: widget.quiz.qId),
+                  ) : ElevatedButton(
+                    onPressed: _isQuizPerformed ? null : () {
+                      widget.switchScreen();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal[600],
+                      padding: EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
                       ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange[600],
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Text(
+                      _isQuizPerformed ? "Quiz Already Completed" : "Start Quiz",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                  child: Text(
-                    "Go to the Quiz Room",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  SizedBox(height: 20),
+
+                  // Go to Quiz Room Button
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => QuizzesResultPage(quizId: widget.quiz.qId),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange[600],
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: Text(
+                      "Go to the Quiz Room",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
