@@ -274,7 +274,7 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
 
       generatedDates.add(
         TutorDate(
-          id: generatedDates.length + 1,
+          ind: generatedDates.length + 1,
           uniqueId:
           "${date.year}${date.month.toString().padLeft(2, '0')}${date.day.toString().padLeft(2, '0')}_123${generatedDates.length + 1}",
           monthId: uniqueId,
@@ -580,13 +580,58 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
     );
   }
 
+  Future<void> deleteTutorMonthWithDates(TutorMonth month) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final String monthId = month.uniqueId ?? '';
+    final String studentId = month.studentId ?? '';
+    final dbHelper = DatabaseManager();
+
+    try {
+      // 🔌 If online, delete from Firebase
+      if (await InternetConnectionChecker.instance.hasConnection) {
+        final monthRef = FirebaseDatabase.instance.ref("tutor_month").child(monthId);
+        final datesRef = FirebaseDatabase.instance.ref("tutor_date");
+
+        await monthRef.remove();
+        // Optionally remove all related dates from Firebase (if stored separately)
+        // You might filter by monthId in Firebase query
+        // (only if you're storing dates in a separate `tutor_date` node)
+      }
+
+      // 🗄 Delete from local SQLite DB
+      await dbHelper.deleteTutorMonthAndDates(monthId);
+
+      // 🧹 Remove from UI list
+      setState(() {
+        tutorMonths.removeWhere((m) => m.uniqueId == month.uniqueId);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Month deleted successfully!')),
+      );
+    } catch (e) {
+      print("Error deleting month: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete month: $e')),
+      );
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("${widget.student.name}'s"),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Color(0xFF005F73),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -616,7 +661,7 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
                     ),
                   )
                       : Text(
-                    "Add Month",
+                    "Create Month",
                     style: TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold),
                   ),
@@ -655,7 +700,7 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
           children: [
             Container(
               height: 200,
-              color: Colors.blueAccent,
+              color: Color(0xFF005F73),
             ),
             CircleAvatar(
               radius: 60,
@@ -777,7 +822,8 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15.0),
                       ),
-                      color: Colors.pink.shade50,
+                      // color: Colors.pink.shade50,
+                      color: Color(0xFFEFF8F9),
                       margin: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -831,76 +877,153 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
                                   isExpanded = !isExpanded;
                                 });
                               },
+                              // child: Row(
+                              //   mainAxisAlignment:
+                              //   MainAxisAlignment.spaceBetween,
+                              //   children: [
+                              //     Text(
+                              //       "Dates:",
+                              //       style: TextStyle(
+                              //         fontSize: 14,
+                              //         fontWeight: FontWeight.bold,
+                              //         color: Colors.pink.shade700,
+                              //       ),
+                              //     ),
+                              //     Icon(
+                              //       isExpanded
+                              //           ? Icons.expand_less
+                              //           : Icons.expand_more,
+                              //       color: Colors.pink.shade700,
+                              //     ),
+                              //   ],
+                              // ),
                               child: Row(
-                                mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    "Dates:",
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.pink.shade700,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "Dates:",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.pink.shade700,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      if (month.dates != null && month.dates!.isNotEmpty)
+                                        Text(
+                                          "✅ ${month.dates!.where((d) => d.attendance == 1).length}", // Adjust status field
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green.shade700,
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                   Icon(
-                                    isExpanded
-                                        ? Icons.expand_less
-                                        : Icons.expand_more,
+                                    isExpanded ? Icons.expand_less : Icons.expand_more,
                                     color: Colors.pink.shade700,
                                   ),
                                 ],
                               ),
+
                             ),
                             SizedBox(height: 5),
 
                             if (isExpanded)
-                              month.dates != null &&
-                                  month.dates!.isNotEmpty
+                              month.dates != null && month.dates!.isNotEmpty
                                   ? Column(
-                                crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                                children: month.dates!
-                                    .asMap()
-                                    .entries
-                                    .map((entry) {
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: month.dates!.asMap().entries.map((entry) {
                                   int index = entry.key + 1;
                                   TutorDate date = entry.value;
+                                  bool isPresent = date.attendance == 1; // Adjust field name as needed
+
                                   return Padding(
-                                    padding:
-                                    const EdgeInsets.symmetric(
-                                        vertical: 2.0),
+                                    padding: const EdgeInsets.symmetric(vertical: 2.0),
                                     child: Row(
                                       children: [
                                         Text(
                                           "$index.",
                                           style: TextStyle(
                                             fontSize: 14,
-                                            fontWeight:
-                                            FontWeight.bold,
-                                            color: Colors
-                                                .pink.shade800,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.pink.shade800,
                                           ),
                                         ),
-                                        SizedBox(width: 5),
+                                        const SizedBox(width: 5),
                                         Text(
                                           "${date.day ?? "N/A"} (${date.date ?? "N/A"})",
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                          ),
+                                          style: const TextStyle(fontSize: 14),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Icon(
+                                          isPresent ? Icons.check_circle : Icons.cancel,
+                                          color: isPresent ? Colors.green : Colors.red,
+                                          size: 18,
                                         ),
                                       ],
                                     ),
                                   );
                                 }).toList(),
                               )
-                                  : Text(
+                                  : const Text(
                                 "No specific dates available",
                                 style: TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey,
                                 ),
                               ),
+
+                            // if (isExpanded)
+                            //   month.dates != null &&
+                            //       month.dates!.isNotEmpty
+                            //       ? Column(
+                            //     crossAxisAlignment:
+                            //     CrossAxisAlignment.start,
+                            //     children: month.dates!
+                            //         .asMap()
+                            //         .entries
+                            //         .map((entry) {
+                            //       int index = entry.key + 1;
+                            //       TutorDate date = entry.value;
+                            //       return Padding(
+                            //         padding:
+                            //         const EdgeInsets.symmetric(
+                            //             vertical: 2.0),
+                            //         child: Row(
+                            //           children: [
+                            //             Text(
+                            //               "$index.",
+                            //               style: TextStyle(
+                            //                 fontSize: 14,
+                            //                 fontWeight:
+                            //                 FontWeight.bold,
+                            //                 color: Colors
+                            //                     .pink.shade800,
+                            //               ),
+                            //             ),
+                            //             SizedBox(width: 5),
+                            //             Text(
+                            //               "${date.day ?? "N/A"} (${date.date ?? "N/A"})",
+                            //               style: TextStyle(
+                            //                 fontSize: 14,
+                            //               ),
+                            //             ),
+                            //           ],
+                            //         ),
+                            //       );
+                            //     }).toList(),
+                            //   )
+                            //       : Text(
+                            //     "No specific dates available",
+                            //     style: TextStyle(
+                            //       fontSize: 14,
+                            //       color: Colors.grey,
+                            //     ),
+                            //   ),
                             SizedBox(height: 10),
 
                             // Payment and Others Buttons
@@ -921,7 +1044,7 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
                                     );
                                   },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.pink,
+                                    backgroundColor: Color(0xFF005F73),
                                     shape: RoundedRectangleBorder(
                                       borderRadius:
                                       BorderRadius.circular(10.0),
@@ -931,22 +1054,60 @@ class _TutorStudentMonthlyState extends State<TutorStudentMonthly> {
                                       color: Colors.white),
                                   label: Text("Payment"),
                                 ),
-                                ElevatedButton.icon(
-                                  onPressed: () {
-                                    // Handle Others action
-                                    print("Others for ${month.month}");
+                                PopupMenuButton<String>(
+                                  onSelected: (value) {
+                                    if (value == 'delete') {
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: Text("Confirm Deletion"),
+                                          content: Text("Are you sure you want to delete this month and its dates?"),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.pop(context),
+                                              child: Text("Cancel"),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                                deleteTutorMonthWithDates(month);
+                                              },
+                                              child: Text("Delete", style: TextStyle(color: Colors.red)),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+
+                                      // await deleteTutorMonthsWithDatesForStudent(studentId);
+                                    } else if (value == 'pay') {
+                                      // Handle pay
+                                      print("Pay pressed for ${month.month}");
+                                      // Navigate to payment page or show a dialog
+                                    }
                                   },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.pink.shade200,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                      BorderRadius.circular(10.0),
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text('Delete'),
                                     ),
+                                    const PopupMenuItem(
+                                      value: 'pay',
+                                      child: Text('Pay'),
+                                    ),
+                                  ],
+                                  child: ElevatedButton.icon(
+                                    onPressed: null, // Disable onPressed because PopupMenuButton handles it
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.pink.shade200,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10.0),
+                                      ),
+                                    ),
+                                    icon: const Icon(Icons.more_horiz, color: Colors.white),
+                                    label: const Text("Others"),
                                   ),
-                                  icon: Icon(Icons.more_horiz,
-                                      color: Colors.white),
-                                  label: Text("Others"),
                                 ),
+
                               ],
                             ),
                           ],
@@ -1499,7 +1660,7 @@ class InfoTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          Icon(icon, color: Colors.blueAccent),
+          Icon(icon, color: Color(0xFF005F73),),
           SizedBox(width: 15),
           Expanded(
             child: Column(
@@ -1550,7 +1711,7 @@ class _ProfileSectionState extends State<ProfileSection> {
             });
           },
           child: Container(
-            color: Colors.blueAccent,
+            color: Color(0xFF005F73),
             padding: EdgeInsets.all(16.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

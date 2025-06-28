@@ -62,7 +62,7 @@ class _TutorStudentPaymentState extends State<TutorStudentPayment> {
     super.initState();
     _minutesControllers = {};
     for (var date in widget.month.dates ?? []) {
-      _minutesControllers[date.id!] = TextEditingController(
+      _minutesControllers[date.ind!] = TextEditingController(
         text: date.minutes != null ? date.minutes.toString() : "",
       );
     }
@@ -321,7 +321,7 @@ class _TutorStudentPaymentState extends State<TutorStudentPayment> {
           children: [
             Container(
               height: 200,
-              color: Colors.blueAccent,
+              color: Color(0xFF005F73),
             ),
             CircleAvatar(
               radius: 60,
@@ -510,9 +510,9 @@ class _TutorStudentPaymentState extends State<TutorStudentPayment> {
           SizedBox(height: 20),
           ElevatedButton(
             onPressed: _submitPayment,
-            child: Text("Save Payment"),
+            child: Text("Pay"),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.pinkAccent,
+              backgroundColor: Colors.yellowAccent,
               padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
             ),
           ),
@@ -526,7 +526,7 @@ class _TutorStudentPaymentState extends State<TutorStudentPayment> {
     return Scaffold(
       appBar: AppBar(
         title: Text("${widget.month.month}"),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Color(0xFF005F73),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -544,7 +544,7 @@ class _TutorStudentPaymentState extends State<TutorStudentPayment> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.calendar_month, size: 20),
+                  Icon(Icons.payment, size: 20),
                   SizedBox(width: 10),
                   isLoading
                       ? SizedBox(
@@ -556,7 +556,7 @@ class _TutorStudentPaymentState extends State<TutorStudentPayment> {
                     ),
                   )
                       : Text(
-                    "Save Payment",
+                    "Save",
                     style: TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold),
                   ),

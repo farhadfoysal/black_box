@@ -663,6 +663,7 @@ class DatabaseTable {
   static const TUTOR_DATE = '''
   CREATE TABLE IF NOT EXISTS tutor_date (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ind INTEGER,
     unique_id TEXT,
     month_id TEXT,
     user_id TEXT,

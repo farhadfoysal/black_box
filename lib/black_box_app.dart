@@ -7,6 +7,9 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:provider/provider.dart';
 
+import 'meter/providers/home_provider.dart';
+import 'meter/providers/login_provider.dart';
+
 class BlackBoxApp extends StatelessWidget{
   const BlackBoxApp({super.key});
 
@@ -19,6 +22,8 @@ class BlackBoxApp extends StatelessWidget{
         providers: [
           ChangeNotifierProvider(create: (_) => UserProvider()),
           ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
+          ChangeNotifierProvider(create: (_) => LoginProvider()),
+          ChangeNotifierProvider(create: (_) => HomeProvider()),
         ],
         child: Obx(
               () => GetMaterialApp(

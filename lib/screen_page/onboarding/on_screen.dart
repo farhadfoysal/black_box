@@ -32,6 +32,7 @@ class OnScreenState extends State<OnScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor:  Colors.white,
         body: Center(
             child: Stack(
               children: [

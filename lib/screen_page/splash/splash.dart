@@ -4,7 +4,7 @@ import 'package:avatar_glow/avatar_glow.dart';
 import 'package:black_box/extra/form/dynamic_form_screen.dart';
 import 'package:black_box/extra/quiz/main_screenn.dart';
 import 'package:black_box/extra/quiz/quiz_four.dart';
-import 'package:black_box/extra/test/sign_in_or_register.dart';
+import 'package:black_box/screen_page/signin/sign_in_or_register.dart';
 import 'package:black_box/quiz/quiz_main.dart';
 import 'package:black_box/quiz/quiz_main_v1.dart';
 import 'package:black_box/quiz/quiz_screen.dart';

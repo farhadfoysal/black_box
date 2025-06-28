@@ -13,7 +13,7 @@ class IntroThree extends StatelessWidget {
             children: [
               Center(
                 child: Lottie.asset(
-                  'animation/hello.json',
+                  'animation/tutor.json',
                   height: 300,
                   reverse: true,
                   repeat: true,
@@ -26,9 +26,9 @@ class IntroThree extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.all(10),
                 child: Text(
-                  "Class Organizer",
+                  "Tuition Tracker",
                   style: TextStyle(
-                      color: Colors.black,
+                      color: Colors.blueGrey,
                       fontSize: 25,
                       fontWeight: FontWeight.bold),
                 ),
@@ -36,11 +36,12 @@ class IntroThree extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.all(10),
                 child: Text(
-                  "Class Organizer description here.....",
+                  "Easily organize tuition schedules, track student payments, and monitor monthly progress with ease.",
                   style: TextStyle(
-                      color: Colors.greenAccent,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w200,
+                      color: Colors.blueGrey,
+                      height: 1.5,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400,
                       fontStyle: FontStyle.italic),
                   textAlign: TextAlign.center,
                 ),

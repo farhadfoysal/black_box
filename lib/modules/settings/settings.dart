@@ -1,6 +1,6 @@
 import 'package:black_box/components/common/photo_avatar.dart';
 import 'package:black_box/cores/cores.dart';
-import 'package:black_box/extra/test/sign_in_or_register.dart';
+import 'package:black_box/screen_page/signin/sign_in_or_register.dart';
 import 'package:black_box/model/user/user.dart';
 import 'package:black_box/modules/settings/settings.dart';
 import 'package:black_box/routes/app_router.dart';

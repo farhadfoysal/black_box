@@ -1,5 +1,6 @@
 class TutorDate {
   int? _id;
+  int? _ind;
   String? _uniqueId;
   String? _monthId;
   String? _userId;
@@ -12,6 +13,7 @@ class TutorDate {
   // Constructor
   TutorDate({
     int? id,
+    int? ind,
     String? uniqueId,
     String? monthId,
     String? userId,
@@ -21,6 +23,7 @@ class TutorDate {
     int? attendance,
     int? minutes,
   })  : _id = id,
+        _ind = ind,
         _uniqueId = uniqueId,
         _monthId = monthId,
         _userId = userId,
@@ -32,6 +35,7 @@ class TutorDate {
 
   // Getters
   int? get id => _id;
+  int? get ind => _ind;
   String? get uniqueId => _uniqueId;
   String? get monthId => _monthId;
   String? get userId => _userId;
@@ -43,6 +47,7 @@ class TutorDate {
 
   // Setters
   set id(int? id) => _id = id;
+  set ind(int? ind) => _ind = ind;
   set uniqueId(String? uniqueId) => _uniqueId = uniqueId;
   set monthId(String? monthId) => _monthId = monthId;
   set userId(String? userId) => _userId = userId;
@@ -56,6 +61,7 @@ class TutorDate {
   Map<String, dynamic> toMap() {
     return {
       'id': _id,
+      'ind': _ind,
       'unique_id': _uniqueId,
       'month_id': _monthId,
       'user_id': _userId,
@@ -71,6 +77,7 @@ class TutorDate {
   static TutorDate fromMap(Map<String, dynamic> map) {
     return TutorDate(
       id: map['id'],
+      ind: map['ind'],
       uniqueId: map['unique_id'],
       monthId: map['month_id'],
       userId: map['user_id'],
@@ -86,6 +93,7 @@ class TutorDate {
   Map<String, dynamic> toJson() {
     return {
       'id': _id,
+      'ind': _ind,
       'unique_id': _uniqueId,
       'month_id': _monthId,
       'user_id': _userId,
@@ -101,6 +109,7 @@ class TutorDate {
   factory TutorDate.fromJson(Map<String, dynamic> json) {
     return TutorDate(
       id: json['id'],
+      ind: json['ind'],
       uniqueId: json['unique_id'],
       monthId: json['month_id'],
       userId: json['user_id'],

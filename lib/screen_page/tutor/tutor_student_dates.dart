@@ -56,7 +56,7 @@ class _TutorStudentDatesState extends State<TutorStudentDates> {
     super.initState();
     _minutesControllers = {};
     for (var date in widget.month.dates ?? []) {
-      _minutesControllers[date.id!] = TextEditingController(
+      _minutesControllers[date.ind!] = TextEditingController(
         text: date.minutes != null ? date.minutes.toString() : "",
       );
     }
@@ -538,7 +538,7 @@ class _TutorStudentDatesState extends State<TutorStudentDates> {
                                     onChanged: (value) {
                                       _setMinutes(date!, value);
                                     },
-                                    controller: _minutesControllers[date?.id!] ?? TextEditingController(),
+                                    controller: _minutesControllers[date?.ind!] ?? TextEditingController(),
                                   ),
                                 ),
 
@@ -1189,7 +1189,7 @@ class _TutorStudentDatesState extends State<TutorStudentDates> {
     return Scaffold(
       appBar: AppBar(
         title: Text("${widget.month.month}"),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Color(0xFF005F73),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1264,7 +1264,7 @@ class InfoTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          Icon(icon, color: Colors.blueAccent),
+          Icon(icon, color: Color(0xFF005F73)),
           SizedBox(width: 15),
           Expanded(
             child: Column(

@@ -145,7 +145,7 @@ class DatabaseManager {
     return await db.insert(
       'tutor_students', // Table name
       student.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+      conflictAlgorithm: ConflictAlgorithm.ignore,
     );
   }
 
@@ -175,7 +175,7 @@ class DatabaseManager {
         int result = await txn.insert(
           'tutor_students',
           studentData,
-          conflictAlgorithm: ConflictAlgorithm.replace,
+          conflictAlgorithm: ConflictAlgorithm.ignore,
         );
 
         // If TutorStudent has days, insert associated TutorWeekDay records into the tutor_week_days table (inside the transaction)
@@ -184,7 +184,7 @@ class DatabaseManager {
             await txn.insert(
               'tutor_week_days',
               day.toMap(),
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictAlgorithm: ConflictAlgorithm.ignore,
             );
           }
         }
@@ -223,7 +223,7 @@ class DatabaseManager {
       int result = await db.insert(
         'tutor_students',
         studentData,
-        conflictAlgorithm: ConflictAlgorithm.replace,
+        conflictAlgorithm: ConflictAlgorithm.ignore,
       );
 
       // If TutorStudent has days, insert associated TutorWeekDay records into the tutor_week_days table
@@ -233,7 +233,7 @@ class DatabaseManager {
           await db.insert(
             'tutor_week_days',
             day.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace,
+            conflictAlgorithm: ConflictAlgorithm.ignore,
           );
         }
       }
@@ -288,7 +288,7 @@ class DatabaseManager {
             await txn.insert(
               'tutor_week_days',
               day.toMap(),
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictAlgorithm: ConflictAlgorithm.ignore,
             );
           }
         }
@@ -344,7 +344,7 @@ class DatabaseManager {
           await db.insert(
             'tutor_week_days',
             day.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace,
+            conflictAlgorithm: ConflictAlgorithm.ignore,
           );
         }
       }
@@ -381,7 +381,7 @@ class DatabaseManager {
         await db.insert(
           'tutor_week_days',
           day.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
+          conflictAlgorithm: ConflictAlgorithm.ignore,
         );
       }
     }
@@ -405,6 +405,9 @@ class DatabaseManager {
       where: 'unique_id = ?',
       whereArgs: [uniqueId],
     );
+
+    r = await deleteTutorMonthsWithDatesForStudent(uniqueId);
+
     return r;
   }
 
@@ -463,7 +466,7 @@ class DatabaseManager {
         int result = await txn.insert(
           'tutor_students',
           studentData,
-          conflictAlgorithm: ConflictAlgorithm.replace,
+          conflictAlgorithm: ConflictAlgorithm.ignore,
         );
 
         // If TutorStudent has days, insert associated TutorWeekDay records into the tutor_week_days table
@@ -473,7 +476,7 @@ class DatabaseManager {
             await txn.insert(
               'tutor_week_days',
               day.toMap(),
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictAlgorithm: ConflictAlgorithm.ignore,
             );
           }
         }
@@ -512,7 +515,7 @@ class DatabaseManager {
       int result = await db.insert(
         'tutor_students',
         studentData,
-        conflictAlgorithm: ConflictAlgorithm.replace,
+        conflictAlgorithm: ConflictAlgorithm.ignore,
       );
 
       // If TutorStudent has days, insert associated TutorWeekDay records into the tutor_week_days table
@@ -522,7 +525,7 @@ class DatabaseManager {
           await db.insert(
             'tutor_week_days',
             day.toMap(),
-            conflictAlgorithm: ConflictAlgorithm.replace,
+            conflictAlgorithm: ConflictAlgorithm.ignore,
           );
         }
       }
@@ -542,7 +545,7 @@ class DatabaseManager {
     int r = await db.insert(
       'tutor_students',
       tutorStudent.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+      conflictAlgorithm: ConflictAlgorithm.ignore,
     );
 
     // Insert associated TutorWeekDay records into the tutor_week_days table if days is not null
@@ -552,7 +555,7 @@ class DatabaseManager {
         await db.insert(
           'tutor_week_days',
           day.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
+          conflictAlgorithm: ConflictAlgorithm.ignore,
         );
       }
     }
@@ -803,11 +806,49 @@ class DatabaseManager {
         if (tutorMonth.dates != null && tutorMonth.dates!.isNotEmpty) {
           // Insert each day into the tutor_date table using the transaction object
           for (var date in tutorMonth.dates!) {
-            await txn.insert(
+
+            int inserted = await txn.insert(
               'tutor_date',
               date.toMap(),
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictAlgorithm: ConflictAlgorithm.ignore,
             );
+
+            // If not inserted (i.e., conflict), fallback to update
+            if (inserted == 0) {
+              List<Map<String, dynamic>> existing = await txn.query(
+                'tutor_date',
+                where: 'date = ? AND month_id = ?',
+                whereArgs: [date.date, date.monthId],
+              );
+
+              if (existing.isEmpty) {
+                await txn.insert('tutor_date', date.toMap());
+              }
+              // await txn.update(
+              //   'tutor_date',
+              //   date.toMap(),
+              //   where: 'date = ? AND month_id = ?',
+              //   whereArgs: [date.date, date.monthId],
+              // );
+            }
+
+            // List<Map<String, dynamic>> existing = await txn.query(
+            //   'tutor_date',
+            //   where: 'date = ? AND month_id = ?',
+            //   whereArgs: [date.date, date.monthId],
+            // );
+            //
+            // if (existing.isEmpty) {
+            //   await txn.insert('tutor_date', date.toMap());
+            // }
+            //
+            //
+            // await txn.insert(
+            //   'tutor_date',
+            //   date.toMap(),
+            //   // conflictAlgorithm: ConflictAlgorithm.ignore,
+            //   conflictAlgorithm: ConflictAlgorithm.ignore,
+            // );
           }
         }
 
@@ -817,6 +858,151 @@ class DatabaseManager {
       print('Error inserting TutorMonth: $e');
       rethrow;
     }
+  }
+
+  Future<int> deleteTutorMonthsWithDatesForStudent(String studentId) async {
+    Database db = await DatabaseHelper().database;
+
+    try {
+      return await db.transaction((txn) async {
+        // Step 1: Fetch all tutor_month entries for the student
+        List<Map<String, dynamic>> studentMonths = await txn.query(
+          'tutor_month',
+          where: 'student_id = ?',
+          whereArgs: [studentId],
+        );
+
+        int totalDeleted = 0;
+
+        for (var month in studentMonths) {
+          final int monthId = month['id'];
+
+          // Step 2: Delete related tutor_date entries
+          await txn.delete(
+            'tutor_date',
+            where: 'month_id = ?',
+            whereArgs: [monthId],
+          );
+
+          // Step 3: Delete the tutor_month entry
+          int deletedMonth = await txn.delete(
+            'tutor_month',
+            where: 'id = ?',
+            whereArgs: [monthId],
+          );
+
+          totalDeleted += deletedMonth;
+        }
+
+        return totalDeleted;
+      });
+    } catch (e) {
+      print('Error deleting TutorMonths with dates for student $studentId: $e');
+      rethrow;
+    }
+  }
+
+  Future<int> deleteTutorMonthWithDates(String studentId, String month) async {
+    Database db = await DatabaseHelper().database;
+
+    try {
+      return await db.transaction((txn) async {
+        // Get the month record to find its unique ID (if needed)
+        List<Map<String, dynamic>> monthRecords = await txn.query(
+          'tutor_month',
+          where: 'student_id = ? AND month = ?',
+          whereArgs: [studentId, month],
+        );
+
+        if (monthRecords.isEmpty) return 0;
+
+        int deletedCount = 0;
+
+        for (var monthRecord in monthRecords) {
+          final monthId = monthRecord['id'];
+
+          // First, delete associated dates
+          int deletedDates = await txn.delete(
+            'tutor_date',
+            where: 'month_id = ?',
+            whereArgs: [monthId],
+          );
+
+          // Then, delete the month
+          int deletedMonth = await txn.delete(
+            'tutor_month',
+            where: 'id = ?',
+            whereArgs: [monthId],
+          );
+
+          deletedCount += deletedMonth;
+        }
+
+        return deletedCount;
+      });
+    } catch (e) {
+      print('Error deleting TutorMonth with dates: $e');
+      rethrow;
+    }
+  }
+
+
+  Future<int> deleteAllTutorMonthsWithDates() async {
+    Database db = await DatabaseHelper().database;
+
+    try {
+      return await db.transaction((txn) async {
+        // Step 1: Get all tutor_month entries
+        List<Map<String, dynamic>> allMonths = await txn.query('tutor_month');
+
+        int totalDeleted = 0;
+
+        for (var month in allMonths) {
+          final monthId = month['id'];
+
+          // Step 2: Delete related tutor_date entries
+          await txn.delete(
+            'tutor_date',
+            where: 'month_id = ?',
+            whereArgs: [monthId],
+          );
+
+          // Step 3: Delete the tutor_month entry
+          int deletedMonth = await txn.delete(
+            'tutor_month',
+            where: 'id = ?',
+            whereArgs: [monthId],
+          );
+
+          totalDeleted += deletedMonth;
+        }
+
+        return totalDeleted;
+      });
+    } catch (e) {
+      print('Error deleting all TutorMonths with dates: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteTutorMonthAndDates(String monthUniqueId) async {
+    final db = await DatabaseHelper().database;
+
+    await db.transaction((txn) async {
+      // First delete all related dates
+      await txn.delete(
+        'tutor_date',
+        where: 'month_id = ?',
+        whereArgs: [monthUniqueId],
+      );
+
+      // Then delete the month entry
+      await txn.delete(
+        'tutor_month',
+        where: 'unique_id = ?',
+        whereArgs: [monthUniqueId],
+      );
+    });
   }
 
 
@@ -850,7 +1036,7 @@ class DatabaseManager {
             await db.insert(
               'tutor_date',
               date.toMap(),
-              conflictAlgorithm: ConflictAlgorithm.replace,
+              conflictAlgorithm: ConflictAlgorithm.ignore,
             );
           }
         }
@@ -1091,7 +1277,7 @@ class DatabaseManager {
   Future<int> insertSchooll(School school) async {
     final db = await DatabaseHelper().database;
     return await db!.insert('school', school.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+        conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   // Get all schools from the database
@@ -1175,7 +1361,7 @@ class DatabaseManager {
     return await db.insert(
       'schedule',
       schedule.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+      conflictAlgorithm: ConflictAlgorithm.ignore,
     );
   }
 
@@ -1305,7 +1491,7 @@ class DatabaseManager {
         await txn.insert(
           'schedule',
           schedule.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
+          conflictAlgorithm: ConflictAlgorithm.ignore,
         );
       }
     });

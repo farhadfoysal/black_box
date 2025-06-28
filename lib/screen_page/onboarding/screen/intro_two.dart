@@ -13,7 +13,7 @@ class IntroTwo extends StatelessWidget {
             children: [
               Center(
                 child: Lottie.asset(
-                  'animation/edumain.json',
+                  'animation/6.json',
                   height: 300,
                   reverse: true,
                   repeat: true,
@@ -26,7 +26,7 @@ class IntroTwo extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.all(10),
                 child: Text(
-                  "Class Organizer",
+                  "Mess Manager",
                   style: TextStyle(
                       color: Colors.black,
                       fontSize: 25,
@@ -36,11 +36,12 @@ class IntroTwo extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.all(10),
                 child: Text(
-                  "Class Organizer description here.....",
+                  "The Mess Manager module is designed to streamline hostel and dormitory meal services. "
+                      "It allows users to manage daily meals, track meal counts, calculate costs, and handle other mess-related operations efficiently.",
                   style: TextStyle(
-                      color: Colors.greenAccent,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w200,
+                      color: Color(0xFF4CAF50),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400,
                       fontStyle: FontStyle.italic),
                   textAlign: TextAlign.center,
                 ),

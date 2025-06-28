@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:black_box/extra/test/sign_in_or_register.dart';
+import 'package:black_box/meter/ui/view/auth/login_screen.dart';
+import 'package:black_box/quiz/quiz_exam_screen.dart';
+import 'package:black_box/screen_page/signin/sign_in_or_register.dart';
+import 'package:black_box/routine/routine_screen.dart';
 import 'package:black_box/screen_page/mess/mess_main_screen.dart';
 import 'package:black_box/screen_page/tutor/tutor_main_screen.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +17,8 @@ import '../../cores/cores.dart';
 import '../../model/school/school.dart';
 import '../../model/user/user.dart';
 import '../../preference/logout.dart';
+import '../../routes/app_router.dart';
+import '../../screen_page/routine/routine_page.dart';
 import '../../task/task_main.dart';
 import '../../web/internet_connectivity.dart';
 
@@ -271,8 +276,12 @@ class _DrawerWidgetState extends State<DrawerWidget> {
           //   },
           // ),
           _buildDrawerTile(Icons.history_edu, 'Tuition Tracker', TutorMainScreen()),
+          _buildDrawerTile(Icons.quiz, 'QUIZ | EXAM', QuizExamScreen()),
           _buildDrawerTile(Icons.dining, 'MessHome', MessMainScreen()),
           _buildDrawerTile(Icons.task, 'Task', TaskMain()),
+          _buildDrawerTile(Icons.schedule_send_outlined, 'Routine | Schedule', RoutinePage()),
+          _buildDrawerTile(Icons.electric_meter, 'Prepaid', LoginScreen()),
+          // _buildDrawerTile(Icons.schedule_send_outlined, 'East Delta Routine', RoutineScreen()),
 
           // _buildDrawerTile(Icons.palette, 'P R O F I L E', const EditProfileScreen()),
           // _buildDrawerTile(Icons.bus_alert_outlined, 'B U S ', const BusSchedule()),
@@ -283,17 +292,40 @@ class _DrawerWidgetState extends State<DrawerWidget> {
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('L O G O U T'),
+            // onTap: () async {
+            //   await Logout().logoutUser();
+            //   await Logout().clearUser(key: "user_logged_in");
+            //
+            //   Navigator.pop(context);
+            //   Navigator.pushAndRemoveUntil(
+            //     context,
+            //     MaterialPageRoute(builder: (context) => SignInOrRegister()),
+            //         (route) => false,
+            //   );
+            // },
+            // onTap: () async {
+            //   // Perform the logout actions
+            //   await Logout().logoutUser();
+            //   await Logout().clearUser(key: "user_logged_in");
+            //
+            //   Future.delayed(Duration.zero, () {
+            //     Navigator.pushAndRemoveUntil(
+            //       context,
+            //       MaterialPageRoute(builder: (context) => SignInOrRegister()),
+            //           (route) => false, // Remove all routes from the stack
+            //     );
+            //   });
+            // },
+
             onTap: () async {
+              // Perform the logout actions
               await Logout().logoutUser();
               await Logout().clearUser(key: "user_logged_in");
 
-              Navigator.pop(context);
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => SignInOrRegister()),
-                    (route) => false,
-              );
+              await AppRouter.logoutUser(context);
             },
+
+
           ),
         ],
       ),

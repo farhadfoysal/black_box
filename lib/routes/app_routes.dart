@@ -1,4 +1,4 @@
-import 'package:black_box/extra/test/sign_in_or_register.dart';
+import 'package:black_box/screen_page/signin/sign_in_or_register.dart';
 import 'package:black_box/modules/menus/mess_view.dart';
 import 'package:black_box/modules/menus/schedule_view.dart';
 import 'package:black_box/modules/menus/school_view.dart';
@@ -24,11 +24,14 @@ class AppRoutes {
       pageBuilder: (_, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: kThemeAnimationDuration,
-          reverseTransitionDuration: kThemeAnimationDuration,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 400),
           child: const HomeView(),
           transitionsBuilder: (_, animation, __, child) {
-            return FadeTransition(opacity: animation, child: child);
+            return ScaleTransition(
+              scale: animation,
+              child: child,
+            );
           },
         );
       },
@@ -39,11 +42,14 @@ class AppRoutes {
       pageBuilder: (_, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: kThemeAnimationDuration,
-          reverseTransitionDuration: kThemeAnimationDuration,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
           child: const ScheduleView(),
           transitionsBuilder: (_, animation, __, child) {
-            return FadeTransition(opacity: animation, child: child);
+            return ScaleTransition(
+              scale: animation,
+              child: child,
+            );
           },
         );
       },
@@ -54,8 +60,8 @@ class AppRoutes {
       pageBuilder: (_, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: kThemeAnimationDuration,
-          reverseTransitionDuration: kThemeAnimationDuration,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
           child: const SchoolView(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
@@ -69,8 +75,8 @@ class AppRoutes {
       pageBuilder: (_, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: kThemeAnimationDuration,
-          reverseTransitionDuration: kThemeAnimationDuration,
+          transitionDuration: const Duration(milliseconds: 500),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
           child: const ProfileView(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
@@ -84,8 +90,8 @@ class AppRoutes {
       pageBuilder: (_, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: kThemeAnimationDuration,
-          reverseTransitionDuration: kThemeAnimationDuration,
+          transitionDuration: const Duration(milliseconds: 500),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
           child: const MessView(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
@@ -101,8 +107,8 @@ class AppRoutes {
       pageBuilder: (_, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: kThemeAnimationDuration,
-          reverseTransitionDuration: kThemeAnimationDuration,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
           child: SignInOrRegister(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
@@ -116,8 +122,8 @@ class AppRoutes {
       pageBuilder: (_, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: kThemeAnimationDuration,
-          reverseTransitionDuration: kThemeAnimationDuration,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
           child: Settings(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
@@ -131,8 +137,8 @@ class AppRoutes {
       pageBuilder: (_, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: kThemeAnimationDuration,
-          reverseTransitionDuration: kThemeAnimationDuration,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
           child: SignInOrRegister(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
@@ -146,8 +152,8 @@ class AppRoutes {
       pageBuilder: (_, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: kThemeAnimationDuration,
-          reverseTransitionDuration: kThemeAnimationDuration,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
           child: Login(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
@@ -161,8 +167,8 @@ class AppRoutes {
       pageBuilder: (_, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: kThemeAnimationDuration,
-          reverseTransitionDuration: kThemeAnimationDuration,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
           child: Register(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
@@ -176,8 +182,8 @@ class AppRoutes {
       pageBuilder: (_, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: kThemeAnimationDuration,
-          reverseTransitionDuration: kThemeAnimationDuration,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
           child: MessHomeAdmin(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
@@ -191,8 +197,8 @@ class AppRoutes {
       pageBuilder: (_, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: kThemeAnimationDuration,
-          reverseTransitionDuration: kThemeAnimationDuration,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
           child: MessHomeEmployee(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
@@ -206,8 +212,8 @@ class AppRoutes {
       pageBuilder: (_, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          transitionDuration: kThemeAnimationDuration,
-          reverseTransitionDuration: kThemeAnimationDuration,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
           child: MessHomeMember(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);

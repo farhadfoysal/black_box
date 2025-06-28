@@ -1035,7 +1035,7 @@ class _TutorMainScreenState extends State<TutorMainScreen> {
                                     ),
                                   ),
                                   PopupMenuButton<String>(
-                                    onSelected: (value) {
+                                    onSelected: (value) async {
                                       if (value == 'edit') {
                                         // Implement edit logic
                                       } else if (value == 'call') {
@@ -1043,6 +1043,29 @@ class _TutorMainScreenState extends State<TutorMainScreen> {
                                       } else if (value == 'whatsapp') {
                                         _openWhatsApp(student.phone??"");
                                       } else if (value == 'delete') {
+
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: Text("Confirm Deletion"),
+                                            content: Text("Are you sure you want to delete this Student?"),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context),
+                                                child: Text("Cancel"),
+                                              ),
+                                              TextButton(
+                                                onPressed: () async {
+                                                  Navigator.pop(context);
+                                                  await deleteStudentFromFirebaseAndOffline(student);
+                                                },
+                                                child: Text("Delete", style: TextStyle(color: Colors.red)),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+
+
                                         setState(() {
                                           students.remove(
                                               student); // Assuming `students` is your list
@@ -1274,6 +1297,31 @@ class _TutorMainScreenState extends State<TutorMainScreen> {
   //   );
   // }
 
+  Future<void> deleteStudentFromFirebaseAndOffline(TutorStudent student) async {
+    try {
+      // Delete from Firebase Realtime DB
+      final dbRef = FirebaseDatabase.instance.ref("tutor_student");
+      await dbRef.child(student.uniqueId ?? "").remove();
+
+      // Delete from offline SQLite DB
+      await DatabaseManager().deleteTutorStudent(student.uniqueId ?? "");
+
+      // Show confirmation
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Student deleted successfully!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete student: $e')),
+        );
+      }
+    }
+  }
+
+
   Future<void> saveStudent(TutorStudent student) async {
     var uuid = Uuid();
     String uniqueId = Unique().generateUniqueID();
@@ -1306,7 +1354,7 @@ class _TutorMainScreenState extends State<TutorMainScreen> {
         setState(() {
           students.add(student);
         });
-        await setUserTutorStudentOnline(
+        await setUserTutorStudentOfline(
             _user ?? _user_data, student, "student");
         // Navigator.pushReplacement(
         //   context,
@@ -1348,29 +1396,29 @@ class _TutorMainScreenState extends State<TutorMainScreen> {
       });
       Navigator.pop(context);
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              Icons.info_outline,
-              color: Colors.white,
-            ),
-            SizedBox(width: 10),
-            Text(
-              "Ups, Successfully Saved!",
-              style: TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.redAccent,
-        shape: StadiumBorder(),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   const SnackBar(
+    //     content: Row(
+    //       children: [
+    //         Icon(
+    //           Icons.info_outline,
+    //           color: Colors.white,
+    //         ),
+    //         SizedBox(width: 10),
+    //         Text(
+    //           "Ups, Successfully Saved!",
+    //           style: TextStyle(color: Colors.white),
+    //         ),
+    //       ],
+    //     ),
+    //     backgroundColor: Colors.redAccent,
+    //     shape: StadiumBorder(),
+    //     behavior: SnackBarBehavior.floating,
+    //   ),
+    // );
   }
 
-  setUserTutorStudentOnline(User? user, TutorStudent student, String s) async {
+  setUserTutorStudentOfline(User? user, TutorStudent student, String s) async {
     // int result = await DatabaseManager().insertTutorStudentDay(student);
     int result = await DatabaseManager().insertTutorStudentDays(student);
 

@@ -12,7 +12,7 @@ class TutorStudentProfile extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("${student.name}'s Profile"),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Color(0xFF005F73),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -24,7 +24,7 @@ class TutorStudentProfile extends StatelessWidget {
               children: [
                 Container(
                   height: 200,
-                  color: Colors.blueAccent,
+                  color: Color(0xFF005F73),
                 ),
                 CircleAvatar(
                   radius: 60,

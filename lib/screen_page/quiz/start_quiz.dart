@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../quiz/StudentAuthenticationScreen.dart';
+
 class StartQuiz extends StatelessWidget {
   final void Function() switchScreen;
   StartQuiz(this.switchScreen);
@@ -64,6 +66,34 @@ class StartQuiz extends StatelessWidget {
                 ),
                 child: Text(
                   "Start Quiz",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              SizedBox(height: 32),
+              // Start Button
+              ElevatedButton(
+                onPressed: () {
+                  // Navigate to the QuizPage
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => StudentAuthenticationScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: Text(
+                  "Go to the QuizRoom",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

@@ -5,7 +5,6 @@ import '../screen_page/quiz/quiz_page.dart';
 import '../screen_page/quiz/result_page.dart';
 import '../screen_page/quiz/start_quiz.dart';
 
-
 class QuizMain extends StatefulWidget {
   const QuizMain({super.key});
 
@@ -14,19 +13,18 @@ class QuizMain extends StatefulWidget {
 }
 
 class _QuizState extends State<QuizMain> {
-
   var activeScreen = "start-screen";
   List<String> selectedAnswer = [];
   bool hasFinished = false;
 
-  void switchScreen(){
+  void switchScreen() {
     setState(() {
       selectedAnswer = [];
       activeScreen = "question-screen";
     });
   }
 
-  void switchResult(){
+  void switchResult() {
     setState(() {
       activeScreen = "result-screen";
     });
@@ -36,7 +34,7 @@ class _QuizState extends State<QuizMain> {
     return selectedAnswer.length == questions.length;
   }
 
-  void onSelectedAnswer(String answer, String questionText){
+  void onSelectedAnswer(String answer, String questionText) {
     // selectedAnswer.add(answer);
     // // print(selectedAnswer.length);
     // selectedAnswer.length == questions.length ? setState(() {
@@ -52,7 +50,6 @@ class _QuizState extends State<QuizMain> {
       //   finishedExam();
       // }
     });
-
   }
 
   void finishedExam() {
@@ -83,11 +80,19 @@ class _QuizState extends State<QuizMain> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
-
-    final screenWidget = activeScreen ==  "start-screen" ? StartQuiz(switchScreen) : activeScreen == "question-screen" ? QuizPage(selectedAnswers: selectedAnswer,onSelectedAnswer: onSelectedAnswer, switchResult: switchResult) : ResultPage(switchScreen: switchScreen, selectedAnswer: selectedAnswer,);
+    final screenWidget = activeScreen == "start-screen"
+        ? StartQuiz(switchScreen)
+        : activeScreen == "question-screen"
+            ? QuizPage(
+                selectedAnswers: selectedAnswer,
+                onSelectedAnswer: onSelectedAnswer,
+                switchResult: switchResult)
+            : ResultPage(
+                switchScreen: switchScreen,
+                selectedAnswer: selectedAnswer,
+              );
 
     return Scaffold(
       body: Container(
@@ -102,7 +107,6 @@ class _QuizState extends State<QuizMain> {
         ),
         child: screenWidget,
       ),
-
     );
   }
 }

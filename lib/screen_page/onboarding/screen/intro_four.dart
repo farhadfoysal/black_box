@@ -13,7 +13,7 @@ class IntroFour extends StatelessWidget {
             children: [
               Center(
                 child: Lottie.asset(
-                  'animation/edubox.json',
+                  'animation/ (3).json',
                   height: 300,
                   reverse: true,
                   repeat: true,
@@ -36,15 +36,17 @@ class IntroFour extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.all(10),
                 child: Text(
-                  "Class Organizer description here.....",
+                  "Manage class routines, schedules, and attendance with ease. Stay organized and efficient with smart scheduling tools.",
                   style: TextStyle(
-                      color: Colors.greenAccent,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w200,
-                      fontStyle: FontStyle.italic),
+                    color: Colors.blueGrey,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w400,
+                    fontStyle: FontStyle.italic,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
+
             ],
           ),
         ));

@@ -356,6 +356,10 @@ class _LoginState extends State<Login> {
           }
         } else {
 
+          setState(() {
+            loading = false;
+          });
+
           if (mounted) {
             showSnackBarMsg(context, 'Email or password is not correct!');
           }

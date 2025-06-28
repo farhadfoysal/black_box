@@ -14,4 +14,5 @@ class Routes {
   static const String settingsPage = '/settings';
   static const String profilePage = '/profile';
   static const String nestedProfilePage = '/profile';
+  static const String backupPage = '/backup';
 }

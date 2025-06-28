@@ -2,7 +2,7 @@ import 'package:black_box/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../extra/test/sign_in_or_register.dart';
+import '../screen_page/signin/sign_in_or_register.dart';
 import '../modules/menus/home_view.dart';
 import '../preference/logout.dart';
 import 'app_nav_bar.dart';

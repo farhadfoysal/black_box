@@ -44,11 +44,11 @@ class _HomeViewState extends State<HomePage> {
 
   final List<DashboardItem> items = [
     DashboardItem(
-      title: 'Property Management',
+      title: 'Property Manager',
       icon: MdiIcons.officeBuilding,
-      color: Colors.blue,
+      color: Color(0xFF005F73),
       route: '/tenant',
-      subtitle: 'Manage Properties & Tenants',
+      subtitle: 'Properties & Tenants',
     ),
     DashboardItem(
       title: 'Mess Manager',
@@ -65,21 +65,21 @@ class _HomeViewState extends State<HomePage> {
       subtitle: 'Track Student Payments',
     ),
     DashboardItem(
-      title: 'Tutor Finder',
+      title: 'Tutor',
       icon: MdiIcons.schoolOutline,
       color: Colors.purple,
       route: '/tutor-finder',
       subtitle: 'Find Qualified Tutors',
     ),
     DashboardItem(
-      title: 'HouseRent Finder',
+      title: 'HouseRent',
       icon: MdiIcons.accountGroup,
       color: Colors.red,
       route: '/roommate-finder',
       subtitle: 'Connect with Roommates',
     ),
     DashboardItem(
-      title: 'Tuition Finder',
+      title: 'Tuition',
       icon: MdiIcons.magnify,
       color: Colors.teal,
       route: '/tuition-finder',
@@ -170,7 +170,7 @@ class _HomeViewState extends State<HomePage> {
                       decoration: TextDecoration.none,
                       fontSize: 20,
                       fontFamily: 'Lato',
-                      color: Colors.blue,
+                      color: Color(0xFF005F73),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -220,11 +220,11 @@ class _HomeViewState extends State<HomePage> {
                 size: 40,
                 color: item.color,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
                 item.title,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: item.color,
                 ),
@@ -283,7 +283,7 @@ class _ProfileHeader extends StatelessWidget {
                           decoration: TextDecoration.none,
                           fontSize: 18,
                           fontFamily: 'Lato',
-                          color: Colors.blue,
+                          color: Color(0xFF005F73),
                           fontWeight: FontWeight.bold,
                         ),
                       ),

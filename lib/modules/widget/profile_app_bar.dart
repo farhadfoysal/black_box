@@ -1,4 +1,4 @@
-import 'package:black_box/extra/test/sign_in_or_register.dart';
+import 'package:black_box/screen_page/signin/sign_in_or_register.dart';
 import 'package:flutter/material.dart';
 
 import '../../preference/logout.dart';

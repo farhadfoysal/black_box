@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
+import '../../../utility/player/MP4_like_lottie_animation.dart';
+
 class IntroOne extends StatelessWidget {
   const IntroOne({super.key});
 
@@ -8,17 +10,21 @@ class IntroOne extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
+          backgroundColor: Colors.white,
           body: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Center(
-                child: Lottie.asset(
-                  'animation/education.json',
-                  height: 300,
-                  reverse: true,
-                  repeat: true,
-                  fit: BoxFit.cover,
-                ),
+                child:
+                MP4LikeLottieAnimation(assetPath: 'animation/(15).mp4'),
+
+                // Lottie.asset(
+                //   'animation/ (9).json',
+                //   height: 300,
+                //   reverse: true,
+                //   repeat: true,
+                //   fit: BoxFit.cover,
+                // ),
               ),
               const SizedBox(
                 height: 20,
@@ -26,7 +32,7 @@ class IntroOne extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.all(10),
                 child: Text(
-                  "Class Organizer",
+                  "MultiTask Management",
                   style: TextStyle(
                       color: Colors.black,
                       fontSize: 25,
@@ -36,11 +42,13 @@ class IntroOne extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  "Class Organizer description here.....",
+                  "BlackBox helps manage Properties, Mess, Tuition, Tutor, Student academic routines efficiently. "
+                      "This section of the app also includes a Property Management System "
+                      "that lets users manage property listings, tenant details, and rental schedules seamlessly.",
                   style: TextStyle(
-                      color: Colors.greenAccent,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w200,
+                      color: Colors.blueGrey,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w400,
                       fontStyle: FontStyle.italic),
                   textAlign: TextAlign.center,
                 ),

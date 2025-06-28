@@ -56,7 +56,7 @@ class _TutorStudentMonthlyDatesState extends State<TutorStudentMonthlyDates> {
     super.initState();
     _minutesControllers = {};
     for (var date in widget.month.dates ?? []) {
-      _minutesControllers[date.id!] = TextEditingController(
+      _minutesControllers[date.ind!] = TextEditingController(
         text: date.minutes != null ? date.minutes.toString() : "",
       );
     }
@@ -296,7 +296,8 @@ class _TutorStudentMonthlyDatesState extends State<TutorStudentMonthlyDates> {
           children: [
             Container(
               height: 200,
-              color: Colors.blueAccent,
+              // color: Colors.blueAccent,
+              color: Color(0xFF005F73),
             ),
             CircleAvatar(
               radius: 60,
@@ -405,7 +406,8 @@ class _TutorStudentMonthlyDatesState extends State<TutorStudentMonthlyDates> {
                 ),
                 elevation: 5,
                 margin: const EdgeInsets.symmetric(vertical: 8.0),
-                color: Colors.pink.shade50,
+                // color: Colors.pink.shade50,
+                color: Color(0xFFEFF8F9),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
@@ -538,7 +540,7 @@ class _TutorStudentMonthlyDatesState extends State<TutorStudentMonthlyDates> {
                                     onChanged: (value) {
                                       _setMinutes(date!, value);
                                     },
-                                    controller: _minutesControllers[date?.id!] ?? TextEditingController(),
+                                    controller: _minutesControllers[date?.ind!] ?? TextEditingController(),
                                   ),
                                 ),
 
@@ -1189,7 +1191,7 @@ class _TutorStudentMonthlyDatesState extends State<TutorStudentMonthlyDates> {
     return Scaffold(
       appBar: AppBar(
         title: Text("${widget.month.month}"),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Color(0xFF005F73),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1264,7 +1266,7 @@ class InfoTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         children: [
-          Icon(icon, color: Colors.blueAccent),
+          Icon(icon, color: Color(0xFF005F73)),
           SizedBox(width: 15),
           Expanded(
             child: Column(
