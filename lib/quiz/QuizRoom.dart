@@ -441,7 +441,7 @@ class _QuizRoomState extends State<QuizRoom> {
                 currentQuestion.url != null &&
                 currentQuestion.url.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.only(top: 10),
                 child: Center(
                   child: GestureDetector(
                     onDoubleTap: () {
@@ -471,7 +471,7 @@ class _QuizRoomState extends State<QuizRoom> {
                 currentQuestion.url != null &&
                 currentQuestion.url.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.only(top: 10),
                 child: Center(
                   child: AspectRatio(
                     aspectRatio: 16 / 9,
@@ -486,6 +486,7 @@ class _QuizRoomState extends State<QuizRoom> {
                 child: YoutubePlayerWidget(url: currentQuestion.url),
               ),
 
+            const SizedBox(height: 10.0),
             Row(
               children: [
                 Expanded(
@@ -503,6 +504,24 @@ class _QuizRoomState extends State<QuizRoom> {
                         padding: const EdgeInsets.all(16),
                       ),
                       child: const Icon(Icons.arrow_back, color: Colors.white),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        finishedExam(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        padding: const EdgeInsets.symmetric(vertical: 10.0,horizontal: 10.0),
+                      ),
+                      child: const Text(
+                        "Submit",
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
                     ),
                   ),
                 ),
@@ -527,24 +546,24 @@ class _QuizRoomState extends State<QuizRoom> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 2),
             // Submit Button
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  finishedExam(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                ),
-                child: const Text(
-                  "SAVE",
-                  style: TextStyle(fontSize: 18, color: Colors.white),
-                ),
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(vertical: 8.0),
+            //   child: ElevatedButton(
+            //     onPressed: () {
+            //       finishedExam(context);
+            //     },
+            //     style: ElevatedButton.styleFrom(
+            //       backgroundColor: Colors.black,
+            //       padding: const EdgeInsets.symmetric(vertical: 16.0),
+            //     ),
+            //     child: const Text(
+            //       "SAVE",
+            //       style: TextStyle(fontSize: 18, color: Colors.white),
+            //     ),
+            //   ),
+            // ),
           ],
         ),
       ),
