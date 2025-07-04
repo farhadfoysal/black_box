@@ -212,6 +212,189 @@ class _CategoriesListView extends StatelessWidget {
 //   }
 // }
 
+// class _MenuButton extends StatelessWidget {
+//   const _MenuButton({
+//     required this.title,
+//     required this.imagePath,
+//     required this.onPressed,
+//   });
+//
+//   final String title;
+//   final String imagePath;
+//   final VoidCallback onPressed;
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     const radius = 17.00;
+//
+//     return Column(
+//       children: [
+//         InkWell(
+//           onTap: onPressed,
+//           borderRadius: BorderRadius.circular(radius),
+//           child: Ink(
+//             padding: const EdgeInsets.all(12),
+//             width: 65,
+//             height: 65,
+//             decoration: BoxDecoration(
+//               color: const Color(0xFF94BFF8).withOpacity(0.3),
+//               borderRadius: BorderRadius.circular(radius),
+//             ),
+//             child: SvgPicture.asset(
+//               imagePath,
+//               width: 50,
+//               height: 50,
+//             ),
+//           ),
+//         ),
+//         Padding(
+//           padding: const EdgeInsets.all(8.0),
+//           child: Text(
+//             title,
+//             style: const TextStyle(fontSize: 13.5),
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+// }
+
+// class _MenuButton extends StatelessWidget {
+//   const _MenuButton({
+//     required this.title,
+//     required this.imagePath,
+//     required this.onPressed,
+//   });
+//
+//   final String title;
+//   final String imagePath;
+//   final VoidCallback onPressed;
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     const radius = 17.00;
+//
+//     // final hasImage = imagePath.isNotEmpty;
+//     final hasImage = imagePath.isNotEmpty;
+//
+//
+//     return Column(
+//       children: [
+//         InkWell(
+//           onTap: onPressed,
+//           borderRadius: BorderRadius.circular(radius),
+//           child: Ink(
+//             padding: const EdgeInsets.all(12),
+//             width: 65,
+//             height: 65,
+//             decoration: BoxDecoration(
+//               color: const Color(0xFF94BFF8).withOpacity(0.3),
+//               borderRadius: BorderRadius.circular(radius),
+//             ),
+//             child: hasImage
+//                 ? SvgPicture.asset(
+//               imagePath,
+//               width: 50,
+//               height: 50,
+//             )
+//                 : Center(
+//               child: Text(
+//                 title.length >= 3 ? title.substring(0, 3).toUpperCase() : title.toUpperCase(),
+//                 style: const TextStyle(
+//                   fontSize: 16,
+//                   fontWeight: FontWeight.bold,
+//                   color: Color(0xFF1A1A1A),
+//                 ),
+//               ),
+//             ),
+//           ),
+//         ),
+//         Padding(
+//           padding: const EdgeInsets.all(8.0),
+//           child: Text(
+//             title,
+//             textAlign: TextAlign.center,
+//             style: const TextStyle(fontSize: 13.5),
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+// }
+
+// class _MenuButton extends StatelessWidget {
+//   const _MenuButton({
+//     required this.title,
+//     required this.imagePath,
+//     required this.onPressed,
+//   });
+//
+//   final String title;
+//   final String imagePath;
+//   final VoidCallback onPressed;
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     const radius = 17.0;
+//
+//     final hasImage = imagePath.isNotEmpty;
+//
+//     String getFallbackIconText(String title) {
+//       final words = title.trim().split(RegExp(r'\s+'));
+//       if (words.length == 1) {
+//         return words.first.length >= 3
+//             ? words.first.substring(0, 3).toUpperCase()
+//             : words.first.toUpperCase();
+//       } else {
+//         return words.map((w) => w[0].toUpperCase()).take(3).join();
+//       }
+//     }
+//
+//     return Column(
+//       children: [
+//         InkWell(
+//           onTap: onPressed,
+//           borderRadius: BorderRadius.circular(radius),
+//           child: Ink(
+//             width: 65,
+//             height: 65,
+//             padding: const EdgeInsets.all(12),
+//             decoration: BoxDecoration(
+//               color: const Color(0xFF94BFF8).withOpacity(0.3),
+//               borderRadius: BorderRadius.circular(radius),
+//             ),
+//             child: hasImage
+//                 ? SvgPicture.asset(
+//               imagePath,
+//               width: 50,
+//               height: 50,
+//             )
+//                 : Center(
+//               child: Text(
+//                 getFallbackIconText(title),
+//                 textAlign: TextAlign.center,
+//                 style: const TextStyle(
+//                   fontSize: 16,
+//                   fontWeight: FontWeight.bold,
+//                   color: Color(0xFF1A1A1A),
+//                 ),
+//               ),
+//             ),
+//           ),
+//         ),
+//         Padding(
+//           padding: const EdgeInsets.all(8.0),
+//           child: Text(
+//             title,
+//             textAlign: TextAlign.center,
+//             style: const TextStyle(fontSize: 13.5),
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+// }
+
 class _MenuButton extends StatelessWidget {
   const _MenuButton({
     required this.title,
@@ -225,7 +408,38 @@ class _MenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const radius = 17.00;
+    const radius = 17.0;
+
+    final hasImage = imagePath.isNotEmpty;
+
+    final ignoreWords = {'and', 'of', 'the', '&'};
+
+    String getFallbackIconText(String title) {
+      final words = title
+          .trim()
+          .toLowerCase()
+          .split(RegExp(r'\s+'))
+          .where((word) => !ignoreWords.contains(word))
+          .toList();
+
+      if (words.length == 1) {
+        return words.first.length >= 3
+            ? words.first.substring(0, 3).toUpperCase()
+            : words.first.toUpperCase();
+      } else {
+        return words.map((w) => w[0].toUpperCase()).join();
+      }
+    }
+
+    String _formatTitle(String title) {
+      final words = title.trim().split(RegExp(r'\s+'));
+
+      if (words.length > 2) {
+        return '${words[0]} ${words[1]}...';
+      }
+
+      return title;
+    }
 
     return Column(
       children: [
@@ -233,24 +447,37 @@ class _MenuButton extends StatelessWidget {
           onTap: onPressed,
           borderRadius: BorderRadius.circular(radius),
           child: Ink(
-            padding: const EdgeInsets.all(12),
             width: 65,
             height: 65,
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: const Color(0xFF94BFF8).withOpacity(0.3),
               borderRadius: BorderRadius.circular(radius),
             ),
-            child: SvgPicture.asset(
+            child: hasImage
+                ? SvgPicture.asset(
               imagePath,
               width: 50,
               height: 50,
+            )
+                : Center(
+              child: Text(
+                getFallbackIconText(title),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
             ),
           ),
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: Text(
-            title,
+            _formatTitle(title),
+            textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 13.5),
           ),
         ),
@@ -258,6 +485,7 @@ class _MenuButton extends StatelessWidget {
     );
   }
 }
+
 
 class _NewCoursesListView extends StatelessWidget {
   const _NewCoursesListView({
@@ -275,7 +503,7 @@ class _NewCoursesListView extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: SubHeader(
-              title: 'New Courses',
+              title: 'Enrolled Courses',
               onPressed: () {},
             ),
           ),
