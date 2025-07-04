@@ -15,4 +15,10 @@ class Routes {
   static const String profilePage = '/profile';
   static const String nestedProfilePage = '/profile';
   static const String backupPage = '/backup';
+  static const String myCoursesPage = '/myCourses';
+  static const String gkQuizPage = '/gkQuiz';
+  static const String noticePage = '/notice';
+  static const String examPage = '/exams';
+  static const String coursesOfCategoryPage = '/coursesOfCategory';
+
 }

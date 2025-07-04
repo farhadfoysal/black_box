@@ -3,9 +3,11 @@ import 'dart:ffi';
 import 'package:black_box/components/common/photo_avatar.dart';
 import 'package:black_box/cores/cores.dart';
 import 'package:black_box/model/user/user.dart';
+import 'package:black_box/routes/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as b;
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ionicons/ionicons.dart';
 
 import '../../components/components.dart';
@@ -171,7 +173,26 @@ class _CategoriesListView extends StatelessWidget {
                 (item) => Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: _MenuButton(
-                onPressed: () {},
+                onPressed: () {
+                  final slug = item.slug;
+
+                  final router = GoRouter.of(context);
+
+                  if (slug == 'courses') {
+                    router.pushNamed(Routes.myCoursesPage);
+                  } else if (slug == 'gk') {
+                    router.pushNamed(Routes.gkQuizPage);
+                  } else if (slug == 'notice') {
+                    router.pushNamed(Routes.noticePage);
+                  } else if (slug == 'exam') {
+                    router.pushNamed(Routes.examPage);
+                  } else {
+                    router.pushNamed(
+                      Routes.coursesOfCategoryPage,
+                      extra: item,
+                    );
+                  }
+                },
                 title: item.name,
                 imagePath: item.imagePath,
               ),

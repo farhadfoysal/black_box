@@ -1,3 +1,8 @@
+import 'package:black_box/screen_page/course/courses_of_category.dart';
+import 'package:black_box/screen_page/course/exam_page.dart';
+import 'package:black_box/screen_page/course/gk_quiz_page.dart';
+import 'package:black_box/screen_page/course/my_courses_page.dart';
+import 'package:black_box/screen_page/course/notice_page.dart';
 import 'package:black_box/screen_page/signin/sign_in_or_register.dart';
 import 'package:black_box/modules/menus/mess_view.dart';
 import 'package:black_box/modules/menus/schedule_view.dart';
@@ -215,6 +220,81 @@ class AppRoutes {
           transitionDuration: const Duration(milliseconds: 400),
           reverseTransitionDuration: const Duration(milliseconds: 200),
           child: MessHomeMember(),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      name: Routes.myCoursesPage,
+      path: Routes.myCoursesPage,
+      pageBuilder: (_, state) {
+        return CustomTransitionPage<void>(
+          key: state.pageKey,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
+          child: MyCoursesPage(),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      name: Routes.gkQuizPage,
+      path: Routes.gkQuizPage,
+      pageBuilder: (_, state) {
+        return CustomTransitionPage<void>(
+          key: state.pageKey,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
+          child: GKQuizPage(),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      name: Routes.noticePage,
+      path: Routes.noticePage,
+      pageBuilder: (_, state) {
+        return CustomTransitionPage<void>(
+          key: state.pageKey,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
+          child: NoticePage(),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      name: Routes.examPage,
+      path: Routes.examPage,
+      pageBuilder: (_, state) {
+        return CustomTransitionPage<void>(
+          key: state.pageKey,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
+          child: ExamsPage(),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    GoRoute(
+      name: Routes.coursesOfCategoryPage,
+      path: Routes.coursesOfCategoryPage,
+      pageBuilder: (_, state) {
+        return CustomTransitionPage<void>(
+          key: state.pageKey,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
+          child: CoursesOfCategoryPage(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(opacity: animation, child: child);
           },
