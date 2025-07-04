@@ -83,6 +83,7 @@ dependencies:
   font_awesome_flutter: ^10.8.0
   mobile_scanner: ^6.0.10
   fl_chart: ^0.71.0
+  ionicons: ^0.2.2
 
 dev_dependencies:
   flutter_test:
@@ -119,6 +120,10 @@ flutter:
     - assets/
     - animation/
     - assets/images/
+    - assets/images/png/
+    - assets/icons/png/
+    - assets/images/svg/
+    - assets/icons/svg/
     - assets/images/mainLogo.svg
     - assets/edu.jpg
     - animation/9.json
