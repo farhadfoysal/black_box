@@ -431,8 +431,6 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
 
   @override
   Widget build(BuildContext context) {
-    // category = GoRouterState.of(context).extra as Category;
-
     return Scaffold(
       appBar: AppBar(title: Text("My Courses")),
       body: Padding(
@@ -458,68 +456,62 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
             Expanded(
               child: filteredCourses.isEmpty
                   ? Center(
-                      child: Text(
-                        'No courses found in Your Courses list',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    )
+                child: Text(
+                  'No courses found in Your Courses list',
+                  style: const TextStyle(fontSize: 16),
+                ),
+              )
                   : ListView.builder(
-                      physics: const BouncingScrollPhysics(),
-                      itemCount: filteredCourses.length,
-                      itemBuilder: (context, index) {
-                        final course = filteredCourses[index];
-                        return GestureDetector(
-                          onTap: () async {
-                            context.push(Routes.courseDetailPage,
-                                extra: course);
-                          },
-                          child: CourseCard(
-                            courseImage: course.courseImage ?? '',
-                            courseName: course.courseName ?? '',
-                            rating: course.totalRating ?? 0,
-                            totalTime: course.totalTime ?? '',
-                            totalVideo: course.totalVideo?.toString() ?? '0',
-                          ),
-                        );
-                      },
+                physics: const BouncingScrollPhysics(),
+                itemCount: filteredCourses.length,
+                itemBuilder: (context, index) {
+                  final course = filteredCourses[index];
+                  return GestureDetector(
+                    onTap: () async {
+                      context.push(Routes.courseDetailPage, extra: course);
+                    },
+                    child: CourseCard(
+                      courseImage: course.courseImage ?? '',
+                      courseName: course.courseName ?? '',
+                      rating: course.totalRating ?? 0,
+                      totalTime: course.totalTime ?? '',
+                      totalVideo: course.totalVideo?.toString() ?? '0',
                     ),
-            ),
-            Positioned(
-              bottom: 20,
-              right: 20,
-              child: ElevatedButton(
-                onPressed: () => _addCourse(context),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white, // Text color
-                  backgroundColor: Colors.blue, // Button color
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25), // Rounded edges
-                  ),
-                  elevation: 5, // Shadow effect
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.school, size: 20),
-                    SizedBox(width: 10),
-                    isLoading
-                        ? SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Text(
-                            "Create Course",
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                  ],
-                ),
+                  );
+                },
               ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: ElevatedButton(
+        onPressed: () => _addCourse(context),
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white, // Text color
+          backgroundColor: Colors.blue, // Button color
+          padding: EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25), // Rounded edges
+          ),
+          elevation: 5, // Shadow effect
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.school, size: 20),
+            SizedBox(width: 10),
+            isLoading
+                ? SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
+                : Text(
+              "Create Course",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],
         ),
