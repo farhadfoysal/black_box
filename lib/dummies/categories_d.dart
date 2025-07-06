@@ -1,5 +1,4 @@
-
-
+import 'package:flutter/material.dart';
 import '../cores/cores.dart';
 
 final categoriesJSON = [
@@ -138,3 +137,12 @@ final categoriesJSON = [
   {"id": 99, "name": "Cyber Security", "slug": "cyber-security", "imagePath": ""},
   {"id": 100, "name": "Foreign Languages", "slug": "foreign-langs", "imagePath": ""},
 ];
+
+final eCategoriesJSON = categoriesJSON.map((category) {
+  return {
+    ...category,
+    'isSelected': false,
+    'textColor': Colors.black,
+    'selectedColor': const Color(0xFF126E64),
+  };
+}).toList();

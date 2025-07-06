@@ -20,5 +20,6 @@ class Routes {
   static const String noticePage = '/notice';
   static const String examPage = '/exams';
   static const String coursesOfCategoryPage = '/coursesOfCategory';
+  static const String courseDetailPage = '/course-detail';
 
 }

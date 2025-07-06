@@ -84,6 +84,9 @@ dependencies:
   mobile_scanner: ^6.0.10
   fl_chart: ^0.71.0
   ionicons: ^0.2.2
+  carousel_slider: ^5.1.1
+  percent_indicator: ^4.2.5
+  flutter_rating_bar: ^4.0.1
 
 dev_dependencies:
   flutter_test:
@@ -120,6 +123,7 @@ flutter:
     - assets/
     - animation/
     - assets/images/
+    - assets/empty_image.png
     - assets/images/png/
     - assets/icons/png/
     - assets/images/svg/

@@ -1,4 +1,5 @@
 import 'package:black_box/screen_page/course/courses_of_category.dart';
+import 'package:black_box/screen_page/course/detail_course_screen.dart';
 import 'package:black_box/screen_page/course/exam_page.dart';
 import 'package:black_box/screen_page/course/gk_quiz_page.dart';
 import 'package:black_box/screen_page/course/my_courses_page.dart';
@@ -17,6 +18,7 @@ import 'package:black_box/screen_page/signup/Register.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../model/course/course_model.dart';
 import '../modules/menus/home_view.dart';
 import '../modules/menus/profile_view.dart';
 
@@ -301,5 +303,22 @@ class AppRoutes {
         );
       },
     ),
+    GoRoute(
+      name: Routes.courseDetailPage,
+      path: Routes.courseDetailPage,
+      pageBuilder: (_, state) {
+        final course = state.extra as CourseModel;
+        return CustomTransitionPage<void>(
+          key: state.pageKey,
+          transitionDuration: const Duration(milliseconds: 400),
+          reverseTransitionDuration: const Duration(milliseconds: 200),
+          child: DetailCourseScreen(course: course),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        );
+      },
+    ),
+    
   ];
 }
