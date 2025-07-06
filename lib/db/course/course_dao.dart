@@ -47,6 +47,17 @@ class CourseDAO {
     return result.map((json) => CourseModelDbMapper.fromMap(json)).toList();
   }
 
+  Future<List<CourseModel>> getCoursesByCategory(String category) async {
+    final database = await db;
+    final result = await database.query(
+      'courses',
+      where: 'category = ?',
+      whereArgs: [category],
+    );
+    return result.map((json) => CourseModelDbMapper.fromMap(json)).toList();
+  }
+
+
   /// ✅ Fetch a single course by its unique_id
   Future<CourseModel?> getCourseByUniqueId(String uniqueId) async {
     final database = await db;

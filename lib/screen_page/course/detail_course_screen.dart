@@ -15,7 +15,7 @@ class DetailCourseScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: PreferredSize(
@@ -131,6 +131,7 @@ class DetailCourseScreen extends StatelessWidget {
               tabs: [
                 Tab(text: 'About'),
                 Tab(text: 'Lessons'),
+                Tab(text: 'Quiz'),
                 Tab(text: 'Tools'),
                 Tab(text: 'Reviews'),
               ],
@@ -206,6 +207,20 @@ class DetailCourseScreen extends StatelessWidget {
                       },
                     ),
                   ],
+                );
+              },
+            ),
+
+            // Quiz
+            ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: course.tools?.length ?? 0,
+              itemBuilder: (context, index) {
+                final tool = course.tools![index];
+                return ToolsCard(
+                  toolsName: tool.toolsName,
+                  imgUrl: tool.toolsIcon,
+                  toolUrl: tool.url,
                 );
               },
             ),

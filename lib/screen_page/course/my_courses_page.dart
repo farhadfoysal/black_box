@@ -124,6 +124,96 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
   Future<void> _initializeData() async {
     // First load user data
     await _loadUserData();
+    _loadCoursesData();
+  }
+
+  Future<void> _loadCoursesData() async {
+    if (await InternetConnectionChecker.instance.hasConnection) {
+      setState(() {
+        isLoading = true;
+      });
+
+      DatabaseReference teachersRef = _databaseRef.child('courses');
+
+      Query query = teachersRef.orderByChild('user_id').equalTo(_user?.userid);
+
+      query.once().then((DatabaseEvent event) {
+        final dataSnapshot = event.snapshot;
+
+        if (dataSnapshot.exists) {
+          final Map<dynamic, dynamic> coursesData =
+          dataSnapshot.value as Map<dynamic, dynamic>;
+
+          setState(() {
+            filteredCourses.clear();
+
+            filteredCourses = coursesData.entries.map((entry) {
+              // Convert each entry's value to Map<String, dynamic>
+              final courseMap = Map<String, dynamic>.from(entry.value as Map);
+
+              return CourseModel.fromJson(courseMap);
+            }).toList();
+
+            // Convert the students data into a list of TutorStudent objects
+            // students = studentsData.entries.map((entry) {
+            //   Map<String, dynamic> studentMap = {
+            //     'id': entry.value['id'] ?? null,
+            //     'unique_id': entry.value['unique_id'] ?? null,
+            //     'user_id': entry.value['user_id'] ?? null,
+            //     'name': entry.value['name'] ?? null,
+            //     'phone': entry.value['phone'] ?? null,
+            //     'gaurdian_phone': entry.value['gaurdian_phone'] ?? null,
+            //     'phone_pass': entry.value['phone_pass'] ?? null,
+            //     'dob': entry.value['dob'] ?? null,
+            //     'education': entry.value['education'] ?? null,
+            //     'address': entry.value['address'] ?? null,
+            //     'active_status': entry.value['active_status'] ?? null,
+            //     'admitted_date': entry.value['admitted_date'] ?? null,
+            //     'img': entry.value['img'] ?? null,
+            //     'days': entry.value['days'] != null
+            //         ? (entry.value['days'] as List)
+            //         .map((day) => TutorWeekDay.fromJson(day))
+            //         .toList()
+            //         : null,
+            //   };
+            //   return TutorStudent.fromJson(studentMap);
+            // }).toList();
+
+            isLoading = false;
+          });
+        } else {
+          print(_user?.userid);
+          print('No Course data available for the current User.');
+          setState(() {
+            isLoading = false;
+          });
+        }
+      }).catchError((error) {
+        print('Failed to load Course data: $error');
+        setState(() {
+          isLoading = false;
+        });
+      });
+    } else {
+
+      List<CourseModel> courseList = await CourseDAO().getCoursesByUserId(_user!.userid!);
+
+      if(!courseList.isEmpty){
+        setState(() {
+          filteredCourses.clear();
+          filteredCourses = courseList;
+          isLoading = false;
+        });
+      }else{
+        showSnackBarMsg(context,
+            "You are in Offline mode now, Please, connect to the Internet!");
+        setState(() {
+          // teachers = data.map((json) => Teacher.fromJson(json)).toList();
+          isLoading = false;
+        });
+      }
+
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -435,7 +525,12 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       appBar: AppBar(title: Text("My Courses")),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
+        child: isLoading
+            ? const Center(
+          child:
+          CircularProgressIndicator(), // Show loading indicator
+        )
+            : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 12),
