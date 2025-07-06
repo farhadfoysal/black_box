@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'controller/connectivity_controller.dart';
 import 'db/local/deletion_sync_manager.dart';
 import 'firebase_options.dart';
 import 'package:firebase_database/firebase_database.dart';
 // import 'package:firebase_storage/firebase_storage.dart';
+
+const supabaseUrl = 'https://acbvncxbfitjeduodvqb.supabase.co';
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjYnZuY3hiZml0amVkdW9kdnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3ODM0MjgsImV4cCI6MjA2NzM1OTQyOH0.9p0DtIwlBnvkjhmjEFXcjw2xE-HnlteQ7PsDrZfBkyw";
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +20,9 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await DeletionSyncManager().init();
+
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
+
 
   // Get.put(ConnectivityController());
   Get.put(ThemeController());
