@@ -12,9 +12,7 @@ CourseModel _$CourseModelFromJson(Map<String, dynamic> json) => CourseModel(
   userId: json['user_id'] as String?,
   courseName: json['course_name'] as String?,
   courseImage: json['course_image'] as String?,
-  category: json['category'] == null
-      ? null
-      : Category.fromJson(json['category'] as Map<String, dynamic>),
+  category: json['category'] as String?,
   description: json['description'] as String?,
   totalVideo: json['total_video'] as int?,
   totalTime: json['total_times'] as String?,
@@ -57,7 +55,7 @@ Map<String, dynamic> _$CourseModelToJson(CourseModel instance) =>
       'tools': instance.tools,
       'level': instance.level,
       'count_students': instance.countStudents,
-      'created_at': instance.createdAt.toIso8601String(),
+      'created_at': instance.createdAt?.toIso8601String(),
       'status': instance.status,
     };
 

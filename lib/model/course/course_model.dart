@@ -23,7 +23,7 @@ class CourseModel {
   @JsonKey(name: 'course_image')
   String? courseImage;
 
-  Category? category;
+  String? category;
   String? description;
 
   @JsonKey(name: 'total_video')
@@ -48,15 +48,15 @@ class CourseModel {
   List<Review>? reviews;
   List<Tools>? tools;
 
-  final String level;
+   String? level;
 
   @JsonKey(name: 'count_students')
-  final int countStudents;
+   int? countStudents;
 
   @JsonKey(name: 'created_at')
-  final DateTime createdAt;
+   DateTime? createdAt;
 
-  final String status;
+   String? status;
 
   CourseModel({
     this.id,
@@ -75,10 +75,10 @@ class CourseModel {
     this.sections,
     this.reviews,
     this.tools,
-    required this.level,
-    required this.countStudents,
-    required this.createdAt,
-    required this.status,
+    this.level,
+    this.countStudents,
+    this.createdAt,
+    this.status,
   });
 
   factory CourseModel.fromJson(Map<String, dynamic> json) =>

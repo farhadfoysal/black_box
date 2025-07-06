@@ -9,7 +9,7 @@ extension CourseModelDbMapper on CourseModel {
       'user_id': userId,
       'course_name': courseName,
       'course_image': courseImage,
-      'category': category?.name,
+      'category': category,
       'description': description,
       'total_video': totalVideo,
       'total_times': totalTime,
@@ -19,7 +19,7 @@ extension CourseModelDbMapper on CourseModel {
       'discount': discount,
       'level': level,
       'count_students': countStudents,
-      'created_at': createdAt.toIso8601String(),
+      'created_at': createdAt?.toIso8601String(),
       'status': status,
     };
   }
