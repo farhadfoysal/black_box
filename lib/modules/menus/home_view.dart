@@ -1,10 +1,17 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:black_box/cores/cores.dart';
 import 'package:black_box/screen_page/tutor/tutor_main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as b;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../components/common/photo_avatar.dart';
+import '../../model/course/teacher.dart';
+import '../../model/school/school.dart';
 import '../../model/user/user.dart';
+import '../../preference/logout.dart';
 import '../../screen_page/mess/mess_manager_page.dart';
 
 class HomeView extends StatelessWidget {
@@ -41,6 +48,20 @@ class HomePage extends StatefulWidget {
 
 class _HomeViewState extends State<HomePage> {
   late User user;
+  String _userName = 'Farhad Foysal';
+  String? userName;
+  String? userPhone;
+  String? userEmail;
+  User? _user, _user_data;
+  String? sid;
+  School? school;
+  Teacher? teacher;
+  File? _selectedImage;
+  bool _showSaveButton = false;
+
+  int _currentIndex1 = 0;
+  int _currentIndex2 = 0;
+  bool isLoading = false;
 
   final List<DashboardItem> items = [
     DashboardItem(
@@ -94,19 +115,87 @@ class _HomeViewState extends State<HomePage> {
 
   @override
   void initState() {
-    loadData();
     super.initState();
+    _loadUserName();
+    _initializeData();
   }
 
-  void loadData() {
+  Future<void> _initializeData() async {
+    await _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    Logout logout = Logout();
+    User? user = await logout.getUserDetails(key: 'user_data');
+
+    Map<String, dynamic>? userMap = await logout.getUser(key: 'user_logged_in');
+    Map<String, dynamic>? schoolMap =
+    await logout.getSchool(key: 'school_data');
+
+    if (userMap != null) {
+      User user_data = User.fromMap(userMap);
+      setState(() {
+        _user_data = user_data;
+        _user = user_data;
+      });
+    } else {
+      print("User map is null");
+    }
+
+    if (schoolMap != null) {
+      School schoolData = School.fromMap(schoolMap);
+      setState(() {
+        _user = user;
+        school = schoolData;
+        sid = school?.sId;
+        print(schoolData.sId);
+      });
+    } else {
+      print("School data is null");
+    }
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userDataString = prefs.getString('user_logged_in');
+    String? imagePath = prefs.getString('profile_picture-${_user?.uniqueid!}');
+
+    if (userDataString != null) {
+      Map<String, dynamic> userData = jsonDecode(userDataString);
+      setState(() {
+        userName = userData['uname'];
+        userPhone = userData['phone'];
+        userEmail = userData['email'];
+        if (imagePath != null) {
+          _selectedImage = File(imagePath);
+        }
+      });
+    }
+  }
+
+  Future<void> _loadUserName() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedUserData = prefs.getString('user_logged_in');
+
+    if (savedUserData != null) {
+      Map<String, dynamic> userData = jsonDecode(savedUserData);
+      setState(() {
+        _userName = userData['uname'] ?? 'Tasnim';
+      });
+    }
+  }
+
+  Future<void> _loadUser() async {
+    Logout logout = Logout();
+    User? user = await logout.getUserDetails(key: 'user_data');
+    Map<String, dynamic>? userMap = await logout.getUser(key: 'user_logged_in');
+    User user_data = User.fromMap(userMap!);
     setState(() {
-      user = User(
-        uname: "Farhad Foysal",
-        pass: '369725',
-        phone: '01585855075',
-      );
+      _user = user;
+      _user_data = user_data;
     });
   }
+
+
+
 
   // @override
   // Widget build(BuildContext context) {
@@ -157,7 +246,7 @@ class _HomeViewState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _ProfileHeader(user: user),
+            _ProfileHeader(user: _user!),
             SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -278,7 +367,7 @@ class _ProfileHeader extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: 1.7),
                       child: Text(
-                        "Farhad Foysal Zibran",
+                        "${user.uname}",
                         style: TextStyle(
                           decoration: TextDecoration.none,
                           fontSize: 18,
@@ -291,7 +380,7 @@ class _ProfileHeader extends StatelessWidget {
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: 1.7),
                       child: Text(
-                        "mff585855075@gmail.com",
+                        "${user.email}",
                         style: p13.ff.grey,
                       ),
                     )

@@ -14,6 +14,8 @@ import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 import 'package:transparent_image/transparent_image.dart';
 
+import '../model/course/course_model.dart';
+
 part 'cards/learned_card.dart';
 part 'cards/new_course_card.dart';
 part 'cards/video_course_card.dart';

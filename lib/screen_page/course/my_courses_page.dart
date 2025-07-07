@@ -67,7 +67,7 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       totalRating: 4.5,
       totalTime: '2h 30m',
       courseImage:
-          'https://fastly.picsum.photos/id/870/200/300.jpg?blur=2&grayscale&hmac=ujRymp644uYVjdKJM7kyLDSsrqNSMVRPnGU99cKl6Vs',
+      'https://fastly.picsum.photos/id/870/200/300.jpg?blur=2&grayscale&hmac=ujRymp644uYVjdKJM7kyLDSsrqNSMVRPnGU99cKl6Vs',
       level: 'Beginner',
       countStudents: 120,
       createdAt: DateTime.now(),
@@ -79,7 +79,7 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       totalRating: 4.2,
       totalTime: '1h 50m',
       courseImage:
-          'https://fastly.picsum.photos/id/50/200/300.jpg?hmac=wlHRGoenBSt-gzxGvJp3cBEIUD71NKbWEXmiJC2mQYE',
+      'https://fastly.picsum.photos/id/50/200/300.jpg?hmac=wlHRGoenBSt-gzxGvJp3cBEIUD71NKbWEXmiJC2mQYE',
       level: 'Beginner',
       countStudents: 95,
       createdAt: DateTime.now(),
@@ -91,7 +91,7 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       totalRating: 4.8,
       totalTime: '3h 20m',
       courseImage:
-          'https://fastly.picsum.photos/id/443/200/300.jpg?grayscale&hmac=3KGsrU5Oo_hghp3-Xuzs6myA2cu1cKEvgsz05yWhKWA',
+      'https://fastly.picsum.photos/id/443/200/300.jpg?grayscale&hmac=3KGsrU5Oo_hghp3-Xuzs6myA2cu1cKEvgsz05yWhKWA',
       level: 'Intermediate',
       countStudents: 80,
       createdAt: DateTime.now(),
@@ -103,7 +103,7 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       totalRating: 4.7,
       totalTime: '2h 45m',
       courseImage:
-          'https://fastly.picsum.photos/id/866/200/300.jpg?hmac=rcadCENKh4rD6MAp6V_ma-AyWv641M4iiOpe1RyFHeI',
+      'https://fastly.picsum.photos/id/866/200/300.jpg?hmac=rcadCENKh4rD6MAp6V_ma-AyWv641M4iiOpe1RyFHeI',
       level: 'Intermediate',
       countStudents: 150,
       createdAt: DateTime.now(),
@@ -1250,6 +1250,80 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       }
     } catch (e) {
       print("Error loading enrolled courses: $e");
+      showSnackBarMsg(context, "Something went wrong while loading courses.");
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> loadFavoriteCourses() async {
+    setState(() => isLoading = true);
+
+    try {
+      final userId = _user?.userid;
+      if (userId == null) {
+        showSnackBarMsg(context, "User ID not found.");
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final hasConnection = await InternetConnectionChecker.instance.hasConnection;
+
+      if (hasConnection) {
+        // ✅ ONLINE: Load from Firebase favorites
+        final favRef = FirebaseDatabase.instance.ref("favorites");
+        final snapshot = await favRef.orderByChild("user_id").equalTo(userId).once();
+
+        if (snapshot.snapshot.exists) {
+          final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+
+          // Extract courseIds from favorites entries
+          final List<String> courseIds = data.values
+              .map((e) => (e as Map)['course_id']?.toString())
+              .where((id) => id != null)
+              .cast<String>()
+              .toList();
+
+          // Fetch course details from Firebase "courses"
+          final coursesRef = FirebaseDatabase.instance.ref("courses");
+          final allCoursesSnapshot = await coursesRef.once();
+
+          if (allCoursesSnapshot.snapshot.exists) {
+            final allCoursesData =
+            allCoursesSnapshot.snapshot.value as Map<dynamic, dynamic>;
+
+            // Filter by courseId list
+            final favoriteCourses = allCoursesData.entries
+                .where((entry) => courseIds.contains(entry.key))
+                .map((entry) => CourseModel.fromJson(
+              Map<String, dynamic>.from(entry.value),
+            ))
+                .toList();
+
+            setState(() {
+              filteredCourses = favoriteCourses;
+            });
+          } else {
+            showSnackBarMsg(context, "No courses found in database.");
+          }
+        } else {
+          showSnackBarMsg(context, "You have no favorite courses.");
+        }
+      } else {
+        // ✅ OFFLINE: Load from Sqflite
+        final localCourseIds = await CourseFavoriteDAO().getFavoriteCourseIds(userId);
+
+        if (localCourseIds.isEmpty) {
+          showSnackBarMsg(context, "Offline: No favorite courses found.");
+        } else {
+          final localCourses = await CourseDAO().getCoursesByIds(localCourseIds);
+          setState(() {
+            filteredCourses = localCourses;
+          });
+        }
+      }
+    } catch (e) {
+      print("Error loading favorite courses: $e");
       showSnackBarMsg(context, "Something went wrong while loading courses.");
     } finally {
       setState(() => isLoading = false);

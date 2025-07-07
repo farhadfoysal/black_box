@@ -1,19 +1,27 @@
 part of component;
 
-class NewCourseCard extends StatelessWidget {
+class NewCourseCard extends StatefulWidget {
+  CourseModel courseModel;
   final String imageUrl;
   final String title;
   final int countPlays;
   final Function onPressed;
 
-  const NewCourseCard({
+  NewCourseCard({
     super.key,
+    required this.courseModel,
     required this.imageUrl,
     required this.title,
     required this.countPlays,
     required this.onPressed,
   });
 
+
+  @override
+  State<StatefulWidget> createState() => NewCourseCardState();
+}
+
+class NewCourseCardState extends State<NewCourseCard>{
   @override
   Widget build(BuildContext context) {
     const TextStyle textInVideoStyle = TextStyle(color: Colors.white, fontSize: 16);
@@ -21,14 +29,14 @@ class NewCourseCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 7),
       child: GestureDetector(
-        onTap: () => onPressed(),
+        onTap: () => widget.onPressed(),
         child: Stack(
           children: [
             SizedBox(
               height: 300,
               width: 205,
               child: CachedNetworkImage(
-                imageUrl: imageUrl,
+                imageUrl: widget.imageUrl,
                 errorWidget: (context, url, error) => const SizedBox(),
                 imageBuilder: (context, assetProvider) {
                   return ClipRRect(
@@ -80,7 +88,7 @@ class NewCourseCard extends StatelessWidget {
               child: SizedBox(
                 width: 180,
                 child: Text(
-                  title.overflow,
+                  widget.title.overflow,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: p17.white,
@@ -101,7 +109,7 @@ class NewCourseCard extends StatelessWidget {
                       size: 18,
                     ),
                     const SizedBox(width: 4),
-                    Text(countPlays.toAbbreviatedString(), style: textInVideoStyle),
+                    Text(widget.countPlays.toAbbreviatedString(), style: textInVideoStyle),
                   ],
                 ),
               ),
@@ -111,4 +119,6 @@ class NewCourseCard extends StatelessWidget {
       ),
     );
   }
+
+
 }

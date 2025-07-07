@@ -1,7 +1,7 @@
 part of component;
 
 class VideoCourseCard extends StatelessWidget {
-  final VideoCourse item;
+  final CourseModel item;
   final VoidCallback onPressed;
 
   const VideoCourseCard({
@@ -36,7 +36,7 @@ class VideoCourseCard extends StatelessWidget {
                 height: 200.0,
                 width: context.screenWidth,
                 child: CachedNetworkImage(
-                  imageUrl: item.imageUrl,
+                  imageUrl: item.courseImage??"",
                   errorWidget: (context, url, error) => const SizedBox(),
                   imageBuilder: (context, assetProvider) {
                     return ClipRRect(
@@ -56,7 +56,7 @@ class VideoCourseCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      item.title.overflow,
+                      item.courseName!.overflow,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: p20.bold,
@@ -68,20 +68,20 @@ class VideoCourseCard extends StatelessWidget {
                           child: UserInfo(
                             onPressed: () {},
                             expanded: false,
-                            title: item.teacher.name,
-                            avatarURL: item.teacher.avatarURL,
+                            title: item.userId,
+                            avatarURL: item.userId,
                           ),
                         ),
                         const DotContainer(),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 2),
-                          child: Text(item.level, style: p15.grey),
+                          child: Text(item.level!, style: p15.grey),
                         ),
                         const DotContainer(),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 2),
                           child: Text(
-                            "${item.lessons.length} ${item.lessons.length > 1 ? 'Lessons' : 'Lesson'}",
+                            "${item.totalTime} ${item.totalVideo! > 1 ? 'Lessons' : 'Lesson'}",
                             style: p15.grey,
                           ),
                         ),
