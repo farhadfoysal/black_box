@@ -1,6 +1,9 @@
+import 'package:black_box/model/course/video_lesson.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../db/course/course_dao.dart';
 import '../../model/course/course_model.dart';
+import '../../model/course/enrollment.dart';
+import '../../model/course/favorite.dart';
 import '../../services/course/supabse_service.dart';
 
 class CourseRepository {
@@ -18,7 +21,10 @@ class CourseRepository {
     return connectivityResult != ConnectivityResult.none;
   }
 
-  /// ✅ Add a course (local first, then online if connected)
+  // --------------------------------------------------
+  // 📌 COURSES
+  // --------------------------------------------------
+
   Future<void> addCourse(CourseModel course) async {
     await courseDAO.insertCourse(course);
     if (await _isConnected()) {
@@ -30,7 +36,6 @@ class CourseRepository {
     }
   }
 
-  /// ✅ Get all courses (online if connected, else local)
   Future<List<CourseModel>> getCourses() async {
     if (await _isConnected()) {
       try {
@@ -44,7 +49,6 @@ class CourseRepository {
     }
   }
 
-  /// ✅ Get courses by userId
   Future<List<CourseModel>> getCoursesByUserId(String userId) async {
     if (await _isConnected()) {
       try {
@@ -54,12 +58,10 @@ class CourseRepository {
         return [];
       }
     } else {
-      // Optional: If local DB had userId info — fetch from local too
       return [];
     }
   }
 
-  /// ✅ Get single course by uniqueId
   Future<CourseModel?> getCourseByUniqueId(String uniqueId) async {
     if (await _isConnected()) {
       try {
@@ -69,12 +71,10 @@ class CourseRepository {
         return null;
       }
     } else {
-      // Optional: If local DB had uniqueId info — fetch from local too
       return null;
     }
   }
 
-  /// ✅ Update course (local first, then online)
   Future<void> updateCourse(CourseModel course) async {
     await courseDAO.updateCourse(course);
     if (await _isConnected()) {
@@ -86,7 +86,6 @@ class CourseRepository {
     }
   }
 
-  /// ✅ Delete course (local first, then online)
   Future<void> deleteCourse(int id) async {
     await courseDAO.deleteCourse(id);
     if (await _isConnected()) {
@@ -97,7 +96,234 @@ class CourseRepository {
       }
     }
   }
+
+  // --------------------------------------------------
+  // 📌 ENROLLMENTS
+  // --------------------------------------------------
+
+  Future<void> enrollCourse(Enrollment enrollment) async {
+    if (await _isConnected()) {
+      try {
+        await supabaseService.enrollCourse(enrollment);
+      } catch (e) {
+        print('Failed to enroll: $e');
+      }
+    } else {
+      print('No connection. Enrollment skipped.');
+    }
+  }
+
+  Future<void> disenrollCourse(String userId, String courseId) async {
+    if (await _isConnected()) {
+      try {
+        await supabaseService.disenrollCourse(userId, courseId);
+      } catch (e) {
+        print('Failed to disenroll: $e');
+      }
+    } else {
+      print('No connection. Disenrollment skipped.');
+    }
+  }
+
+  Future<List<String>> getEnrolledCourseIds(String userId) async {
+    if (await _isConnected()) {
+      try {
+        return await supabaseService.getEnrolledCourseIds(userId);
+      } catch (e) {
+        print('Failed to fetch enrolled courses: $e');
+        return [];
+      }
+    } else {
+      return [];
+    }
+  }
+
+  // --------------------------------------------------
+  // 📌 FAVORITES
+  // --------------------------------------------------
+
+  Future<void> favoriteCourse(Favorite favorite) async {
+    if (await _isConnected()) {
+      try {
+        await supabaseService.favoriteCourse(favorite);
+      } catch (e) {
+        print('Failed to favorite: $e');
+      }
+    } else {
+      print('No connection. Favorite skipped.');
+    }
+  }
+
+  Future<void> unfavoriteCourse(String userId, String courseId) async {
+    if (await _isConnected()) {
+      try {
+        await supabaseService.unfavoriteCourse(userId, courseId);
+      } catch (e) {
+        print('Failed to unfavorite: $e');
+      }
+    } else {
+      print('No connection. Unfavorite skipped.');
+    }
+  }
+
+  Future<List<String>> getFavoriteCourseIds(String userId) async {
+    if (await _isConnected()) {
+      try {
+        return await supabaseService.getFavoriteCourseIds(userId);
+      } catch (e) {
+        print('Failed to fetch favorites: $e');
+        return [];
+      }
+    } else {
+      return [];
+    }
+  }
+
+  // --------------------------------------------------
+  // 📌 COURSE VIDEOS
+  // --------------------------------------------------
+
+  Future<void> addVideoToCourse(VideoLesson video) async {
+    if (await _isConnected()) {
+      try {
+        await supabaseService.addVideo(video);
+      } catch (e) {
+        print('Failed to add video: $e');
+      }
+    } else {
+      print('No connection. Video upload skipped.');
+    }
+  }
+
+  Future<List<VideoLesson>> getVideosByCourseId(String courseId) async {
+    if (await _isConnected()) {
+      try {
+        return await supabaseService.getVideosByCourseId(courseId);
+      } catch (e) {
+        print('Failed to fetch course videos: $e');
+        return [];
+      }
+    } else {
+      return [];
+    }
+  }
+
+  Future<void> deleteVideo(String videoId) async {
+    if (await _isConnected()) {
+      try {
+        await supabaseService.deleteVideo(videoId);
+      } catch (e) {
+        print('Failed to delete video: $e');
+      }
+    } else {
+      print('No connection. Delete video skipped.');
+    }
+  }
 }
+
+
+
+
+// import 'package:connectivity_plus/connectivity_plus.dart';
+// import '../../db/course/course_dao.dart';
+// import '../../model/course/course_model.dart';
+// import '../../services/course/supabse_service.dart';
+//
+// class CourseRepository {
+//   final SupabaseService supabaseService;
+//   final CourseDAO courseDAO;
+//
+//   CourseRepository({
+//     required this.supabaseService,
+//     required this.courseDAO,
+//   });
+//
+//   /// ✅ Check internet connectivity
+//   Future<bool> _isConnected() async {
+//     final connectivityResult = await Connectivity().checkConnectivity();
+//     return connectivityResult != ConnectivityResult.none;
+//   }
+//
+//   /// ✅ Add a course (local first, then online if connected)
+//   Future<void> addCourse(CourseModel course) async {
+//     await courseDAO.insertCourse(course);
+//     if (await _isConnected()) {
+//       try {
+//         await supabaseService.createCourse(course);
+//       } catch (e) {
+//         print('Failed to add course online: $e');
+//       }
+//     }
+//   }
+//
+//   /// ✅ Get all courses (online if connected, else local)
+//   Future<List<CourseModel>> getCourses() async {
+//     if (await _isConnected()) {
+//       try {
+//         return await supabaseService.fetchCourses();
+//       } catch (e) {
+//         print('Failed to fetch online courses: $e');
+//         return await courseDAO.getAllCourses();
+//       }
+//     } else {
+//       return await courseDAO.getAllCourses();
+//     }
+//   }
+//
+//   /// ✅ Get courses by userId
+//   Future<List<CourseModel>> getCoursesByUserId(String userId) async {
+//     if (await _isConnected()) {
+//       try {
+//         return await supabaseService.fetchCoursesByUserId(userId);
+//       } catch (e) {
+//         print('Failed to fetch courses by userId online: $e');
+//         return [];
+//       }
+//     } else {
+//       // Optional: If local DB had userId info — fetch from local too
+//       return [];
+//     }
+//   }
+//
+//   /// ✅ Get single course by uniqueId
+//   Future<CourseModel?> getCourseByUniqueId(String uniqueId) async {
+//     if (await _isConnected()) {
+//       try {
+//         return await supabaseService.fetchCourseByUniqueId(uniqueId);
+//       } catch (e) {
+//         print('Failed to fetch course by uniqueId online: $e');
+//         return null;
+//       }
+//     } else {
+//       // Optional: If local DB had uniqueId info — fetch from local too
+//       return null;
+//     }
+//   }
+//
+//   /// ✅ Update course (local first, then online)
+//   Future<void> updateCourse(CourseModel course) async {
+//     await courseDAO.updateCourse(course);
+//     if (await _isConnected()) {
+//       try {
+//         await supabaseService.updateCourse(course);
+//       } catch (e) {
+//         print('Failed to update course online: $e');
+//       }
+//     }
+//   }
+//
+//   /// ✅ Delete course (local first, then online)
+//   Future<void> deleteCourse(int id) async {
+//     await courseDAO.deleteCourse(id);
+//     if (await _isConnected()) {
+//       try {
+//         await supabaseService.deleteCourse(id);
+//       } catch (e) {
+//         print('Failed to delete course online: $e');
+//       }
+//     }
+//   }
+// }
 
 
 

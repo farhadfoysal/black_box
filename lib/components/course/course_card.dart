@@ -13,26 +13,28 @@ class CourseCard extends StatefulWidget {
   String totalVideo;
   String totalTime;
   double? rating;
+  final VoidCallback? onEnroll;
+  final VoidCallback? onMark;
 
-  CourseCard(
-      {Key? key,
-        required this.courseModel,
-        required this.courseImage,
-        required this.courseName,
-        required this.trackingNumber,
-        this.mentorName,
-        this.rating,
-        required this.totalTime,
-        required this.totalVideo})
-      : super(key: key);
-
+  CourseCard({
+    Key? key,
+    required this.courseModel,
+    required this.courseImage,
+    required this.courseName,
+    required this.trackingNumber,
+    this.mentorName,
+    this.rating,
+    required this.totalTime,
+    required this.totalVideo,
+    this.onEnroll,
+    this.onMark,
+  }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => CourseCardState();
 }
 
-class CourseCardState extends State<CourseCard>{
-
+class CourseCardState extends State<CourseCard> {
   void copyCourseCode(CourseModel course) {
     String? tempNum = course.trackingNumber;
 
@@ -52,7 +54,6 @@ class CourseCardState extends State<CourseCard>{
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -156,38 +157,40 @@ class CourseCardState extends State<CourseCard>{
                       ),
                       PopupMenuButton<String>(
                         onSelected: (value) async {
-                          if (value == 'edit') {
-                            // Implement edit logic
+                          if (value == 'favourite') {
+                            widget.onMark?.call();
                           } else if (value == 'copy') {
                             copyCourseCode(widget.courseModel);
                           } else if (value == 'share') {
                             shareCourse(widget.courseModel);
                           } else if (value == 'mentor') {
                             // _openWhatsApp(student.phone??"");
-                          } else if (value == 'delete') {
-
+                          } else if (value == 'enroll') {
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: Text("Confirm Deletion"),
-                                content: Text("Are you sure you want to delete this Student?"),
+                                title: const Text('Confirm'),
+                                content: Text(
+                                    'Are you sure you want to enroll "${widget.courseModel.courseName}"?'),
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text("Cancel"),
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: const Text('Cancel'),
                                   ),
                                   TextButton(
-                                    onPressed: () async {
-                                      Navigator.pop(context);
-                                      // await deleteStudentFromFirebaseAndOffline(student);
+                                    onPressed: () {
+                                      widget.onEnroll?.call();
+                                      Navigator.pop(context, true);
                                     },
-                                    child: Text("Delete", style: TextStyle(color: Colors.red)),
+                                    child: const Text(
+                                      'Continue to Enroll',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
                                   ),
                                 ],
                               ),
                             );
-
-
                           } else if (value == 'schedule') {
                             // Navigator.push(
                             //   context,
@@ -197,7 +200,6 @@ class CourseCardState extends State<CourseCard>{
                             //             student: student),
                             //   ),
                             // );
-
                           } else if (value == 'go') {
                             // Navigator.push(
                             //   context,
@@ -207,31 +209,23 @@ class CourseCardState extends State<CourseCard>{
                             //             student: student),
                             //   ),
                             // );
-
                           }
                         },
                         itemBuilder: (context) => [
                           const PopupMenuItem(
-                              value: 'copy',
-                              child: Text('Copy Trk')),
+                              value: 'copy', child: Text('Copy Trk')),
                           const PopupMenuItem(
-                              value: 'share',
-                              child: Text('Share')),
+                              value: 'share', child: Text('Share')),
                           const PopupMenuItem(
-                              value: 'mentor',
-                              child: Text('Mentor')),
+                              value: 'enroll', child: Text('Enroll')),
                           const PopupMenuItem(
-                              value: 'schedule',
-                              child: Text('Schedule')),
+                              value: 'schedule', child: Text('Schedule')),
                           const PopupMenuItem(
-                              value: 'go',
-                              child: Text('Attendance')),
+                              value: 'go', child: Text('Attendance')),
                           const PopupMenuItem(
-                              value: 'edit',
-                              child: Text('Edit')),
+                              value: 'mentor', child: Text('Mentor')),
                           const PopupMenuItem(
-                              value: 'delete',
-                              child: Text('Delete')),
+                              value: 'favourite', child: Text('Favourite')),
                         ],
                       ),
                     ],
@@ -245,9 +239,7 @@ class CourseCardState extends State<CourseCard>{
     );
   }
 
-
   void shareCourse(CourseModel course) {
-
     String? tempNum = course.trackingNumber;
     String? tempCode = course.uniqueId;
 
@@ -296,8 +288,6 @@ class CourseCardState extends State<CourseCard>{
       );
     }
   }
-
-
 }
 
 class GreenChipWidget extends StatelessWidget {

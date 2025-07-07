@@ -54,7 +54,7 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
       totalRating: 4.5,
       totalTime: '2h 30m',
       courseImage:
-      'https://fastly.picsum.photos/id/870/200/300.jpg?blur=2&grayscale&hmac=ujRymp644uYVjdKJM7kyLDSsrqNSMVRPnGU99cKl6Vs',
+          'https://fastly.picsum.photos/id/870/200/300.jpg?blur=2&grayscale&hmac=ujRymp644uYVjdKJM7kyLDSsrqNSMVRPnGU99cKl6Vs',
       level: 'Beginner',
       countStudents: 120,
       createdAt: DateTime.now(),
@@ -66,7 +66,7 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
       totalRating: 4.2,
       totalTime: '1h 50m',
       courseImage:
-      'https://fastly.picsum.photos/id/50/200/300.jpg?hmac=wlHRGoenBSt-gzxGvJp3cBEIUD71NKbWEXmiJC2mQYE',
+          'https://fastly.picsum.photos/id/50/200/300.jpg?hmac=wlHRGoenBSt-gzxGvJp3cBEIUD71NKbWEXmiJC2mQYE',
       level: 'Beginner',
       countStudents: 95,
       createdAt: DateTime.now(),
@@ -78,7 +78,7 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
       totalRating: 4.8,
       totalTime: '3h 20m',
       courseImage:
-      'https://fastly.picsum.photos/id/443/200/300.jpg?grayscale&hmac=3KGsrU5Oo_hghp3-Xuzs6myA2cu1cKEvgsz05yWhKWA',
+          'https://fastly.picsum.photos/id/443/200/300.jpg?grayscale&hmac=3KGsrU5Oo_hghp3-Xuzs6myA2cu1cKEvgsz05yWhKWA',
       level: 'Intermediate',
       countStudents: 80,
       createdAt: DateTime.now(),
@@ -90,15 +90,13 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
       totalRating: 4.7,
       totalTime: '2h 45m',
       courseImage:
-      'https://fastly.picsum.photos/id/866/200/300.jpg?hmac=rcadCENKh4rD6MAp6V_ma-AyWv641M4iiOpe1RyFHeI',
+          'https://fastly.picsum.photos/id/866/200/300.jpg?hmac=rcadCENKh4rD6MAp6V_ma-AyWv641M4iiOpe1RyFHeI',
       level: 'Intermediate',
       countStudents: 150,
       createdAt: DateTime.now(),
       status: 'active',
     ),
   ];
-
-
 
   List<CourseModel> filteredCourses = [];
 
@@ -113,7 +111,6 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
     });
     _initializeData();
   }
-
 
   Future<void> _initializeData() async {
     // First load user data
@@ -136,7 +133,7 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
 
         if (dataSnapshot.exists) {
           final Map<dynamic, dynamic> coursesData =
-          dataSnapshot.value as Map<dynamic, dynamic>;
+              dataSnapshot.value as Map<dynamic, dynamic>;
 
           setState(() {
             filteredCourses.clear();
@@ -189,16 +186,16 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
         });
       });
     } else {
+      List<CourseModel> courseList =
+          await CourseDAO().getCoursesByCategory(category.name);
 
-      List<CourseModel> courseList = await CourseDAO().getCoursesByCategory(category.name);
-
-      if(!courseList.isEmpty){
+      if (!courseList.isEmpty) {
         setState(() {
           filteredCourses.clear();
           filteredCourses = courseList;
           isLoading = false;
         });
-      }else{
+      } else {
         showSnackBarMsg(context,
             "You are in Offline mode now, Please, connect to the Internet!");
         setState(() {
@@ -206,7 +203,6 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
           isLoading = false;
         });
       }
-
     }
   }
 
@@ -216,7 +212,7 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
 
     Map<String, dynamic>? userMap = await logout.getUser(key: 'user_logged_in');
     Map<String, dynamic>? schoolMap =
-    await logout.getSchool(key: 'school_data');
+        await logout.getSchool(key: 'school_data');
 
     if (userMap != null) {
       User user_data = User.fromMap(userMap);
@@ -312,7 +308,6 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
     await AppRouter.logoutUser(context);
   }
 
-
   void _searchCourses(String query) {
     final results = allCourses.where((course) {
       final courseName = course.courseName?.toLowerCase() ?? '';
@@ -324,19 +319,11 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
     });
   }
 
-
-  void _deleteCourse(CourseModel course) async {
-    setState(() {
-      allCourses.removeWhere((c) => c.uniqueId == course.uniqueId);
-      _searchCourses(controller.text);
-    });
+  void _enrollCourse(CourseModel course) async {
+    setState(() {});
   }
 
-  void _editCourse(BuildContext context, CourseModel course) {
-
-  }
-
-
+  void _markCourse(BuildContext context, CourseModel course) {}
 
   @override
   Widget build(BuildContext context) {
@@ -348,135 +335,154 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: isLoading
             ? const Center(
-          child:
-          CircularProgressIndicator(), // Show loading indicator
-        )
+                child: CircularProgressIndicator(), // Show loading indicator
+              )
             : Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(20),
-                  ),
-                ),
-                hintText: 'Search course...',
-              ),
-              onChanged: _searchCourses,
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: filteredCourses.isEmpty
-                  ? Center(
-                child: Text(
-                  'No courses found in ${category.name}',
-                  style: const TextStyle(fontSize: 16),
-                ),
-              )
-                  : ListView.builder(
-                physics: const BouncingScrollPhysics(),
-                itemCount: filteredCourses.length,
-                itemBuilder: (context, index) {
-                  final course = filteredCourses[index];
-                  return Dismissible(
-                    key: ValueKey(course.uniqueId), // Use a unique identifier
-                    background: Container(
-                      color: Colors.green,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      alignment: Alignment.centerLeft,
-                      child: const Icon(Icons.edit, color: Colors.white),
-                    ),
-                    secondaryBackground: Container(
-                      color: Colors.red,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      alignment: Alignment.centerRight,
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    confirmDismiss: (direction) async {
-                      if (direction == DismissDirection.startToEnd) {
-                        // Swipe right to Edit
-                        _editCourse(context, course);
-                        return false; // Don't dismiss the tile
-                      } else if (direction == DismissDirection.endToStart) {
-                        // Swipe left to Delete
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Confirm Deletion'),
-                            content: Text('Are you sure you want to delete "${course.courseName}"?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          ),
-                        );
-                        if (confirm == true) {
-                          _deleteCourse(course);
-                          return true; // Dismiss the tile
-                        } else {
-                          return false;
-                        }
-                      }
-                      return false;
-                    },
-                    child: GestureDetector(
-                      onTap: () {
-                        context.push(Routes.courseDetailPage, extra: course);
-                      },
-                      child: CourseCard(
-                        courseModel: course,
-                        courseImage: course.courseImage ?? '',
-                        courseName: course.courseName ?? '',
-                        trackingNumber: course.trackingNumber ?? '',
-                        rating: course.totalRating ?? 0,
-                        totalTime: course.totalTime ?? '',
-                        totalVideo: course.totalVideo?.toString() ?? '0',
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(20),
+                        ),
                       ),
+                      hintText: 'Search course...',
                     ),
-                  );
-                },
-              )
+                    onChanged: _searchCourses,
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                      child: filteredCourses.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No courses found in ${category.name}',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            )
+                          : ListView.builder(
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: filteredCourses.length,
+                              itemBuilder: (context, index) {
+                                final course = filteredCourses[index];
+                                return Dismissible(
+                                  key: ValueKey(course
+                                      .uniqueId), // Use a unique identifier
+                                  background: Container(
+                                    color: Colors.green,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    alignment: Alignment.centerLeft,
+                                    child: const Icon(Icons.edit,
+                                        color: Colors.white),
+                                  ),
+                                  secondaryBackground: Container(
+                                    color: Colors.red,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    alignment: Alignment.centerRight,
+                                    child: const Icon(Icons.delete,
+                                        color: Colors.white),
+                                  ),
+                                  confirmDismiss: (direction) async {
+                                    if (direction ==
+                                        DismissDirection.startToEnd) {
+                                      // Swipe right to Edit
+                                      _markCourse(context, course);
+                                      return false; // Don't dismiss the tile
+                                    } else if (direction ==
+                                        DismissDirection.endToStart) {
+                                      // Swipe left to Delete
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title:
+                                              const Text('Confirm To Enroll'),
+                                          content: Text(
+                                              'Are you sure you want to enroll "${course.courseName}"?'),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context, false),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context, true),
+                                              child: const Text('Enroll',
+                                                  style: TextStyle(
+                                                      color: Colors.red)),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                      if (confirm == true) {
+                                        _enrollCourse(course);
+                                        return true; // Dismiss the tile
+                                      } else {
+                                        return false;
+                                      }
+                                    }
+                                    return false;
+                                  },
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      context.push(Routes.courseDetailPage,
+                                          extra: course);
+                                    },
+                                    child: CourseCard(
+                                      courseModel: course,
+                                      courseImage: course.courseImage ?? '',
+                                      courseName: course.courseName ?? '',
+                                      trackingNumber:
+                                          course.trackingNumber ?? '',
+                                      rating: course.totalRating ?? 0,
+                                      totalTime: course.totalTime ?? '',
+                                      totalVideo:
+                                          course.totalVideo?.toString() ?? '0',
+                                      onEnroll: () {
+                                        _enrollCourse(course);
+                                      },
+                                      onMark: () {
+                                        _markCourse(context, course);
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
 
-              //     : ListView.builder(
-              //   physics: const BouncingScrollPhysics(),
-              //   itemCount: filteredCourses.length,
-              //   itemBuilder: (context, index) {
-              //     final course = filteredCourses[index];
-              //     return GestureDetector(
-              //       onTap: () async {
-              //         context.push(Routes.courseDetailPage, extra: course);
-              //       },
-              //       child: CourseCard(
-              //         courseModel: course,
-              //         courseImage: course.courseImage ?? '',
-              //         courseName: course.courseName ?? '',
-              //         trackingNumber: course.trackingNumber ?? '',
-              //         rating: course.totalRating ?? 0,
-              //         totalTime: course.totalTime ?? '',
-              //         totalVideo: course.totalVideo?.toString() ?? '0',
-              //       ),
-              //     );
-              //   },
-              // ),
-            ),
-          ],
-        ),
+                      //     : ListView.builder(
+                      //   physics: const BouncingScrollPhysics(),
+                      //   itemCount: filteredCourses.length,
+                      //   itemBuilder: (context, index) {
+                      //     final course = filteredCourses[index];
+                      //     return GestureDetector(
+                      //       onTap: () async {
+                      //         context.push(Routes.courseDetailPage, extra: course);
+                      //       },
+                      //       child: CourseCard(
+                      //         courseModel: course,
+                      //         courseImage: course.courseImage ?? '',
+                      //         courseName: course.courseName ?? '',
+                      //         trackingNumber: course.trackingNumber ?? '',
+                      //         rating: course.totalRating ?? 0,
+                      //         totalTime: course.totalTime ?? '',
+                      //         totalVideo: course.totalVideo?.toString() ?? '0',
+                      //       ),
+                      //     );
+                      //   },
+                      // ),
+                      ),
+                ],
+              ),
       ),
     );
   }
 }
-
-
 
 // import 'package:flutter/material.dart';
 // import 'package:go_router/go_router.dart';

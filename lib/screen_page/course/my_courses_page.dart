@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:black_box/db/course/course_dao.dart';
+import 'package:black_box/db/course/course_enrollment_dao.dart';
 import 'package:black_box/model/course/course_model_db_mapper.dart';
 import 'package:black_box/model/school/teacher.dart';
 import 'package:black_box/routes/routes.dart';
@@ -13,7 +14,10 @@ import 'package:go_router/go_router.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import '../../db/course/course_favorite_dao.dart';
 import '../../dummies/categories_d.dart';
+import '../../model/course/enrollment.dart';
+import '../../model/course/favorite.dart';
 import '../../model/course/video_course.dart';
 import '../../components/components.dart';
 import '../../components/course/course_card.dart';
@@ -142,7 +146,7 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
 
         if (dataSnapshot.exists) {
           final Map<dynamic, dynamic> coursesData =
-          dataSnapshot.value as Map<dynamic, dynamic>;
+              dataSnapshot.value as Map<dynamic, dynamic>;
 
           setState(() {
             filteredCourses.clear();
@@ -195,16 +199,16 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
         });
       });
     } else {
+      List<CourseModel> courseList =
+          await CourseDAO().getCoursesByUserId(_user!.userid!);
 
-      List<CourseModel> courseList = await CourseDAO().getCoursesByUserId(_user!.userid!);
-
-      if(!courseList.isEmpty){
+      if (!courseList.isEmpty) {
         setState(() {
           filteredCourses.clear();
           filteredCourses = courseList;
           isLoading = false;
         });
-      }else{
+      } else {
         showSnackBarMsg(context,
             "You are in Offline mode now, Please, connect to the Internet!");
         setState(() {
@@ -212,7 +216,6 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
           isLoading = false;
         });
       }
-
     }
   }
 
@@ -318,7 +321,6 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
     await AppRouter.logoutUser(context);
   }
 
-
   void _addCourse(BuildContext context) {
     final TextEditingController courseNameController = TextEditingController();
     final TextEditingController bannerUrlController = TextEditingController();
@@ -367,10 +369,12 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  _buildTextField(courseNameController, 'Course Name', Icons.text_fields),
+                  _buildTextField(
+                      courseNameController, 'Course Name', Icons.text_fields),
                   const SizedBox(height: 12),
 
-                  _buildTextField(bannerUrlController, 'Course Banner Image URL', Icons.image),
+                  _buildTextField(bannerUrlController,
+                      'Course Banner Image URL', Icons.image),
                   const SizedBox(height: 12),
 
                   _buildComboTextDropdownField(
@@ -392,18 +396,21 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                         labelText: 'About Course',
                         labelStyle: TextStyle(color: Colors.pinkAccent),
                         alignLabelWithHint: true,
-                        prefixIcon: Icon(Icons.description, color: Colors.pinkAccent),
+                        prefixIcon:
+                            Icon(Icons.description, color: Colors.pinkAccent),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
                           borderSide: BorderSide(color: Colors.pinkAccent),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
-                          borderSide: BorderSide(color: Colors.pinkAccent, width: 2),
+                          borderSide:
+                              BorderSide(color: Colors.pinkAccent, width: 2),
                         ),
                         filled: true,
                         fillColor: Colors.white,
-                        contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 15, horizontal: 15),
                       ),
                     ),
                   ),
@@ -413,31 +420,37 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                     value: selectedLevel,
                     decoration: InputDecoration(
                       labelText: 'Level',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                     items: ['Beginner', 'Intermediate', 'Professional', 'Other']
                         .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                         .toList(),
-                    onChanged: (val) => setModalState(() => selectedLevel = val),
+                    onChanged: (val) =>
+                        setModalState(() => selectedLevel = val),
                   ),
                   const SizedBox(height: 12),
 
-                  _buildNumberField(feeController, 'Fee (৳)', Icons.attach_money),
+                  _buildNumberField(
+                      feeController, 'Fee (৳)', Icons.attach_money),
                   const SizedBox(height: 12),
 
-                  _buildNumberField(discountController, 'Discount (%)', Icons.percent),
+                  _buildNumberField(
+                      discountController, 'Discount (%)', Icons.percent),
                   const SizedBox(height: 12),
 
                   DropdownButtonFormField<String>(
                     value: selectedStatus,
                     decoration: InputDecoration(
                       labelText: 'Status',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                     items: ['Active', 'Inactive', 'Draft']
                         .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                         .toList(),
-                    onChanged: (val) => setModalState(() => selectedStatus = val),
+                    onChanged: (val) =>
+                        setModalState(() => selectedStatus = val),
                   ),
                   const SizedBox(height: 20),
 
@@ -447,53 +460,57 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                       onPressed: isSaving
                           ? null
                           : () {
-                        setModalState(() => isSaving = true);
+                              setModalState(() => isSaving = true);
 
-                        var uuid = Uuid();
-                        String uniqueId = Unique().generateUniqueID();
-                        int ranId = Random().nextInt(1000000000) + DateTime.now().millisecondsSinceEpoch;
-                        String referr = String.fromCharCode(65 + Random().nextInt(26));
-                        String numberr = '$ranId$referr';
+                              var uuid = Uuid();
+                              String uniqueId = Unique().generateUniqueID();
+                              int ranId = Random().nextInt(1000000000) +
+                                  DateTime.now().millisecondsSinceEpoch;
+                              String referr = String.fromCharCode(
+                                  65 + Random().nextInt(26));
+                              String numberr = '$ranId$referr';
 
-                        CourseModel courseModel = CourseModel(
-                          courseName: courseNameController.text.trim(),
-                          courseImage: bannerUrlController.text.trim(),
-                          category: categoryController.text.trim(),
-                          description: aboutController.text.trim(),
-                          fee: double.tryParse(feeController.text),
-                          discount: double.tryParse(discountController.text),
-                          uniqueId: uniqueId,
-                          userId: _user?.userid,
-                          totalVideo: 0,
-                          trackingNumber: numberr,
-                          totalTime: "1.30",
-                          totalRating: 4.7,
-                          level: selectedLevel ?? 'Beginner',
-                          countStudents: 0,
-                          createdAt: DateTime.now(),
-                          status: selectedStatus ?? 'Draft',
-                        );
+                              CourseModel courseModel = CourseModel(
+                                courseName: courseNameController.text.trim(),
+                                courseImage: bannerUrlController.text.trim(),
+                                category: categoryController.text.trim(),
+                                description: aboutController.text.trim(),
+                                fee: double.tryParse(feeController.text),
+                                discount:
+                                    double.tryParse(discountController.text),
+                                uniqueId: uniqueId,
+                                userId: _user?.userid,
+                                totalVideo: 0,
+                                trackingNumber: numberr,
+                                totalTime: "1.30",
+                                totalRating: 4.7,
+                                level: selectedLevel ?? 'Beginner',
+                                countStudents: 0,
+                                createdAt: DateTime.now(),
+                                status: selectedStatus ?? 'Draft',
+                              );
 
-                        saveCourse(courseModel);
+                              saveCourse(courseModel);
 
-                        // setModalState(() => isSaving = false);
-                        // Navigator.pop(context);
-                      },
+                              // setModalState(() => isSaving = false);
+                              // Navigator.pop(context);
+                            },
                       icon: isSaving
                           ? SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
                           : Icon(Icons.save),
                       label: Text(isSaving ? 'Saving...' : 'Save Course'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.pinkAccent,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
                   ),
@@ -506,7 +523,6 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       ),
     );
   }
-
 
   void _searchCourses(String query) {
     final results = allCourses.where((course) {
@@ -527,9 +543,8 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
     try {
       if (await InternetConnectionChecker.instance.hasConnection) {
         // Delete from Firebase Realtime Database
-        final DatabaseReference dbRef = FirebaseDatabase.instance
-            .ref("courses")
-            .child(course.uniqueId!);
+        final DatabaseReference dbRef =
+            FirebaseDatabase.instance.ref("courses").child(course.uniqueId!);
 
         await dbRef.remove();
 
@@ -564,24 +579,23 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
     }
   }
 
-
   void _editCourse(BuildContext context, CourseModel course) {
     _eCourse(context, existingCourse: course);
   }
 
   void _eCourse(BuildContext context, {CourseModel? existingCourse}) {
     final TextEditingController courseNameController =
-    TextEditingController(text: existingCourse?.courseName ?? '');
+        TextEditingController(text: existingCourse?.courseName ?? '');
     final TextEditingController bannerUrlController =
-    TextEditingController(text: existingCourse?.courseImage ?? '');
+        TextEditingController(text: existingCourse?.courseImage ?? '');
     final TextEditingController aboutController =
-    TextEditingController(text: existingCourse?.description ?? '');
+        TextEditingController(text: existingCourse?.description ?? '');
     final TextEditingController categoryController =
-    TextEditingController(text: existingCourse?.category ?? '');
+        TextEditingController(text: existingCourse?.category ?? '');
     final TextEditingController feeController =
-    TextEditingController(text: existingCourse?.fee?.toString() ?? '');
+        TextEditingController(text: existingCourse?.fee?.toString() ?? '');
     final TextEditingController discountController =
-    TextEditingController(text: existingCourse?.discount?.toString() ?? '');
+        TextEditingController(text: existingCourse?.discount?.toString() ?? '');
 
     String? selectedLevel = existingCourse?.level;
     String? selectedStatus = existingCourse?.status;
@@ -610,7 +624,9 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                     ),
                     child: Center(
                       child: Text(
-                        existingCourse != null ? "Edit Course" : "Add New Course",
+                        existingCourse != null
+                            ? "Edit Course"
+                            : "Add New Course",
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -619,13 +635,12 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-
-                  _buildTextField(courseNameController, 'Course Name', Icons.text_fields),
+                  _buildTextField(
+                      courseNameController, 'Course Name', Icons.text_fields),
                   const SizedBox(height: 12),
-
-                  _buildTextField(bannerUrlController, 'Banner Image URL', Icons.image),
+                  _buildTextField(
+                      bannerUrlController, 'Banner Image URL', Icons.image),
                   const SizedBox(height: 12),
-
                   _buildComboTextDropdownField(
                     controller: categoryController,
                     labelText: 'Category (Enter or Pick)',
@@ -633,7 +648,6 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                     items: categoryNames,
                   ),
                   const SizedBox(height: 12),
-
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: TextField(
@@ -645,102 +659,117 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                         labelText: 'About Course',
                         labelStyle: const TextStyle(color: Colors.pinkAccent),
                         alignLabelWithHint: true,
-                        prefixIcon: const Icon(Icons.description, color: Colors.pinkAccent),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                        prefixIcon: const Icon(Icons.description,
+                            color: Colors.pinkAccent),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15)),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(15),
-                          borderSide: const BorderSide(color: Colors.pinkAccent, width: 2),
+                          borderSide: const BorderSide(
+                              color: Colors.pinkAccent, width: 2),
                         ),
                         filled: true,
                         fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 15, horizontal: 15),
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
-
                   DropdownButtonFormField<String>(
                     value: selectedLevel,
                     decoration: InputDecoration(
                       labelText: 'Level',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                     items: ['Beginner', 'Intermediate', 'Professional', 'Other']
                         .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                         .toList(),
-                    onChanged: (val) => setModalState(() => selectedLevel = val),
+                    onChanged: (val) =>
+                        setModalState(() => selectedLevel = val),
                   ),
                   const SizedBox(height: 12),
-
-                  _buildNumberField(feeController, 'Fee (৳)', Icons.attach_money),
+                  _buildNumberField(
+                      feeController, 'Fee (৳)', Icons.attach_money),
                   const SizedBox(height: 12),
-
-                  _buildNumberField(discountController, 'Discount (%)', Icons.percent),
+                  _buildNumberField(
+                      discountController, 'Discount (%)', Icons.percent),
                   const SizedBox(height: 12),
-
                   DropdownButtonFormField<String>(
                     value: selectedStatus,
                     decoration: InputDecoration(
                       labelText: 'Status',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                     items: ['Active', 'Inactive', 'Draft']
                         .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                         .toList(),
-                    onChanged: (val) => setModalState(() => selectedStatus = val),
+                    onChanged: (val) =>
+                        setModalState(() => selectedStatus = val),
                   ),
                   const SizedBox(height: 20),
-
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: isLoading
                           ? null
                           : () {
-                        setState(() {
-                          isLoading = true;
-                        });
+                              setState(() {
+                                isLoading = true;
+                              });
 
-                        String uniqueId = existingCourse?.uniqueId ?? Unique().generateUniqueID();
-                        String trackingNumber = existingCourse?.trackingNumber ??
-                            '${Random().nextInt(1000000000)}${String.fromCharCode(65 + Random().nextInt(26))}';
+                              String uniqueId = existingCourse?.uniqueId ??
+                                  Unique().generateUniqueID();
+                              String trackingNumber = existingCourse
+                                      ?.trackingNumber ??
+                                  '${Random().nextInt(1000000000)}${String.fromCharCode(65 + Random().nextInt(26))}';
 
-                        final courseModel = CourseModel(
-                          uniqueId: uniqueId,
-                          trackingNumber: trackingNumber,
-                          courseName: courseNameController.text.trim(),
-                          courseImage: bannerUrlController.text.trim(),
-                          category: categoryController.text.trim(),
-                          description: aboutController.text.trim(),
-                          fee: double.tryParse(feeController.text),
-                          discount: double.tryParse(discountController.text),
-                          totalVideo: existingCourse?.totalVideo ?? 0,
-                          totalTime: existingCourse?.totalTime ?? '1.30',
-                          totalRating: existingCourse?.totalRating ?? 4.7,
-                          level: selectedLevel ?? 'Beginner',
-                          countStudents: existingCourse?.countStudents ?? 0,
-                          createdAt: existingCourse?.createdAt ?? DateTime.now(),
-                          status: selectedStatus ?? 'Draft',
-                          userId: _user?.userid,
-                        );
+                              final courseModel = CourseModel(
+                                uniqueId: uniqueId,
+                                trackingNumber: trackingNumber,
+                                courseName: courseNameController.text.trim(),
+                                courseImage: bannerUrlController.text.trim(),
+                                category: categoryController.text.trim(),
+                                description: aboutController.text.trim(),
+                                fee: double.tryParse(feeController.text),
+                                discount:
+                                    double.tryParse(discountController.text),
+                                totalVideo: existingCourse?.totalVideo ?? 0,
+                                totalTime: existingCourse?.totalTime ?? '1.30',
+                                totalRating: existingCourse?.totalRating ?? 4.7,
+                                level: selectedLevel ?? 'Beginner',
+                                countStudents:
+                                    existingCourse?.countStudents ?? 0,
+                                createdAt:
+                                    existingCourse?.createdAt ?? DateTime.now(),
+                                status: selectedStatus ?? 'Draft',
+                                userId: _user?.userid,
+                              );
 
-                        updateCourse(courseModel);
-                      },
+                              updateCourse(courseModel);
+                            },
                       icon: isLoading
                           ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
                           : const Icon(Icons.save),
-                      label: Text(isLoading ? 'Saving...' : (existingCourse != null ? 'Update Course' : 'Save Course')),
+                      label: Text(isLoading
+                          ? 'Saving...'
+                          : (existingCourse != null
+                              ? 'Update Course'
+                              : 'Save Course')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.pinkAccent,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
                   ),
@@ -755,6 +784,7 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
   }
 
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -763,130 +793,148 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: isLoading
             ? const Center(
-          child:
-          CircularProgressIndicator(), // Show loading indicator
-        )
-            : Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(
-                    Radius.circular(20),
-                  ),
-                ),
-                hintText: 'Search course...',
-              ),
-              onChanged: _searchCourses,
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: filteredCourses.isEmpty
-                  ? Center(
-                child: Text(
-                  'No courses found in Your Courses list',
-                  style: const TextStyle(fontSize: 16),
-                ),
+                child: CircularProgressIndicator(), // Show loading indicator
               )
-                  : ListView.builder(
-                physics: const BouncingScrollPhysics(),
-                itemCount: filteredCourses.length,
-                itemBuilder: (context, index) {
-                  final course = filteredCourses[index];
-                  return Dismissible(
-                    key: ValueKey(course.uniqueId), // Use a unique identifier
-                    background: Container(
-                      color: Colors.green,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      alignment: Alignment.centerLeft,
-                      child: const Icon(Icons.edit, color: Colors.white),
-                    ),
-                    secondaryBackground: Container(
-                      color: Colors.red,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      alignment: Alignment.centerRight,
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    confirmDismiss: (direction) async {
-                      if (direction == DismissDirection.startToEnd) {
-                        // Swipe right to Edit
-                        _editCourse(context, course);
-                        return false; // Don't dismiss the tile
-                      } else if (direction == DismissDirection.endToStart) {
-                        // Swipe left to Delete
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Confirm Deletion'),
-                            content: Text('Are you sure you want to delete "${course.courseName}"?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Delete', style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          ),
-                        );
-                        if (confirm == true) {
-                          _deleteCourse(course);
-                          return true; // Dismiss the tile
-                        } else {
-                          return false;
-                        }
-                      }
-                      return false;
-                    },
-                    child: GestureDetector(
-                      onTap: () {
-                        context.push(Routes.courseDetailPage, extra: course);
-                      },
-                      child: CourseCard(
-                        courseModel: course,
-                        courseImage: course.courseImage ?? '',
-                        courseName: course.courseName ?? '',
-                        trackingNumber: course.trackingNumber ?? '',
-                        rating: course.totalRating ?? 0,
-                        totalTime: course.totalTime ?? '',
-                        totalVideo: course.totalVideo?.toString() ?? '0',
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(
+                          Radius.circular(20),
+                        ),
                       ),
+                      hintText: 'Search course...',
                     ),
-                  );
-                },
+                    onChanged: _searchCourses,
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: filteredCourses.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No courses found in Your Courses list',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          )
+                        : ListView.builder(
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: filteredCourses.length,
+                            itemBuilder: (context, index) {
+                              final course = filteredCourses[index];
+                              return Dismissible(
+                                key: ValueKey(
+                                    course.uniqueId), // Use a unique identifier
+                                background: Container(
+                                  color: Colors.green,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  alignment: Alignment.centerLeft,
+                                  child: const Icon(Icons.edit,
+                                      color: Colors.white),
+                                ),
+                                secondaryBackground: Container(
+                                  color: Colors.red,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  alignment: Alignment.centerRight,
+                                  child: const Icon(Icons.delete,
+                                      color: Colors.white),
+                                ),
+                                confirmDismiss: (direction) async {
+                                  if (direction ==
+                                      DismissDirection.startToEnd) {
+                                    // Swipe right to Edit
+                                    _editCourse(context, course);
+                                    return false; // Don't dismiss the tile
+                                  } else if (direction ==
+                                      DismissDirection.endToStart) {
+                                    // Swipe left to Delete
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('Confirm Deletion'),
+                                        content: Text(
+                                            'Are you sure you want to delete "${course.courseName}"?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, true),
+                                            child: const Text('Delete',
+                                                style: TextStyle(
+                                                    color: Colors.red)),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    if (confirm == true) {
+                                      _deleteCourse(course);
+                                      return true; // Dismiss the tile
+                                    } else {
+                                      return false;
+                                    }
+                                  }
+                                  return false;
+                                },
+                                child: GestureDetector(
+                                  onTap: () {
+                                    context.push(Routes.courseDetailPage,
+                                        extra: course);
+                                  },
+                                  child: CourseCard(
+                                    courseModel: course,
+                                    courseImage: course.courseImage ?? '',
+                                    courseName: course.courseName ?? '',
+                                    trackingNumber: course.trackingNumber ?? '',
+                                    rating: course.totalRating ?? 0,
+                                    totalTime: course.totalTime ?? '',
+                                    totalVideo:
+                                        course.totalVideo?.toString() ?? '0',
+                                    onEnroll: () {
+                                      _enrollCourse(course);
+                                    },
+                                    onMark: () {
+                                      _markCourse(context,course);
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                    //     : ListView.builder(
+                    //   physics: const BouncingScrollPhysics(),
+                    //   itemCount: filteredCourses.length,
+                    //   itemBuilder: (context, index) {
+                    //     final course = filteredCourses[index];
+                    //     return GestureDetector(
+                    //       onTap: () async {
+                    //         context.push(Routes.courseDetailPage, extra: course);
+                    //       },
+                    //       child: CourseCard(
+                    //         courseModel: course,
+                    //         courseImage: course.courseImage ?? '',
+                    //         courseName: course.courseName ?? '',
+                    //         trackingNumber: course.trackingNumber ?? '',
+                    //         rating: course.totalRating ?? 0,
+                    //         totalTime: course.totalTime ?? '',
+                    //         totalVideo: course.totalVideo?.toString() ?? '0',
+                    //       ),
+                    //     );
+                    //   },
+                    // ),
+                  ),
+                ],
               ),
-
-
-              //     : ListView.builder(
-              //   physics: const BouncingScrollPhysics(),
-              //   itemCount: filteredCourses.length,
-              //   itemBuilder: (context, index) {
-              //     final course = filteredCourses[index];
-              //     return GestureDetector(
-              //       onTap: () async {
-              //         context.push(Routes.courseDetailPage, extra: course);
-              //       },
-              //       child: CourseCard(
-              //         courseModel: course,
-              //         courseImage: course.courseImage ?? '',
-              //         courseName: course.courseName ?? '',
-              //         trackingNumber: course.trackingNumber ?? '',
-              //         rating: course.totalRating ?? 0,
-              //         totalTime: course.totalTime ?? '',
-              //         totalVideo: course.totalVideo?.toString() ?? '0',
-              //       ),
-              //     );
-              //   },
-              // ),
-            ),
-          ],
-        ),
       ),
       floatingActionButton: ElevatedButton(
         onPressed: () => _addCourse(context),
@@ -906,30 +954,136 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
             SizedBox(width: 10),
             isLoading
                 ? SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-                strokeWidth: 2,
-              ),
-            )
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
                 : Text(
-              "Create Course",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+                    "Create Course",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
           ],
         ),
       ),
     );
   }
 
+  void _enrollCourse(CourseModel course) async {
+    setState(() => isLoading = true);
+
+    try {
+      final uniqueEnrollId = Unique().generateUniqueID();
+      final userId = _user?.userid;
+      final courseId = course.uniqueId;
+
+      if (userId == null || courseId == null) {
+        throw Exception("User ID or Course ID is null");
+      }
+
+      final enrolledAt = DateTime.now();
+
+      // Firebase
+      final enrollRef = FirebaseDatabase.instance
+          .ref("enrollments")
+          .child(uniqueEnrollId);
+
+      await enrollRef.set({
+        'unique_id': uniqueEnrollId,
+        'user_id': userId,
+        'course_id': courseId,
+        'enrolled_at': enrolledAt.toIso8601String(),
+        'status': 'active',
+      });
+
+      // Supabase
+      final enrollment = Enrollment(
+        uniqueId: uniqueEnrollId,
+        userId: userId,
+        courseId: courseId,
+        enrolledAt: enrolledAt,
+        status: 'active',
+      );
+      await SupabaseService().enrollCourse(enrollment);
+
+      // Sqflite
+      await CourseEnrollmentDAO().enrollCourse(
+        uniqueId: uniqueEnrollId,
+        userId: userId,
+        courseId: courseId,
+        status: 'active',
+      );
+
+      showSnackBarMsg(context, "Successfully enrolled in ${course.courseName}!");
+
+    } catch (e) {
+      print("Enrollment failed: $e");
+      showSnackBarMsg(context, "Failed to enroll in course.");
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+
+  void _markCourse(BuildContext context, CourseModel course) async {
+    setState(() => isLoading = true);
+
+    try {
+      final favoriteId = Unique().generateUniqueID();
+      final userId = _user?.userid;
+      final courseId = course.uniqueId;
+
+      if (userId == null || courseId == null) {
+        throw Exception("User ID or Course ID is null");
+      }
+
+      final markedAt = DateTime.now();
+
+      // Firebase
+      final favRef = FirebaseDatabase.instance
+          .ref("favorites")
+          .child(favoriteId);
+
+      await favRef.set({
+        'unique_id': favoriteId,
+        'user_id': userId,
+        'course_id': courseId,
+        'marked_at': markedAt.toIso8601String(),
+      });
+
+      // Supabase
+      final favorite = Favorite(
+        uniqueId: favoriteId,
+        userId: userId,
+        courseId: courseId,
+      );
+      await SupabaseService().favoriteCourse(favorite);
+
+      // Sqflite
+      await CourseFavoriteDAO().favoriteCourse(
+        uniqueId: favoriteId,
+        userId: userId,
+        courseId: courseId,
+      );
+
+      showSnackBarMsg(context, "Marked ${course.courseName} as favorite!");
+
+    } catch (e) {
+      print("Mark as favorite failed: $e");
+      showSnackBarMsg(context, "Failed to mark as favorite.");
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+
 
   Future<void> saveCourse(CourseModel courseModel) async {
-
     if (await InternetConnectionChecker.instance.hasConnection) {
-      final DatabaseReference dbRef = FirebaseDatabase.instance
-          .ref("courses")
-          .child(courseModel.uniqueId!);
+      final DatabaseReference dbRef =
+          FirebaseDatabase.instance.ref("courses").child(courseModel.uniqueId!);
 
       try {
         await dbRef.set(courseModel.toMap());
@@ -1014,9 +1168,8 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
 
   Future<void> updateCourse(CourseModel courseModel) async {
     if (await InternetConnectionChecker.instance.hasConnection) {
-      final DatabaseReference dbRef = FirebaseDatabase.instance
-          .ref("courses")
-          .child(courseModel.uniqueId!);
+      final DatabaseReference dbRef =
+          FirebaseDatabase.instance.ref("courses").child(courseModel.uniqueId!);
 
       try {
         await dbRef.update(courseModel.toMap());
@@ -1029,7 +1182,8 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
           setState(() {
             isLoading = false;
             // update local course list
-            final index = filteredCourses.indexWhere((c) => c.uniqueId == courseModel.uniqueId);
+            final index = filteredCourses
+                .indexWhere((c) => c.uniqueId == courseModel.uniqueId);
             if (index != -1) {
               filteredCourses[index] = courseModel;
             }
@@ -1051,7 +1205,8 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
         if (mounted) {
           setState(() {
             isLoading = false;
-            final index = filteredCourses.indexWhere((c) => c.uniqueId == courseModel.uniqueId);
+            final index = filteredCourses
+                .indexWhere((c) => c.uniqueId == courseModel.uniqueId);
             if (index != -1) {
               filteredCourses[index] = courseModel;
             }
@@ -1073,8 +1228,6 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       Navigator.pop(context);
     });
   }
-
-
 }
 
 Widget _buildTextField(
@@ -1369,10 +1522,6 @@ Widget _buildComboTextDropdownField({
 //     );
 //   }
 // }
-
-
-
-
 
 // void _addCourse(BuildContext context) {
 //   final TextEditingController uniqueIdController = TextEditingController();
