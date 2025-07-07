@@ -36,6 +36,16 @@ class CourseDAO {
     );
   }
 
+  Future<int> deleteCourseByUniqueId(String uniqueId) async {
+    final database = await db;
+    return await database.delete(
+      'courses',
+      where: 'unique_id = ?',
+      whereArgs: [uniqueId],
+    );
+  }
+
+
   /// ✅ Fetch all courses created by a specific user
   Future<List<CourseModel>> getCoursesByUserId(String userId) async {
     final database = await db;

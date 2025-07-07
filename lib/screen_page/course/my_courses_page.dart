@@ -519,16 +519,241 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
     });
   }
 
-  void _deleteCourse(CourseModel course) async {
+  Future<void> _deleteCourse(CourseModel course) async {
     setState(() {
-      allCourses.removeWhere((c) => c.uniqueId == course.uniqueId);
-      _searchCourses(controller.text);
+      isLoading = true;
     });
+
+    try {
+      if (await InternetConnectionChecker.instance.hasConnection) {
+        // Delete from Firebase Realtime Database
+        final DatabaseReference dbRef = FirebaseDatabase.instance
+            .ref("courses")
+            .child(course.uniqueId!);
+
+        await dbRef.remove();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Course deleted from cloud!')),
+        );
+      }
+
+      // Delete from local Sqflite
+      final result = await CourseDAO().deleteCourseByUniqueId(course.uniqueId!);
+
+      if (result > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Course deleted from offline storage!')),
+        );
+      }
+
+      // Remove from UI list
+      setState(() {
+        allCourses.removeWhere((c) => c.uniqueId == course.uniqueId);
+        _searchCourses(controller.text);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to delete course: $e')),
+      );
+      print(e);
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
+
 
   void _editCourse(BuildContext context, CourseModel course) {
-
+    _eCourse(context, existingCourse: course);
   }
+
+  void _eCourse(BuildContext context, {CourseModel? existingCourse}) {
+    final TextEditingController courseNameController =
+    TextEditingController(text: existingCourse?.courseName ?? '');
+    final TextEditingController bannerUrlController =
+    TextEditingController(text: existingCourse?.courseImage ?? '');
+    final TextEditingController aboutController =
+    TextEditingController(text: existingCourse?.description ?? '');
+    final TextEditingController categoryController =
+    TextEditingController(text: existingCourse?.category ?? '');
+    final TextEditingController feeController =
+    TextEditingController(text: existingCourse?.fee?.toString() ?? '');
+    final TextEditingController discountController =
+    TextEditingController(text: existingCourse?.discount?.toString() ?? '');
+
+    String? selectedLevel = existingCourse?.level;
+    String? selectedStatus = existingCourse?.status;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 20,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.pinkAccent,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Text(
+                        existingCourse != null ? "Edit Course" : "Add New Course",
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  _buildTextField(courseNameController, 'Course Name', Icons.text_fields),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(bannerUrlController, 'Banner Image URL', Icons.image),
+                  const SizedBox(height: 12),
+
+                  _buildComboTextDropdownField(
+                    controller: categoryController,
+                    labelText: 'Category (Enter or Pick)',
+                    icon: Icons.category,
+                    items: categoryNames,
+                  ),
+                  const SizedBox(height: 12),
+
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: TextField(
+                      controller: aboutController,
+                      minLines: 4,
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                      decoration: InputDecoration(
+                        labelText: 'About Course',
+                        labelStyle: const TextStyle(color: Colors.pinkAccent),
+                        alignLabelWithHint: true,
+                        prefixIcon: const Icon(Icons.description, color: Colors.pinkAccent),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          borderSide: const BorderSide(color: Colors.pinkAccent, width: 2),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  DropdownButtonFormField<String>(
+                    value: selectedLevel,
+                    decoration: InputDecoration(
+                      labelText: 'Level',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    items: ['Beginner', 'Intermediate', 'Professional', 'Other']
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    onChanged: (val) => setModalState(() => selectedLevel = val),
+                  ),
+                  const SizedBox(height: 12),
+
+                  _buildNumberField(feeController, 'Fee (৳)', Icons.attach_money),
+                  const SizedBox(height: 12),
+
+                  _buildNumberField(discountController, 'Discount (%)', Icons.percent),
+                  const SizedBox(height: 12),
+
+                  DropdownButtonFormField<String>(
+                    value: selectedStatus,
+                    decoration: InputDecoration(
+                      labelText: 'Status',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    items: ['Active', 'Inactive', 'Draft']
+                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                        .toList(),
+                    onChanged: (val) => setModalState(() => selectedStatus = val),
+                  ),
+                  const SizedBox(height: 20),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                        setState(() {
+                          isLoading = true;
+                        });
+
+                        String uniqueId = existingCourse?.uniqueId ?? Unique().generateUniqueID();
+                        String trackingNumber = existingCourse?.trackingNumber ??
+                            '${Random().nextInt(1000000000)}${String.fromCharCode(65 + Random().nextInt(26))}';
+
+                        final courseModel = CourseModel(
+                          uniqueId: uniqueId,
+                          trackingNumber: trackingNumber,
+                          courseName: courseNameController.text.trim(),
+                          courseImage: bannerUrlController.text.trim(),
+                          category: categoryController.text.trim(),
+                          description: aboutController.text.trim(),
+                          fee: double.tryParse(feeController.text),
+                          discount: double.tryParse(discountController.text),
+                          totalVideo: existingCourse?.totalVideo ?? 0,
+                          totalTime: existingCourse?.totalTime ?? '1.30',
+                          totalRating: existingCourse?.totalRating ?? 4.7,
+                          level: selectedLevel ?? 'Beginner',
+                          countStudents: existingCourse?.countStudents ?? 0,
+                          createdAt: existingCourse?.createdAt ?? DateTime.now(),
+                          status: selectedStatus ?? 'Draft',
+                          userId: _user?.userid,
+                        );
+
+                        updateCourse(courseModel);
+                      },
+                      icon: isLoading
+                          ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                          : const Icon(Icons.save),
+                      label: Text(isLoading ? 'Saving...' : (existingCourse != null ? 'Update Course' : 'Save Course')),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.pinkAccent,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -787,6 +1012,67 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
     // );
   }
 
+  Future<void> updateCourse(CourseModel courseModel) async {
+    if (await InternetConnectionChecker.instance.hasConnection) {
+      final DatabaseReference dbRef = FirebaseDatabase.instance
+          .ref("courses")
+          .child(courseModel.uniqueId!);
+
+      try {
+        await dbRef.update(courseModel.toMap());
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Course updated successfully!')),
+        );
+
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+            // update local course list
+            final index = filteredCourses.indexWhere((c) => c.uniqueId == courseModel.uniqueId);
+            if (index != -1) {
+              filteredCourses[index] = courseModel;
+            }
+          });
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update course: $e')),
+        );
+        print("Error updating course: $e");
+      }
+    } else {
+      final result = await CourseDAO().updateCourse(courseModel);
+      if (result > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Course updated successfully!')),
+        );
+
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+            final index = filteredCourses.indexWhere((c) => c.uniqueId == courseModel.uniqueId);
+            if (index != -1) {
+              filteredCourses[index] = courseModel;
+            }
+          });
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update course offline')),
+        );
+      }
+    }
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+      Navigator.pop(context);
+    });
+  }
 
 
 }
