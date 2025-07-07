@@ -1,7 +1,10 @@
+import 'package:barcode_widget/barcode_widget.dart';
+import 'package:black_box/model/course/course.dart';
 import 'package:black_box/model/course/course_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-class CourseCard extends StatelessWidget {
+class CourseCard extends StatefulWidget {
   CourseModel courseModel;
   String courseImage;
   String courseName;
@@ -22,6 +25,34 @@ class CourseCard extends StatelessWidget {
         required this.totalTime,
         required this.totalVideo})
       : super(key: key);
+
+
+  @override
+  State<StatefulWidget> createState() => CourseCardState();
+}
+
+class CourseCardState extends State<CourseCard>{
+
+  void copyCourseCode(CourseModel course) {
+    String? tempNum = course.trackingNumber;
+
+    if (tempNum != null && tempNum.isNotEmpty) {
+      Clipboard.setData(ClipboardData(text: tempNum)).then((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Course Tracking Number copied: $tempNum')),
+        );
+      }).catchError((error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to copy: $error')),
+        );
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No Tracking Number to copy')),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +82,7 @@ class CourseCard extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(5),
                     child: Image.network(
-                      courseImage,
+                      widget.courseImage,
                       fit: BoxFit.cover,
                       errorBuilder: (context, Object exception, stackTrace) {
                         return Image.asset(
@@ -78,7 +109,7 @@ class CourseCard extends StatelessWidget {
                           children: [
                             const Icon(Icons.star,
                                 color: Colors.amber, size: 16),
-                            Text('$rating'),
+                            Text('${widget.rating}'),
                           ],
                         ),
                       ),
@@ -99,7 +130,7 @@ class CourseCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    courseName,
+                    widget.courseName,
                     overflow: TextOverflow.ellipsis,
                     maxLines: 2,
                   ),
@@ -116,19 +147,21 @@ class CourseCard extends StatelessWidget {
                     children: [
                       GreenChipWidget(
                         icon: Icons.timelapse,
-                        label: totalTime,
+                        label: widget.totalTime,
                       ),
                       const SizedBox(width: 8),
                       GreenChipWidget(
                         icon: Icons.videocam,
-                        label: '$totalVideo Video',
+                        label: "${widget.totalVideo}",
                       ),
                       PopupMenuButton<String>(
                         onSelected: (value) async {
                           if (value == 'edit') {
                             // Implement edit logic
+                          } else if (value == 'copy') {
+                            copyCourseCode(widget.courseModel);
                           } else if (value == 'share') {
-                            // _makePhoneCall(student.phone??"");
+                            shareCourse(widget.courseModel);
                           } else if (value == 'mentor') {
                             // _openWhatsApp(student.phone??"");
                           } else if (value == 'delete') {
@@ -179,6 +212,9 @@ class CourseCard extends StatelessWidget {
                         },
                         itemBuilder: (context) => [
                           const PopupMenuItem(
+                              value: 'copy',
+                              child: Text('Copy Trk')),
+                          const PopupMenuItem(
                               value: 'share',
                               child: Text('Share')),
                           const PopupMenuItem(
@@ -208,6 +244,60 @@ class CourseCard extends StatelessWidget {
       ),
     );
   }
+
+
+  void shareCourse(CourseModel course) {
+
+    String? tempNum = course.trackingNumber;
+    String? tempCode = course.uniqueId;
+
+    if (tempNum != null && tempCode != null) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Share Course'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Barcode for Tracking Number:'),
+                SizedBox(height: 10),
+                BarcodeWidget(
+                  barcode: Barcode.code128(), // Choose the barcode format
+                  data: tempNum,
+                  width: 200,
+                  height: 100,
+                ),
+                SizedBox(height: 20),
+                Text('QR Code for Course UniqueId:'),
+                SizedBox(height: 10),
+                BarcodeWidget(
+                  barcode: Barcode.qrCode(), // QR code format
+                  data: tempCode,
+                  width: 200,
+                  height: 200,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                child: Text('Close'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Course data is incomplete for sharing')),
+      );
+    }
+  }
+
+
 }
 
 class GreenChipWidget extends StatelessWidget {

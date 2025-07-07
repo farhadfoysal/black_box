@@ -519,6 +519,17 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
     });
   }
 
+  void _deleteCourse(CourseModel course) async {
+    setState(() {
+      allCourses.removeWhere((c) => c.uniqueId == course.uniqueId);
+      _searchCourses(controller.text);
+    });
+  }
+
+  void _editCourse(BuildContext context, CourseModel course) {
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -561,22 +572,93 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                 itemCount: filteredCourses.length,
                 itemBuilder: (context, index) {
                   final course = filteredCourses[index];
-                  return GestureDetector(
-                    onTap: () async {
-                      context.push(Routes.courseDetailPage, extra: course);
+                  return Dismissible(
+                    key: ValueKey(course.uniqueId), // Use a unique identifier
+                    background: Container(
+                      color: Colors.green,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      alignment: Alignment.centerLeft,
+                      child: const Icon(Icons.edit, color: Colors.white),
+                    ),
+                    secondaryBackground: Container(
+                      color: Colors.red,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      alignment: Alignment.centerRight,
+                      child: const Icon(Icons.delete, color: Colors.white),
+                    ),
+                    confirmDismiss: (direction) async {
+                      if (direction == DismissDirection.startToEnd) {
+                        // Swipe right to Edit
+                        _editCourse(context, course);
+                        return false; // Don't dismiss the tile
+                      } else if (direction == DismissDirection.endToStart) {
+                        // Swipe left to Delete
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Confirm Deletion'),
+                            content: Text('Are you sure you want to delete "${course.courseName}"?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true) {
+                          _deleteCourse(course);
+                          return true; // Dismiss the tile
+                        } else {
+                          return false;
+                        }
+                      }
+                      return false;
                     },
-                    child: CourseCard(
-                      courseModel: course,
-                      courseImage: course.courseImage ?? '',
-                      courseName: course.courseName ?? '',
-                      trackingNumber: course.trackingNumber ?? '',
-                      rating: course.totalRating ?? 0,
-                      totalTime: course.totalTime ?? '',
-                      totalVideo: course.totalVideo?.toString() ?? '0',
+                    child: GestureDetector(
+                      onTap: () {
+                        context.push(Routes.courseDetailPage, extra: course);
+                      },
+                      child: CourseCard(
+                        courseModel: course,
+                        courseImage: course.courseImage ?? '',
+                        courseName: course.courseName ?? '',
+                        trackingNumber: course.trackingNumber ?? '',
+                        rating: course.totalRating ?? 0,
+                        totalTime: course.totalTime ?? '',
+                        totalVideo: course.totalVideo?.toString() ?? '0',
+                      ),
                     ),
                   );
                 },
               ),
+
+
+              //     : ListView.builder(
+              //   physics: const BouncingScrollPhysics(),
+              //   itemCount: filteredCourses.length,
+              //   itemBuilder: (context, index) {
+              //     final course = filteredCourses[index];
+              //     return GestureDetector(
+              //       onTap: () async {
+              //         context.push(Routes.courseDetailPage, extra: course);
+              //       },
+              //       child: CourseCard(
+              //         courseModel: course,
+              //         courseImage: course.courseImage ?? '',
+              //         courseName: course.courseName ?? '',
+              //         trackingNumber: course.trackingNumber ?? '',
+              //         rating: course.totalRating ?? 0,
+              //         totalTime: course.totalTime ?? '',
+              //         totalVideo: course.totalVideo?.toString() ?? '0',
+              //       ),
+              //     );
+              //   },
+              // ),
             ),
           ],
         ),
