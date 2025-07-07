@@ -1,5 +1,6 @@
 import 'package:black_box/model/course/video_lesson.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import '../../db/course/course_dao.dart';
 import '../../model/course/course_model.dart';
 import '../../model/course/enrollment.dart';
@@ -137,6 +138,81 @@ class CourseRepository {
       return [];
     }
   }
+
+  // Future<List<String>> getEnrolledCourseIds(String userId) async {
+  //   final hasConnection = await InternetConnectionChecker().hasConnection;
+  //
+  //   try {
+  //     if (hasConnection) {
+  //       // ✅ Online from Supabase
+  //       return await supabaseService.getEnrolledCourseIds(userId);
+  //     } else {
+  //       // ✅ Offline from Sqflite
+  //       return await CourseEnrollmentDAO().getEnrolledCourseIds(userId);
+  //     }
+  //   } catch (e) {
+  //     print("Failed to fetch enrolled course IDs: $e");
+  //     return [];
+  //   }
+  // }
+
+  // Future<List<String>> getFavoriteCourseIds(String userId) async {
+  //   final hasConnection = await InternetConnectionChecker().hasConnection;
+  //
+  //   try {
+  //     if (hasConnection) {
+  //       // ✅ Online from Supabase
+  //       return await supabaseService.getFavoriteCourseIds(userId);
+  //     } else {
+  //       // ✅ Offline from Sqflite
+  //       return await CourseFavoriteDAO().getFavoriteCourseIds(userId);
+  //     }
+  //   } catch (e) {
+  //     print("Failed to fetch favorite course IDs: $e");
+  //     return [];
+  //   }
+  // }
+
+  Future<List<CourseModel>> getEnrolledCourses(String userId) async {
+    final courseIds = await getEnrolledCourseIds(userId);
+    if (courseIds.isEmpty) return [];
+
+    final hasConnection = await InternetConnectionChecker.instance.hasConnection;
+
+    try {
+      if (hasConnection) {
+        final allCourses = await supabaseService.fetchCourses();
+        return allCourses.where((c) => courseIds.contains(c.uniqueId)).toList();
+      } else {
+        final allCourses = await courseDAO.getAllCourses();
+        return allCourses.where((c) => courseIds.contains(c.uniqueId)).toList();
+      }
+    } catch (e) {
+      print("Failed to fetch enrolled courses: $e");
+      return [];
+    }
+  }
+
+  Future<List<CourseModel>> getFavoriteCourses(String userId) async {
+    final courseIds = await getFavoriteCourseIds(userId);
+    if (courseIds.isEmpty) return [];
+
+    final hasConnection = await InternetConnectionChecker.instance.hasConnection;
+
+    try {
+      if (hasConnection) {
+        final allCourses = await supabaseService.fetchCourses();
+        return allCourses.where((c) => courseIds.contains(c.uniqueId)).toList();
+      } else {
+        final allCourses = await courseDAO.getAllCourses();
+        return allCourses.where((c) => courseIds.contains(c.uniqueId)).toList();
+      }
+    } catch (e) {
+      print("Failed to fetch favorite courses: $e");
+      return [];
+    }
+  }
+
 
   // --------------------------------------------------
   // 📌 FAVORITES

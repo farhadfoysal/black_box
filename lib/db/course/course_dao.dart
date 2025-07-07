@@ -84,6 +84,19 @@ class CourseDAO {
       return null;
     }
   }
+
+  Future<List<CourseModel>> getCoursesByIds(List<String> ids) async {
+    final database = await db;
+    final placeholders = List.filled(ids.length, '?').join(',');
+    final result = await database.query(
+      'courses',
+      where: 'unique_id IN ($placeholders)',
+      whereArgs: ids,
+    );
+    return result.map((e) => CourseModel.fromJson(e)).toList();
+  }
+
+
 }
 
 

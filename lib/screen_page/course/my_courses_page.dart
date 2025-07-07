@@ -900,10 +900,12 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                                     totalVideo:
                                         course.totalVideo?.toString() ?? '0',
                                     onEnroll: () {
-                                      _enrollCourse(course);
+                                      // _enrollCourse(course);
+                                      enrollCourse(course);
                                     },
                                     onMark: () {
-                                      _markCourse(context,course);
+                                      // _markCourse(context,course);
+                                      markFavorite(course);
                                     },
                                   ),
                                 ),
@@ -971,44 +973,150 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
     );
   }
 
-  void _enrollCourse(CourseModel course) async {
+  // void _enrollCourse(CourseModel course) async {
+  //   setState(() => isLoading = true);
+  //
+  //   try {
+  //     final uniqueEnrollId = Unique().generateUniqueID();
+  //     final userId = _user?.userid;
+  //     final courseId = course.uniqueId;
+  //
+  //     if (userId == null || courseId == null) {
+  //       throw Exception("User ID or Course ID is null");
+  //     }
+  //
+  //     final enrolledAt = DateTime.now();
+  //
+  //     // Firebase
+  //     final enrollRef = FirebaseDatabase.instance
+  //         .ref("enrollments")
+  //         .child(uniqueEnrollId);
+  //
+  //     await enrollRef.set({
+  //       'unique_id': uniqueEnrollId,
+  //       'user_id': userId,
+  //       'course_id': courseId,
+  //       'enrolled_at': enrolledAt.toIso8601String(),
+  //       'status': 'active',
+  //     });
+  //
+  //     // Supabase
+  //     final enrollment = Enrollment(
+  //       uniqueId: uniqueEnrollId,
+  //       userId: userId,
+  //       courseId: courseId,
+  //       enrolledAt: enrolledAt,
+  //       status: 'active',
+  //     );
+  //     await SupabaseService().enrollCourse(enrollment);
+  //
+  //     // Sqflite
+  //     await CourseEnrollmentDAO().enrollCourse(
+  //       uniqueId: uniqueEnrollId,
+  //       userId: userId,
+  //       courseId: courseId,
+  //       status: 'active',
+  //     );
+  //
+  //     showSnackBarMsg(context, "Successfully enrolled in ${course.courseName}!");
+  //
+  //   } catch (e) {
+  //     print("Enrollment failed: $e");
+  //     showSnackBarMsg(context, "Failed to enroll in course.");
+  //   } finally {
+  //     setState(() => isLoading = false);
+  //   }
+  // }
+
+
+  // void _markCourse(BuildContext context, CourseModel course) async {
+  //   setState(() => isLoading = true);
+  //
+  //   try {
+  //     final favoriteId = Unique().generateUniqueID();
+  //     final userId = _user?.userid;
+  //     final courseId = course.uniqueId;
+  //
+  //     if (userId == null || courseId == null) {
+  //       throw Exception("User ID or Course ID is null");
+  //     }
+  //
+  //     final markedAt = DateTime.now();
+  //
+  //     // Firebase
+  //     final favRef = FirebaseDatabase.instance
+  //         .ref("favorites")
+  //         .child(favoriteId);
+  //
+  //     await favRef.set({
+  //       'unique_id': favoriteId,
+  //       'user_id': userId,
+  //       'course_id': courseId,
+  //       'marked_at': markedAt.toIso8601String(),
+  //     });
+  //
+  //     // Supabase
+  //     final favorite = Favorite(
+  //       uniqueId: favoriteId,
+  //       userId: userId,
+  //       courseId: courseId,
+  //     );
+  //     await SupabaseService().favoriteCourse(favorite);
+  //
+  //     // Sqflite
+  //     await CourseFavoriteDAO().favoriteCourse(
+  //       uniqueId: favoriteId,
+  //       userId: userId,
+  //       courseId: courseId,
+  //     );
+  //
+  //     showSnackBarMsg(context, "Marked ${course.courseName} as favorite!");
+  //
+  //   } catch (e) {
+  //     print("Mark as favorite failed: $e");
+  //     showSnackBarMsg(context, "Failed to mark as favorite.");
+  //   } finally {
+  //     setState(() => isLoading = false);
+  //   }
+  // }
+
+
+  Future<void> enrollCourse(CourseModel course) async {
     setState(() => isLoading = true);
 
-    try {
-      final uniqueEnrollId = Unique().generateUniqueID();
-      final userId = _user?.userid;
-      final courseId = course.uniqueId;
+    final uniqueEnrollId = Unique().generateUniqueID();
+    final userId = _user?.userid;
+    final courseId = course.uniqueId;
 
-      if (userId == null || courseId == null) {
-        throw Exception("User ID or Course ID is null");
+    if (userId == null || courseId == null) {
+      showSnackBarMsg(context, "User or Course ID missing.");
+      return;
+    }
+
+    final enrolledAt = DateTime.now();
+    final enrollment = Enrollment(
+      uniqueId: uniqueEnrollId,
+      userId: userId,
+      courseId: courseId,
+      enrolledAt: enrolledAt,
+      status: 'active',
+    );
+
+    final hasConnection = await InternetConnectionChecker.instance.hasConnection;
+
+    try {
+      if (hasConnection) {
+        //  Firebase
+        final enrollRef = FirebaseDatabase.instance
+            .ref("enrollments")
+            .child(uniqueEnrollId);
+        await enrollRef.set(enrollment.toMap());
+
+        //  Supabase
+        // await SupabaseService().enrollCourse(enrollment);
       }
 
-      final enrolledAt = DateTime.now();
-
-      // Firebase
-      final enrollRef = FirebaseDatabase.instance
-          .ref("enrollments")
-          .child(uniqueEnrollId);
-
-      await enrollRef.set({
-        'unique_id': uniqueEnrollId,
-        'user_id': userId,
-        'course_id': courseId,
-        'enrolled_at': enrolledAt.toIso8601String(),
-        'status': 'active',
-      });
-
-      // Supabase
-      final enrollment = Enrollment(
-        uniqueId: uniqueEnrollId,
-        userId: userId,
-        courseId: courseId,
-        enrolledAt: enrolledAt,
-        status: 'active',
-      );
-      await SupabaseService().enrollCourse(enrollment);
-
-      // Sqflite
+      //  Local Sqflite always
       await CourseEnrollmentDAO().enrollCourse(
         uniqueId: uniqueEnrollId,
         userId: userId,
@@ -1016,52 +1124,49 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
         status: 'active',
       );
 
-      showSnackBarMsg(context, "Successfully enrolled in ${course.courseName}!");
-
+      showSnackBarMsg(context, "Enrolled in ${course.courseName} successfully!");
     } catch (e) {
       print("Enrollment failed: $e");
       showSnackBarMsg(context, "Failed to enroll in course.");
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
-
-  void _markCourse(BuildContext context, CourseModel course) async {
+  Future<void> markFavorite(CourseModel course) async {
     setState(() => isLoading = true);
 
-    try {
-      final favoriteId = Unique().generateUniqueID();
-      final userId = _user?.userid;
-      final courseId = course.uniqueId;
+    final favoriteId = Unique().generateUniqueID();
+    final userId = _user?.userid;
+    final courseId = course.uniqueId;
 
-      if (userId == null || courseId == null) {
-        throw Exception("User ID or Course ID is null");
+    if (userId == null || courseId == null) {
+      showSnackBarMsg(context, "User or Course ID missing.");
+      return;
+    }
+
+    final markedAt = DateTime.now();
+    final favorite = Favorite(
+      uniqueId: favoriteId,
+      userId: userId,
+      courseId: courseId,
+    );
+
+    final hasConnection = await InternetConnectionChecker.instance.hasConnection;
+
+    try {
+      if (hasConnection) {
+        //  Firebase
+        final favRef = FirebaseDatabase.instance
+            .ref("favorites")
+            .child(favoriteId);
+        await favRef.set(favorite.toMap());
+
+        //  Supabase
+        // await SupabaseService().favoriteCourse(favorite);
       }
 
-      final markedAt = DateTime.now();
-
-      // Firebase
-      final favRef = FirebaseDatabase.instance
-          .ref("favorites")
-          .child(favoriteId);
-
-      await favRef.set({
-        'unique_id': favoriteId,
-        'user_id': userId,
-        'course_id': courseId,
-        'marked_at': markedAt.toIso8601String(),
-      });
-
-      // Supabase
-      final favorite = Favorite(
-        uniqueId: favoriteId,
-        userId: userId,
-        courseId: courseId,
-      );
-      await SupabaseService().favoriteCourse(favorite);
-
-      // Sqflite
+      //  Local Sqflite always
       await CourseFavoriteDAO().favoriteCourse(
         uniqueId: favoriteId,
         userId: userId,
@@ -1069,15 +1174,87 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       );
 
       showSnackBarMsg(context, "Marked ${course.courseName} as favorite!");
-
     } catch (e) {
-      print("Mark as favorite failed: $e");
-      showSnackBarMsg(context, "Failed to mark as favorite.");
+      print("Mark favorite failed: $e");
+      showSnackBarMsg(context, "Failed to mark favorite.");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> loadEnrolledCourses() async {
+    setState(() => isLoading = true);
+
+    try {
+      final userId = _user?.userid;
+      if (userId == null) {
+        showSnackBarMsg(context, "User ID not found.");
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final hasConnection = await InternetConnectionChecker.instance.hasConnection;
+
+      if (hasConnection) {
+        // ✅ ONLINE: Load from Firebase
+        final enrollRef = FirebaseDatabase.instance.ref("enrollments");
+        final snapshot = await enrollRef.orderByChild("user_id").equalTo(userId).once();
+
+        if (snapshot.snapshot.exists) {
+          final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+
+          // Extract courseIds from enrollment entries
+          final List<String> courseIds = data.values
+              .map((e) => (e as Map)['course_id']?.toString())
+              .where((id) => id != null)
+              .cast<String>()
+              .toList();
+
+          // Fetch course details from Firebase "courses" node
+          final coursesRef = FirebaseDatabase.instance.ref("courses");
+          final allCoursesSnapshot = await coursesRef.once();
+
+          if (allCoursesSnapshot.snapshot.exists) {
+            final allCoursesData =
+            allCoursesSnapshot.snapshot.value as Map<dynamic, dynamic>;
+
+            // Filter by courseId list
+            final enrolledCourses = allCoursesData.entries
+                .where((entry) => courseIds.contains(entry.key))
+                .map((entry) => CourseModel.fromJson(
+              Map<String, dynamic>.from(entry.value),
+            ))
+                .toList();
+
+            setState(() {
+              filteredCourses = enrolledCourses;
+            });
+          } else {
+            showSnackBarMsg(context, "No courses found in database.");
+          }
+        } else {
+          showSnackBarMsg(context, "You have not enrolled in any courses.");
+        }
+      } else {
+        // ✅ OFFLINE: Load from Sqflite
+        final localCourseIds = await CourseEnrollmentDAO().getEnrolledCourseIds(userId);
+
+        if (localCourseIds.isEmpty) {
+          showSnackBarMsg(context, "Offline: No enrolled courses found.");
+        } else {
+          final localCourses = await CourseDAO().getCoursesByIds(localCourseIds);
+          setState(() {
+            filteredCourses = localCourses;
+          });
+        }
+      }
+    } catch (e) {
+      print("Error loading enrolled courses: $e");
+      showSnackBarMsg(context, "Something went wrong while loading courses.");
     } finally {
       setState(() => isLoading = false);
     }
   }
-
 
 
   Future<void> saveCourse(CourseModel courseModel) async {

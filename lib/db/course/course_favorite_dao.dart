@@ -52,4 +52,17 @@ class CourseFavoriteDAO {
     );
     return result.map((e) => e['course_id'] as String).toList();
   }
+
+  // Future<List<String>> getFavoriteCourseIds(String userId) async {
+  //   final database = await db;
+  //   final result = await database.query(
+  //     'course_favorites',
+  //     columns: ['course_id'],
+  //     where: 'user_id = ?',
+  //     whereArgs: [userId],
+  //   );
+  //   return result.map((e) => e['course_id'] as String).toList();
+  // }
+
+
 }

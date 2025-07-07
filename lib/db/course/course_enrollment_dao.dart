@@ -54,4 +54,29 @@ class CourseEnrollmentDAO {
     );
     return result.map((e) => e['course_id'] as String).toList();
   }
+
+  // Future<List<String>> getEnrolledCourseIds(String userId) async {
+  //   final database = await db;
+  //   final result = await database.query(
+  //     'course_enrollments',
+  //     columns: ['course_id'],
+  //     where: 'user_id = ?',
+  //     whereArgs: [userId],
+  //   );
+  //   return result.map((e) => e['course_id'].toString()).toList();
+  // }
+
+
+// Future<List<String>> getEnrolledCourseIds(String userId) async {
+  //   final database = await db;
+  //   final result = await database.query(
+  //     'course_enrollments',
+  //     columns: ['course_id'],
+  //     where: 'user_id = ?',
+  //     whereArgs: [userId],
+  //   );
+  //   return result.map((e) => e['course_id'] as String).toList();
+  // }
+
+
 }
