@@ -130,7 +130,7 @@ flutter:
     - assets/
     - animation/
     - assets/images/
-    - assets/empty_image.png
+    - assets/background.jpg
     - assets/images/png/
     - assets/icons/png/
     - assets/images/svg/

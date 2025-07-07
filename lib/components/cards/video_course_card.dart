@@ -37,7 +37,11 @@ class VideoCourseCard extends StatelessWidget {
                 width: context.screenWidth,
                 child: CachedNetworkImage(
                   imageUrl: item.courseImage??"",
-                  errorWidget: (context, url, error) => const SizedBox(),
+                  placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                  errorWidget: (context, url, error) => Image.asset(
+                    'assets/background.jpg',
+                    fit: BoxFit.cover,
+                  ),
                   imageBuilder: (context, assetProvider) {
                     return ClipRRect(
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(radius)),

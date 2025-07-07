@@ -240,6 +240,9 @@ class _HomeViewState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_user == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return SafeArea(
       child: SingleChildScrollView(
         physics: ClampingScrollPhysics(),

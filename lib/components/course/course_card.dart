@@ -87,7 +87,7 @@ class CourseCardState extends State<CourseCard> {
                       fit: BoxFit.cover,
                       errorBuilder: (context, Object exception, stackTrace) {
                         return Image.asset(
-                          'assets/empty_image.png',
+                          'assets/background.jpg',
                           fit: BoxFit.cover,
                         );
                       },

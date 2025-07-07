@@ -124,7 +124,17 @@ class SchoolViewState extends State<SchoolView> {
       isLoading = true;
       // isLoading = false;
     });
+    loadData();
     _initializeData();
+  }
+
+  Future<void> loadData() async {
+    final now = DateTime.now();
+    final categories = categoriesJSON.map((e) => Category.fromJson(e));
+
+    this.categories
+      ..clear()
+      ..addAll(categories);
   }
 
   Future<void> _initializeData() async {
@@ -222,6 +232,9 @@ class SchoolViewState extends State<SchoolView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_user == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return SafeArea(
       child: AppPullRefresh(
         onRefresh: _initializeData,
@@ -229,6 +242,7 @@ class SchoolViewState extends State<SchoolView> {
           physics: const ClampingScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 25, top: 6),
           children: [
+
             _ProfileHeader(user: _user!),
             _CategoriesListView(categories: categories),
             _NewCoursesListView(newCourses: filteredCourses),
@@ -356,7 +370,7 @@ class SchoolViewState extends State<SchoolView> {
                 allCoursesSnapshot.snapshot.value as Map<dynamic, dynamic>;
 
             // Filter by courseId list
-            final favoriteCourses = allCoursesData.entries
+            final fCourses = allCoursesData.entries
                 .where((entry) => courseIds.contains(entry.key))
                 .map((entry) => CourseModel.fromJson(
                       Map<String, dynamic>.from(entry.value),
@@ -364,7 +378,7 @@ class SchoolViewState extends State<SchoolView> {
                 .toList();
 
             setState(() {
-              filteredCourses = favoriteCourses;
+              favoriteCourses = fCourses;
             });
           } else {
             showSnackBarMsg(context, "No courses found in database.");
@@ -383,7 +397,7 @@ class SchoolViewState extends State<SchoolView> {
           final localCourses =
               await CourseDAO().getCoursesByIds(localCourseIds);
           setState(() {
-            filteredCourses = localCourses;
+            favoriteCourses = localCourses;
           });
         }
       }

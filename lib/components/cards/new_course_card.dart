@@ -37,7 +37,11 @@ class NewCourseCardState extends State<NewCourseCard>{
               width: 205,
               child: CachedNetworkImage(
                 imageUrl: widget.imageUrl,
-                errorWidget: (context, url, error) => const SizedBox(),
+                placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                errorWidget: (context, url, error) => Image.asset(
+                  'assets/background.jpg',
+                  fit: BoxFit.cover,
+                ),
                 imageBuilder: (context, assetProvider) {
                   return ClipRRect(
                     borderRadius: BorderRadius.circular(20),
