@@ -8,6 +8,10 @@ import 'package:go_router/go_router.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../db/course/course_dao.dart';
+import '../../db/course/course_enrollment_dao.dart';
+import '../../db/course/course_favorite_dao.dart';
+import '../../model/course/enrollment.dart';
+import '../../model/course/favorite.dart';
 import '../../model/course/teacher.dart';
 import '../../model/course/video_course.dart';
 import '../../components/components.dart';
@@ -17,6 +21,7 @@ import '../../model/school/school.dart';
 import '../../model/user/user.dart';
 import '../../preference/logout.dart';
 import '../../routes/app_router.dart';
+import '../../utility/unique.dart';
 
 class CoursesOfCategoryPage extends StatefulWidget {
   const CoursesOfCategoryPage({Key? key}) : super(key: key);
@@ -319,11 +324,6 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
     });
   }
 
-  void _enrollCourse(CourseModel course) async {
-    setState(() {});
-  }
-
-  void _markCourse(BuildContext context, CourseModel course) {}
 
   @override
   Widget build(BuildContext context) {
@@ -376,7 +376,7 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 20),
                                     alignment: Alignment.centerLeft,
-                                    child: const Icon(Icons.edit,
+                                    child: const Icon(Icons.favorite,
                                         color: Colors.white),
                                   ),
                                   secondaryBackground: Container(
@@ -384,14 +384,14 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 20),
                                     alignment: Alignment.centerRight,
-                                    child: const Icon(Icons.delete,
+                                    child: const Icon(Icons.check,
                                         color: Colors.white),
                                   ),
                                   confirmDismiss: (direction) async {
                                     if (direction ==
                                         DismissDirection.startToEnd) {
                                       // Swipe right to Edit
-                                      _markCourse(context, course);
+                                      markFavorite(course);
                                       return false; // Don't dismiss the tile
                                     } else if (direction ==
                                         DismissDirection.endToStart) {
@@ -420,7 +420,7 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
                                         ),
                                       );
                                       if (confirm == true) {
-                                        _enrollCourse(course);
+                                        enrollCourse(course);
                                         return true; // Dismiss the tile
                                       } else {
                                         return false;
@@ -444,10 +444,12 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
                                       totalVideo:
                                           course.totalVideo?.toString() ?? '0',
                                       onEnroll: () {
-                                        _enrollCourse(course);
+                                        // _enrollCourse(course);
+                                        enrollCourse(course);
                                       },
                                       onMark: () {
-                                        _markCourse(context, course);
+                                        // _markCourse(context,course);
+                                        markFavorite(course);
                                       },
                                     ),
                                   ),
@@ -482,6 +484,183 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
       ),
     );
   }
+
+  Future<void> enrollCourse(CourseModel course) async {
+    setState(() => isLoading = true);
+
+    final uniqueEnrollId = Unique().generateUniqueID();
+    final userId = _user?.userid;
+    final courseId = course.uniqueId;
+
+    if (userId == null || courseId == null) {
+      showSnackBarMsg(context, "User or Course ID missing.");
+      return;
+    }
+
+    final enrolledAt = DateTime.now();
+    final enrollment = Enrollment(
+      uniqueId: uniqueEnrollId,
+      userId: userId,
+      courseId: courseId,
+      enrolledAt: enrolledAt,
+      status: 'active',
+    );
+
+    final hasConnection = await InternetConnectionChecker.instance.hasConnection;
+
+    try {
+      if (hasConnection) {
+        //  Firebase
+        final enrollRef = FirebaseDatabase.instance
+            .ref("enrollments")
+            .child(uniqueEnrollId);
+        await enrollRef.set(enrollment.toMap());
+
+        //  Supabase
+        // await SupabaseService().enrollCourse(enrollment);
+      }
+
+      //  Local Sqflite always
+      await CourseEnrollmentDAO().enrollCourse(
+        uniqueId: uniqueEnrollId,
+        userId: userId,
+        courseId: courseId,
+        status: 'active',
+      );
+
+      showSnackBarMsg(context, "Enrolled in ${course.courseName} successfully!");
+    } catch (e) {
+      print("Enrollment failed: $e");
+      showSnackBarMsg(context, "Failed to enroll in course.");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> markFavorite(CourseModel course) async {
+    setState(() => isLoading = true);
+
+    final favoriteId = Unique().generateUniqueID();
+    final userId = _user?.userid;
+    final courseId = course.uniqueId;
+
+    if (userId == null || courseId == null) {
+      showSnackBarMsg(context, "User or Course ID missing.");
+      return;
+    }
+
+    final markedAt = DateTime.now();
+    final favorite = Favorite(
+      uniqueId: favoriteId,
+      userId: userId,
+      courseId: courseId,
+    );
+
+    final hasConnection = await InternetConnectionChecker.instance.hasConnection;
+
+    try {
+      if (hasConnection) {
+        //  Firebase
+        final favRef = FirebaseDatabase.instance
+            .ref("favorites")
+            .child(favoriteId);
+        await favRef.set(favorite.toMap());
+
+        //  Supabase
+        // await SupabaseService().favoriteCourse(favorite);
+      }
+
+      //  Local Sqflite always
+      await CourseFavoriteDAO().favoriteCourse(
+        uniqueId: favoriteId,
+        userId: userId,
+        courseId: courseId,
+      );
+
+      showSnackBarMsg(context, "Marked ${course.courseName} as favorite!");
+    } catch (e) {
+      print("Mark favorite failed: $e");
+      showSnackBarMsg(context, "Failed to mark favorite.");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> loadEnrolledCourses() async {
+    setState(() => isLoading = true);
+
+    try {
+      final userId = _user?.userid;
+      if (userId == null) {
+        showSnackBarMsg(context, "User ID not found.");
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final hasConnection = await InternetConnectionChecker.instance.hasConnection;
+
+      if (hasConnection) {
+        // ✅ ONLINE: Load from Firebase
+        final enrollRef = FirebaseDatabase.instance.ref("enrollments");
+        final snapshot = await enrollRef.orderByChild("user_id").equalTo(userId).once();
+
+        if (snapshot.snapshot.exists) {
+          final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+
+          // Extract courseIds from enrollment entries
+          final List<String> courseIds = data.values
+              .map((e) => (e as Map)['course_id']?.toString())
+              .where((id) => id != null)
+              .cast<String>()
+              .toList();
+
+          // Fetch course details from Firebase "courses" node
+          final coursesRef = FirebaseDatabase.instance.ref("courses");
+          final allCoursesSnapshot = await coursesRef.once();
+
+          if (allCoursesSnapshot.snapshot.exists) {
+            final allCoursesData =
+            allCoursesSnapshot.snapshot.value as Map<dynamic, dynamic>;
+
+            // Filter by courseId list
+            final enrolledCourses = allCoursesData.entries
+                .where((entry) => courseIds.contains(entry.key))
+                .map((entry) => CourseModel.fromJson(
+              Map<String, dynamic>.from(entry.value),
+            ))
+                .toList();
+
+            setState(() {
+              filteredCourses = enrolledCourses;
+            });
+          } else {
+            showSnackBarMsg(context, "No courses found in database.");
+          }
+        } else {
+          showSnackBarMsg(context, "You have not enrolled in any courses.");
+        }
+      } else {
+        // ✅ OFFLINE: Load from Sqflite
+        final localCourseIds = await CourseEnrollmentDAO().getEnrolledCourseIds(userId);
+
+        if (localCourseIds.isEmpty) {
+          showSnackBarMsg(context, "Offline: No enrolled courses found.");
+        } else {
+          final localCourses = await CourseDAO().getCoursesByIds(localCourseIds);
+          setState(() {
+            filteredCourses = localCourses;
+          });
+        }
+      }
+    } catch (e) {
+      print("Error loading enrolled courses: $e");
+      showSnackBarMsg(context, "Something went wrong while loading courses.");
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+
 }
 
 // import 'package:flutter/material.dart';
