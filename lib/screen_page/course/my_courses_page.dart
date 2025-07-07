@@ -566,8 +566,10 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
                       context.push(Routes.courseDetailPage, extra: course);
                     },
                     child: CourseCard(
+                      courseModel: course,
                       courseImage: course.courseImage ?? '',
                       courseName: course.courseName ?? '',
+                      trackingNumber: course.trackingNumber ?? '',
                       rating: course.totalRating ?? 0,
                       totalTime: course.totalTime ?? '',
                       totalVideo: course.totalVideo?.toString() ?? '0',

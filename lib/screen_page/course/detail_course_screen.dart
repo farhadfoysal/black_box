@@ -6,13 +6,22 @@ import '../../components/course/tools_card.dart';
 import '../../model/course/course_model.dart';
 import '../../style/color/app_color.dart';
 
-class DetailCourseScreen extends StatelessWidget {
+class DetailCourseScreen extends StatefulWidget {
   final CourseModel course;
   const DetailCourseScreen({Key? key, required this.course}) : super(key: key);
 
   @override
+  State<StatefulWidget> createState() => DetailCourseScreenState();
+}
+
+
+class DetailCourseScreenState extends State<DetailCourseScreen>{
+
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    CourseModel course = widget.course;
 
     return DefaultTabController(
       length: 5,
@@ -32,6 +41,22 @@ class DetailCourseScreen extends StatelessWidget {
               'Course Details',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textLight),
             ),
+            actions: [
+              IconButton(
+                onPressed: () {
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) =>
+                  //         TutorStudentMonthly(
+                  //             student: student),
+                  //   ),
+                  // );
+                },
+                icon: const Icon(Icons.dashboard_customize, color: AppColors.textLight),
+                tooltip: 'Course Manager',
+              ),
+            ],
             flexibleSpace: Container(
               color: Colors.black54, // fallback background
               child: Stack(
@@ -264,10 +289,9 @@ class DetailCourseScreen extends StatelessWidget {
       ),
     );
   }
+
+
 }
-
-
-
 
 // import 'package:flutter/material.dart';
 // import 'package:youtube_player_flutter/youtube_player_flutter.dart';

@@ -1,8 +1,11 @@
+import 'package:black_box/model/course/course_model.dart';
 import 'package:flutter/material.dart';
 
 class CourseCard extends StatelessWidget {
+  CourseModel courseModel;
   String courseImage;
   String courseName;
+  String trackingNumber;
   String? mentorName;
   String totalVideo;
   String totalTime;
@@ -10,8 +13,10 @@ class CourseCard extends StatelessWidget {
 
   CourseCard(
       {Key? key,
+        required this.courseModel,
         required this.courseImage,
         required this.courseName,
+        required this.trackingNumber,
         this.mentorName,
         this.rating,
         required this.totalTime,
@@ -117,6 +122,81 @@ class CourseCard extends StatelessWidget {
                       GreenChipWidget(
                         icon: Icons.videocam,
                         label: '$totalVideo Video',
+                      ),
+                      PopupMenuButton<String>(
+                        onSelected: (value) async {
+                          if (value == 'edit') {
+                            // Implement edit logic
+                          } else if (value == 'share') {
+                            // _makePhoneCall(student.phone??"");
+                          } else if (value == 'mentor') {
+                            // _openWhatsApp(student.phone??"");
+                          } else if (value == 'delete') {
+
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text("Confirm Deletion"),
+                                content: Text("Are you sure you want to delete this Student?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text("Cancel"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      Navigator.pop(context);
+                                      // await deleteStudentFromFirebaseAndOffline(student);
+                                    },
+                                    child: Text("Delete", style: TextStyle(color: Colors.red)),
+                                  ),
+                                ],
+                              ),
+                            );
+
+
+                          } else if (value == 'schedule') {
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) =>
+                            //         TutorStudentProfile(
+                            //             student: student),
+                            //   ),
+                            // );
+
+                          } else if (value == 'go') {
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) =>
+                            //         TutorStudentMonthly(
+                            //             student: student),
+                            //   ),
+                            // );
+
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                              value: 'share',
+                              child: Text('Share')),
+                          const PopupMenuItem(
+                              value: 'mentor',
+                              child: Text('Mentor')),
+                          const PopupMenuItem(
+                              value: 'schedule',
+                              child: Text('Schedule')),
+                          const PopupMenuItem(
+                              value: 'go',
+                              child: Text('Attendance')),
+                          const PopupMenuItem(
+                              value: 'edit',
+                              child: Text('Edit')),
+                          const PopupMenuItem(
+                              value: 'delete',
+                              child: Text('Delete')),
+                        ],
                       ),
                     ],
                   ),
