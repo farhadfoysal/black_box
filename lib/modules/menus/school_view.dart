@@ -229,7 +229,6 @@ class SchoolViewState extends State<SchoolView> {
     await AppRouter.logoutUser(context);
   }
 
-
   @override
   Widget build(BuildContext context) {
     if (_user == null) {
@@ -242,7 +241,6 @@ class SchoolViewState extends State<SchoolView> {
           physics: const ClampingScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 25, top: 6),
           children: [
-
             _ProfileHeader(user: _user!),
             _CategoriesListView(categories: categories),
             _NewCoursesListView(newCourses: filteredCourses),
@@ -268,7 +266,7 @@ class SchoolViewState extends State<SchoolView> {
           await InternetConnectionChecker.instance.hasConnection;
 
       if (hasConnection) {
-        // ✅ ONLINE: Load from Firebase
+        //  ONLINE: Load from Firebase
         final enrollRef = FirebaseDatabase.instance.ref("enrollments");
         final snapshot =
             await enrollRef.orderByChild("user_id").equalTo(userId).once();
@@ -309,7 +307,7 @@ class SchoolViewState extends State<SchoolView> {
           showSnackBarMsg(context, "You have not enrolled in any courses.");
         }
       } else {
-        // ✅ OFFLINE: Load from Sqflite
+        //  OFFLINE: Load from Sqflite
         final localCourseIds =
             await CourseEnrollmentDAO().getEnrolledCourseIds(userId);
 
@@ -346,7 +344,7 @@ class SchoolViewState extends State<SchoolView> {
           await InternetConnectionChecker.instance.hasConnection;
 
       if (hasConnection) {
-        // ✅ ONLINE: Load from Firebase favorites
+        //  ONLINE: Load from Firebase favorites
         final favRef = FirebaseDatabase.instance.ref("favorites");
         final snapshot =
             await favRef.orderByChild("user_id").equalTo(userId).once();
@@ -387,7 +385,7 @@ class SchoolViewState extends State<SchoolView> {
           showSnackBarMsg(context, "You have no favorite courses.");
         }
       } else {
-        // ✅ OFFLINE: Load from Sqflite
+        //  OFFLINE: Load from Sqflite
         final localCourseIds =
             await CourseFavoriteDAO().getFavoriteCourseIds(userId);
 
@@ -450,11 +448,13 @@ class _ProfileHeader extends StatelessWidget {
             ),
           )),
           InkWell(
-            onTap: () {},
+            onTap: () {
+
+            },
             child: Padding(
               padding: EdgeInsets.all(10.0),
               child: Icon(
-                Icons.search_rounded,
+                Icons.add_circle_outline_rounded,
                 size: 40,
               ),
             ),
@@ -659,7 +659,10 @@ class _NewCoursesListView extends StatelessWidget {
               children: newCourses
                   .map(
                     (item) => NewCourseCard(
-                      onPressed: () {},
+                      onPressed: () {
+                        context.push(Routes.courseDetailPage,
+                            extra: item);
+                      },
                       title: item.courseName ?? "",
                       countPlays: item.totalVideo ?? 0,
                       imageUrl: item.courseImage ?? "",
@@ -699,7 +702,10 @@ class _PopularCoursesListView extends StatelessWidget {
             children: popularCourses
                 .map(
                   (item) => VideoCourseCard(
-                    onPressed: () {},
+                    onPressed: () {
+                      context.push(Routes.courseDetailPage,
+                          extra: item);
+                    },
                     item: item,
                   ),
                 )

@@ -69,13 +69,13 @@ class DetailCourseScreenState extends State<DetailCourseScreen>{
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Image.asset(
-                        'assets/empty_image.png',
+                        'assets/background.jpg',
                         fit: BoxFit.cover,
                       );
                     },
                   )
                       : Image.asset(
-                    'assets/empty_image.png',
+                    'assets/background.jpg',
                     fit: BoxFit.cover,
                   ),
 
