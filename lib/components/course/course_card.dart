@@ -36,12 +36,12 @@ class CourseCard extends StatefulWidget {
 
 class CourseCardState extends State<CourseCard> {
   void copyCourseCode(CourseModel course) {
-    String? tempNum = course.trackingNumber;
+    String? tempNum = course.uniqueId;
 
     if (tempNum != null && tempNum.isNotEmpty) {
       Clipboard.setData(ClipboardData(text: tempNum)).then((_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Course Tracking Number copied: $tempNum')),
+          SnackBar(content: Text('Course Code copied: $tempNum')),
         );
       }).catchError((error) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -50,7 +50,7 @@ class CourseCardState extends State<CourseCard> {
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No Tracking Number to copy')),
+        SnackBar(content: Text('No Course Code to copy')),
       );
     }
   }
@@ -213,7 +213,7 @@ class CourseCardState extends State<CourseCard> {
                         },
                         itemBuilder: (context) => [
                           const PopupMenuItem(
-                              value: 'copy', child: Text('Copy Trk')),
+                              value: 'copy', child: Text('Copy Code')),
                           const PopupMenuItem(
                               value: 'share', child: Text('Share')),
                           const PopupMenuItem(
@@ -261,7 +261,7 @@ class CourseCardState extends State<CourseCard> {
                   height: 100,
                 ),
                 SizedBox(height: 20),
-                Text('QR Code for Course UniqueId:'),
+                Text('QR Code for Course Code:'),
                 SizedBox(height: 10),
                 BarcodeWidget(
                   barcode: Barcode.qrCode(), // QR code format

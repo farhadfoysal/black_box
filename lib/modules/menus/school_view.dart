@@ -6,6 +6,7 @@ import 'package:black_box/components/common/photo_avatar.dart';
 import 'package:black_box/cores/cores.dart';
 import 'package:black_box/model/user/user.dart';
 import 'package:black_box/routes/routes.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as b;
@@ -22,11 +23,15 @@ import '../../db/course/course_favorite_dao.dart';
 import '../../dummies/categories_d.dart';
 import '../../dummies/video_courses_d.dart';
 import '../../model/course/course_model.dart';
+import '../../model/course/enrollment.dart';
 import '../../model/course/teacher.dart';
 import '../../model/course/video_course.dart';
 import '../../model/school/school.dart';
 import '../../preference/logout.dart';
 import '../../routes/app_router.dart';
+import '../../screen_page/course/scan_qr_page.dart';
+import '../../services/course/supabse_service.dart';
+import '../../utility/unique.dart';
 
 class SchoolView extends StatefulWidget {
   const SchoolView({super.key});
@@ -229,6 +234,8 @@ class SchoolViewState extends State<SchoolView> {
     await AppRouter.logoutUser(context);
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     if (_user == null) {
@@ -411,145 +418,246 @@ class SchoolViewState extends State<SchoolView> {
 class _ProfileHeader extends StatelessWidget {
   final User user;
 
+  const _ProfileHeader({Key? key, required this.user}) : super(key: key);
+
+  void showSnackBarMsg(BuildContext context, String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 2),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
   void showEnrollCourseDialog(BuildContext context, Function(String uniqueId) onEnroll) {
     final TextEditingController _idController = TextEditingController();
+    bool isProcessing = false; // Move this OUTSIDE of builder
 
     showDialog(
       context: context,
       builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          insetPadding: const EdgeInsets.all(20),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.school_rounded, size: 50, color: Colors.deepPurple),
-                  const SizedBox(height: 15),
-                  const Text(
-                    "Enroll in a Course",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    "Enter the course Tracking Number / Unique ID below or scan a QR code to enroll.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Input field
-                  TextField(
-                    controller: _idController,
-                    decoration: InputDecoration(
-                      labelText: "Tracking Number / Unique ID",
-                      prefixIcon: const Icon(Icons.numbers_rounded),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Buttons
-                  Row(
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              insetPadding: const EdgeInsets.all(20),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            // trigger your scanner screen here (e.g., push QR scanner page)
-                            // Navigator.push(context, MaterialPageRoute(builder: (context) => YourScannerScreen()));
-                          },
-                          icon: const Icon(Icons.qr_code_scanner_rounded),
-                          label: const Text("Scan QR"),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: Colors.deepPurple.shade50,
-                            foregroundColor: Colors.deepPurple,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
+                      const Icon(Icons.school_rounded, size: 50, color: Colors.deepPurple),
+                      const SizedBox(height: 15),
+                      const Text(
+                        "Enroll in a Course",
+                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        "Enter the course Tracking Number / Unique ID below or scan a QR code to enroll.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                      const SizedBox(height: 20),
+
+                      TextField(
+                        controller: _idController,
+                        enabled: !isProcessing,
+                        decoration: InputDecoration(
+                          labelText: "Tracking Number / Unique ID",
+                          prefixIcon: const Icon(Icons.numbers_rounded),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            if (_idController.text.isNotEmpty) {
-                              Navigator.pop(context);
-                              onEnroll(_idController.text.trim());
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Please enter a Tracking Number.")),
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.check_circle_rounded),
-                          label: const Text("Enroll"),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: Colors.deepPurple,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      const SizedBox(height: 20),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: isProcessing
+                                  ? null
+                                  : () {
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const ScanQrPage()),
+                                );
+                              },
+                              icon: const Icon(Icons.qr_code_scanner_rounded),
+                              label: const Text("Scan QR"),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                backgroundColor: Colors.deepPurple.shade50,
+                                foregroundColor: Colors.deepPurple,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: isProcessing
+                                  ? null
+                                  : () {
+                                if (_idController.text.isNotEmpty) {
+                                  setState(() {
+                                    isProcessing = true;
+                                  });
+
+                                  Future.delayed(const Duration(seconds: 10), () {
+                                    Navigator.pop(context);
+                                    onEnroll(_idController.text.trim());
+                                    showSnackBarMsg(context, "Please wait few seconds to process the enrollment");
+                                  });
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Please enter a Tracking Number.")),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                backgroundColor: Colors.deepPurple,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: isProcessing
+                                  ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                                  : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(Icons.check_circle_rounded),
+                                  SizedBox(width: 8),
+                                  Text("Enroll"),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
   }
 
 
-  const _ProfileHeader({required this.user});
+  Future<void> _enrollCourseById(BuildContext context, String uniqueId) async {
+    try {
+      CourseModel? course;
+
+      if (await InternetConnectionChecker.instance.hasConnection) {
+
+        final dbRef = FirebaseDatabase.instance.ref("courses");
+
+        final directSnapshot = await dbRef.child(uniqueId).get();
+
+        if (directSnapshot.exists) {
+          final courseMap = Map<String, dynamic>.from(directSnapshot.value as Map);
+          course = CourseModel.fromJson(courseMap);
+        } else {
+
+          final query = dbRef.orderByChild('tracking_number').equalTo(uniqueId);
+          final querySnapshot = await query.get();
+
+          if (querySnapshot.exists) {
+            final firstMatch = querySnapshot.children.first;
+            final courseMap = Map<String, dynamic>.from(firstMatch.value as Map);
+            course = CourseModel.fromJson(courseMap);
+          }
+        }
+
+
+        // final dbRef = FirebaseDatabase.instance.ref("courses").child(uniqueId);
+        // final snapshot = await dbRef.get();
+        //
+        // if (snapshot.exists) {
+        //   final courseMap = Map<String, dynamic>.from(snapshot.value as Map);
+        //   course = CourseModel.fromJson(courseMap);
+        // }
+      }
+
+      if (course == null) {
+        course = await CourseDAO().getCourseByUniqueId(uniqueId);
+      }
+
+      if (course != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EnrollCoursePage(course: course!, user: user),
+          ),
+        );
+      }else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Course not found for this Tracking ID.")),
+        );
+      }
+    } catch (e) {
+      print("Enrollment by ID failed: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to enroll by ID.")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0.0),
       child: Row(
         children: [
           XAvatarCircle(
             photoURL:
-                "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg",
+            "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg",
             membership: "U",
             progress: 60,
-            color: context.themeD.primaryColor,
+            color: Theme.of(context).primaryColor,
           ),
           Expanded(
-              child: Padding(
-            padding: EdgeInsets.all(5.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 1.7),
-                  child: Text(
-                    "Courses",
-                    style: p21.bold,
+            child: Padding(
+              padding: const EdgeInsets.all(5.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 1.7),
+                    child: Text(
+                      "Courses",
+                      style: p21.bold,
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4),
-                  child: Text(
-                    "${user.uname}",
-                    style: p14.bold.grey,
-                  ),
-                )
-              ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(
+                      "${user.uname}",
+                      style: p14.bold.grey,
+                    ),
+                  )
+                ],
+              ),
             ),
-          )),
+          ),
           InkWell(
             onTap: () {
               showEnrollCourseDialog(context, (uniqueId) {
-                _enrollCourseById(uniqueId);
+                _enrollCourseById(context, uniqueId);
               });
             },
-            child: Padding(
+            child: const Padding(
               padding: EdgeInsets.all(10.0),
               child: Icon(
                 Icons.add_circle_outline_rounded,
@@ -560,17 +668,19 @@ class _ProfileHeader extends StatelessWidget {
           InkWell(
             onTap: () {},
             child: Padding(
-              padding: EdgeInsets.all(10.0),
+              padding: const EdgeInsets.all(10.0),
               child: b.Badge(
                 badgeStyle: b.BadgeStyle(
                   borderSide: const BorderSide(color: Colors.white, width: 2),
-                  badgeColor: Colors.red.withOpacity(0.9),
+                  badgeColor: Colors.redAccent,
                   borderRadius: BorderRadius.circular(13),
                   elevation: 0,
                 ),
-                badgeContent: Text("7",
-                    style: TextStyle(color: Colors.white, fontSize: 12)),
-                child: Icon(
+                badgeContent: const Text(
+                  "7",
+                  style: TextStyle(color: Colors.white, fontSize: 12),
+                ),
+                child: const Icon(
                   Icons.notifications_outlined,
                   size: 40,
                 ),
@@ -581,9 +691,143 @@ class _ProfileHeader extends StatelessWidget {
       ),
     );
   }
+}
 
-  void _enrollCourseById(String uniqueId) {
 
+class EnrollCoursePage extends StatelessWidget {
+  final CourseModel course;
+  final User user;
+
+  const EnrollCoursePage({super.key, required this.course, required this.user});
+
+  void showSnackBarMsg(BuildContext context, String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      duration: const Duration(seconds: 2),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+
+  void enrollCourseAction(BuildContext context, CourseModel course) async {
+    final uniqueEnrollId = Unique().generateUniqueID();
+    final userId = user?.userid;
+
+    if (userId == null) {
+      showSnackBarMsg(context, "Please login first.");
+      return;
+    }
+
+    final enrolledAt = DateTime.now();
+
+    // Firebase
+    final enrollRef = FirebaseDatabase.instance.ref("enrollments").child(uniqueEnrollId);
+
+    await enrollRef.set({
+      'unique_id': uniqueEnrollId,
+      'user_id': userId,
+      'course_id': course.uniqueId,
+      'enrolled_at': enrolledAt.toIso8601String(),
+      'status': 'active',
+    });
+
+    // Supabase
+    // final enrollment = Enrollment(
+    //   uniqueId: uniqueEnrollId,
+    //   userId: userId,
+    //   courseId: course.uniqueId!,
+    //   enrolledAt: enrolledAt,
+    //   status: 'active',
+    // );
+    // await SupabaseService().enrollCourse(enrollment);
+
+    // Sqflite
+    await CourseEnrollmentDAO().enrollCourse(
+      uniqueId: uniqueEnrollId,
+      userId: userId,
+      courseId: course.uniqueId!,
+      status: 'active',
+    );
+
+    showSnackBarMsg(context, "Successfully enrolled in ${course.courseName}!");
+    Navigator.pop(context); // Close confirm page
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Confirm Enrollment"),
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Course image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: CachedNetworkImage(
+                imageUrl: course.courseImage ?? "",
+                height: 200,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                placeholder: (ctx, url) => const Center(child: CircularProgressIndicator()),
+                errorWidget: (ctx, url, error) => Image.asset('assets/background.jpg'),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            Text(course.courseName ?? "Unnamed Course", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 10),
+            Text("Total Lessons: ${course.totalVideo}", style: const TextStyle(color: Colors.grey)),
+            Text("Level: ${course.level}", style: const TextStyle(color: Colors.grey)),
+
+            const Spacer(),
+
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ScanQrPage()),
+                      );
+                    },
+                    icon: const Icon(Icons.qr_code_scanner_rounded),
+                    label: const Text("Scan QR"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple.shade50,
+                      foregroundColor: Colors.deepPurple,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      // confirm enrollment action
+                      enrollCourseAction(context, course);
+                    },
+                    icon: const Icon(Icons.check_circle),
+                    label: const Text("Enroll"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -605,33 +849,33 @@ class _CategoriesListView extends StatelessWidget {
           children: categories
               .map(
                 (item) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: _MenuButton(
-                    onPressed: () {
-                      final slug = item.slug;
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: _MenuButton(
+                onPressed: () {
+                  final slug = item.slug;
 
-                      final router = GoRouter.of(context);
+                  final router = GoRouter.of(context);
 
-                      if (slug == 'courses') {
-                        router.pushNamed(Routes.myCoursesPage);
-                      } else if (slug == 'gk') {
-                        router.pushNamed(Routes.gkQuizPage);
-                      } else if (slug == 'notice') {
-                        router.pushNamed(Routes.noticePage);
-                      } else if (slug == 'exam') {
-                        router.pushNamed(Routes.examPage);
-                      } else {
-                        router.pushNamed(
-                          Routes.coursesOfCategoryPage,
-                          extra: item,
-                        );
-                      }
-                    },
-                    title: item.name,
-                    imagePath: item.imagePath,
-                  ),
-                ),
-              )
+                  if (slug == 'courses') {
+                    router.pushNamed(Routes.myCoursesPage);
+                  } else if (slug == 'gk') {
+                    router.pushNamed(Routes.gkQuizPage);
+                  } else if (slug == 'notice') {
+                    router.pushNamed(Routes.noticePage);
+                  } else if (slug == 'exam') {
+                    router.pushNamed(Routes.examPage);
+                  } else {
+                    router.pushNamed(
+                      Routes.coursesOfCategoryPage,
+                      extra: item,
+                    );
+                  }
+                },
+                title: item.name,
+                imagePath: item.imagePath,
+              ),
+            ),
+          )
               .toList(),
         ),
       ),
@@ -700,21 +944,21 @@ class _MenuButton extends StatelessWidget {
             ),
             child: hasImage
                 ? SvgPicture.asset(
-                    imagePath,
-                    width: 50,
-                    height: 50,
-                  )
+              imagePath,
+              width: 50,
+              height: 50,
+            )
                 : Center(
-                    child: Text(
-                      getFallbackIconText(title),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1A1A),
-                      ),
-                    ),
-                  ),
+              child: Text(
+                getFallbackIconText(title),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+            ),
           ),
         ),
         Padding(
@@ -761,16 +1005,16 @@ class _NewCoursesListView extends StatelessWidget {
               children: newCourses
                   .map(
                     (item) => NewCourseCard(
-                      onPressed: () {
-                        context.push(Routes.courseDetailPage,
-                            extra: item);
-                      },
-                      title: item.courseName ?? "",
-                      countPlays: item.totalVideo ?? 0,
-                      imageUrl: item.courseImage ?? "",
-                      courseModel: item,
-                    ),
-                  )
+                  onPressed: () {
+                    context.push(Routes.courseDetailPage,
+                        extra: item);
+                  },
+                  title: item.courseName ?? "",
+                  countPlays: item.totalVideo ?? 0,
+                  imageUrl: item.courseImage ?? "",
+                  courseModel: item,
+                ),
+              )
                   .toList(),
             ),
           ),
@@ -804,13 +1048,13 @@ class _PopularCoursesListView extends StatelessWidget {
             children: popularCourses
                 .map(
                   (item) => VideoCourseCard(
-                    onPressed: () {
-                      context.push(Routes.courseDetailPage,
-                          extra: item);
-                    },
-                    item: item,
-                  ),
-                )
+                onPressed: () {
+                  context.push(Routes.courseDetailPage,
+                      extra: item);
+                },
+                item: item,
+              ),
+            )
                 .toList(),
           ),
         ],
@@ -818,6 +1062,228 @@ class _PopularCoursesListView extends StatelessWidget {
     );
   }
 }
+
+
+
+// class _ProfileHeader extends StatelessWidget {
+//   final User user;
+//
+//   void showEnrollCourseDialog(BuildContext context, Function(String uniqueId) onEnroll) {
+//     final TextEditingController _idController = TextEditingController();
+//
+//     showDialog(
+//       context: context,
+//       builder: (context) {
+//         return Dialog(
+//           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+//           insetPadding: const EdgeInsets.all(20),
+//           child: Padding(
+//             padding: const EdgeInsets.all(20),
+//             child: SingleChildScrollView(
+//               child: Column(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: [
+//                   const Icon(Icons.school_rounded, size: 50, color: Colors.deepPurple),
+//                   const SizedBox(height: 15),
+//                   const Text(
+//                     "Enroll in a Course",
+//                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+//                   ),
+//                   const SizedBox(height: 10),
+//                   const Text(
+//                     "Enter the course Tracking Number / Unique ID below or scan a QR code to enroll.",
+//                     textAlign: TextAlign.center,
+//                     style: TextStyle(fontSize: 14, color: Colors.grey),
+//                   ),
+//                   const SizedBox(height: 20),
+//
+//                   // Input field
+//                   TextField(
+//                     controller: _idController,
+//                     decoration: InputDecoration(
+//                       labelText: "Tracking Number / Unique ID",
+//                       prefixIcon: const Icon(Icons.numbers_rounded),
+//                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+//                     ),
+//                   ),
+//                   const SizedBox(height: 20),
+//
+//                   // Buttons
+//                   Row(
+//                     children: [
+//                       Expanded(
+//                         child: ElevatedButton.icon(
+//                           onPressed: () {
+//                             Navigator.pop(context);
+//                             // trigger your scanner screen here (e.g., push QR scanner page)
+//                             // Navigator.push(context, MaterialPageRoute(builder: (context) => YourScannerScreen()));
+//                           },
+//                           icon: const Icon(Icons.qr_code_scanner_rounded),
+//                           label: const Text("Scan QR"),
+//                           style: ElevatedButton.styleFrom(
+//                             padding: const EdgeInsets.symmetric(vertical: 14),
+//                             backgroundColor: Colors.deepPurple.shade50,
+//                             foregroundColor: Colors.deepPurple,
+//                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//                           ),
+//                         ),
+//                       ),
+//                       const SizedBox(width: 10),
+//                       Expanded(
+//                         child: ElevatedButton.icon(
+//                           onPressed: () {
+//                             if (_idController.text.isNotEmpty) {
+//                               Navigator.pop(context);
+//                               onEnroll(_idController.text.trim());
+//                             } else {
+//                               ScaffoldMessenger.of(context).showSnackBar(
+//                                 const SnackBar(content: Text("Please enter a Tracking Number.")),
+//                               );
+//                             }
+//                           },
+//                           icon: const Icon(Icons.check_circle_rounded),
+//                           label: const Text("Enroll"),
+//                           style: ElevatedButton.styleFrom(
+//                             padding: const EdgeInsets.symmetric(vertical: 14),
+//                             backgroundColor: Colors.deepPurple,
+//                             foregroundColor: Colors.white,
+//                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//                           ),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ),
+//         );
+//       },
+//     );
+//   }
+//
+//
+//   const _ProfileHeader({required this.user, required BuildContext context});
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 0.0),
+//       child: Row(
+//         children: [
+//           XAvatarCircle(
+//             photoURL:
+//                 "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg",
+//             membership: "U",
+//             progress: 60,
+//             color: context.themeD.primaryColor,
+//           ),
+//           Expanded(
+//               child: Padding(
+//             padding: EdgeInsets.all(5.0),
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 Padding(
+//                   padding: EdgeInsets.symmetric(vertical: 1.7),
+//                   child: Text(
+//                     "Courses",
+//                     style: p21.bold,
+//                   ),
+//                 ),
+//                 Padding(
+//                   padding: EdgeInsets.symmetric(vertical: 4),
+//                   child: Text(
+//                     "${user.uname}",
+//                     style: p14.bold.grey,
+//                   ),
+//                 )
+//               ],
+//             ),
+//           )),
+//           InkWell(
+//             onTap: () {
+//               showEnrollCourseDialog(context, (uniqueId) {
+//                 _enrollCourseById(uniqueId);
+//               });
+//             },
+//             child: Padding(
+//               padding: EdgeInsets.all(10.0),
+//               child: Icon(
+//                 Icons.add_circle_outline_rounded,
+//                 size: 40,
+//               ),
+//             ),
+//           ),
+//           InkWell(
+//             onTap: () {},
+//             child: Padding(
+//               padding: EdgeInsets.all(10.0),
+//               child: b.Badge(
+//                 badgeStyle: b.BadgeStyle(
+//                   borderSide: const BorderSide(color: Colors.white, width: 2),
+//                   badgeColor: Colors.red.withOpacity(0.9),
+//                   borderRadius: BorderRadius.circular(13),
+//                   elevation: 0,
+//                 ),
+//                 badgeContent: Text("7",
+//                     style: TextStyle(color: Colors.white, fontSize: 12)),
+//                 child: Icon(
+//                   Icons.notifications_outlined,
+//                   size: 40,
+//                 ),
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   void _enrollCourseById(String uniqueId) async {
+//
+//     try {
+//       CourseModel? course;
+//
+//       if (await InternetConnectionChecker.instance.hasConnection) {
+//         // Fetch from Firebase
+//         final dbRef = FirebaseDatabase.instance.ref("courses").child(uniqueId);
+//         final snapshot = await dbRef.get();
+//
+//         if (snapshot.exists) {
+//           final courseMap = Map<String, dynamic>.from(snapshot.value as Map);
+//           course = CourseModel.fromJson(courseMap);
+//         }
+//       }
+//
+//       // If not found online, try offline
+//       if (course == null) {
+//         course = await CourseDAO().getCourseByUniqueId(uniqueId);
+//       }
+//
+//       if (course != null) {
+//         // Navigate to EnrollCoursePage
+//         if (mounted) {
+//           // Navigator.push(
+//           //   context,
+//           //   MaterialPageRoute(
+//           //     builder: (context) => EnrollCoursePage(course: course),
+//           //   ),
+//           // );
+//         }
+//       } else {
+//         // showSnackBarMsg(context, "Course not found for this Tracking ID.");
+//       }
+//
+//     } catch (e) {
+//       print("Enrollment by ID failed: $e");
+//       // showSnackBarMsg(context, "Failed to enroll by ID.");
+//     } finally {
+//       // if (mounted) setState(() => isLoading = false);
+//     }
+//   }
+//
+// }
+
 
 // class _NewCoursesListView extends StatelessWidget {
 //   const _NewCoursesListView({
@@ -1109,4 +1575,219 @@ class _PopularCoursesListView extends StatelessWidget {
 //       ],
 //     );
 //   }
+// }
+
+
+
+
+
+// void showEnrollCourseDialog(BuildContext context, Function(String uniqueId) onEnroll) {
+//   final TextEditingController _idController = TextEditingController();
+//
+//   showDialog(
+//     context: context,
+//     builder: (context) {
+//       return Dialog(
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+//         insetPadding: const EdgeInsets.all(20),
+//         child: Padding(
+//           padding: const EdgeInsets.all(20),
+//           child: SingleChildScrollView(
+//             child: Column(
+//               mainAxisSize: MainAxisSize.min,
+//               children: [
+//                 const Icon(Icons.school_rounded, size: 50, color: Colors.deepPurple),
+//                 const SizedBox(height: 15),
+//                 const Text(
+//                   "Enroll in a Course",
+//                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+//                 ),
+//                 const SizedBox(height: 10),
+//                 const Text(
+//                   "Enter the course Tracking Number / Unique ID below or scan a QR code to enroll.",
+//                   textAlign: TextAlign.center,
+//                   style: TextStyle(fontSize: 14, color: Colors.grey),
+//                 ),
+//                 const SizedBox(height: 20),
+//
+//                 // Input field
+//                 TextField(
+//                   controller: _idController,
+//                   decoration: InputDecoration(
+//                     labelText: "Tracking Number / Unique ID",
+//                     prefixIcon: const Icon(Icons.numbers_rounded),
+//                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+//                   ),
+//                 ),
+//                 const SizedBox(height: 20),
+//
+//                 // Buttons
+//                 Row(
+//                   children: [
+//                     Expanded(
+//                       child: ElevatedButton.icon(
+//                         onPressed: () {
+//                           Navigator.pop(context);
+//                           Navigator.push(context, MaterialPageRoute(builder: (context) => ScanQrPage()));
+//                         },
+//                         icon: const Icon(Icons.qr_code_scanner_rounded),
+//                         label: const Text("Scan QR"),
+//                         style: ElevatedButton.styleFrom(
+//                           padding: const EdgeInsets.symmetric(vertical: 14),
+//                           backgroundColor: Colors.deepPurple.shade50,
+//                           foregroundColor: Colors.deepPurple,
+//                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//                         ),
+//                       ),
+//                     ),
+//                     const SizedBox(width: 10),
+//                     Expanded(
+//                       child: ElevatedButton.icon(
+//                         onPressed: () {
+//                           if (_idController.text.isNotEmpty) {
+//                             // Navigator.pop(context);
+//                             onEnroll(_idController.text.trim());
+//                           } else {
+//                             ScaffoldMessenger.of(context).showSnackBar(
+//                               const SnackBar(content: Text("Please enter a Tracking Number.")),
+//                             );
+//                           }
+//                         },
+//                         icon: const Icon(Icons.check_circle_rounded),
+//                         label: const Text("Enroll"),
+//                         style: ElevatedButton.styleFrom(
+//                           padding: const EdgeInsets.symmetric(vertical: 14),
+//                           backgroundColor: Colors.deepPurple,
+//                           foregroundColor: Colors.white,
+//                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ),
+//       );
+//     },
+//   );
+// }
+
+
+// void showEnrollCourseDialog(BuildContext context, Function(String uniqueId) onEnroll) {
+//   final TextEditingController _idController = TextEditingController();
+//
+//   showDialog(
+//     context: context,
+//     builder: (context) {
+//       return StatefulBuilder(
+//         builder: (context, setState) {
+//           bool isProcessing = false;
+//
+//           return Dialog(
+//             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+//             insetPadding: const EdgeInsets.all(20),
+//             child: Padding(
+//               padding: const EdgeInsets.all(20),
+//               child: SingleChildScrollView(
+//                 child: Column(
+//                   mainAxisSize: MainAxisSize.min,
+//                   children: [
+//                     const Icon(Icons.school_rounded, size: 50, color: Colors.deepPurple),
+//                     const SizedBox(height: 15),
+//                     const Text(
+//                       "Enroll in a Course",
+//                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+//                     ),
+//                     const SizedBox(height: 10),
+//                     const Text(
+//                       "Enter the course Tracking Number / Unique ID below or scan a QR code to enroll.",
+//                       textAlign: TextAlign.center,
+//                       style: TextStyle(fontSize: 14, color: Colors.grey),
+//                     ),
+//                     const SizedBox(height: 20),
+//
+//                     // Input field
+//                     TextField(
+//                       controller: _idController,
+//                       enabled: !isProcessing,
+//                       decoration: InputDecoration(
+//                         labelText: "Tracking Number / Unique ID",
+//                         prefixIcon: const Icon(Icons.numbers_rounded),
+//                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+//                       ),
+//                     ),
+//                     const SizedBox(height: 20),
+//
+//                     if (!isProcessing)
+//                       Row(
+//                         children: [
+//                           Expanded(
+//                             child: ElevatedButton.icon(
+//                               onPressed: () {
+//                                 Navigator.pop(context);
+//                                 Navigator.push(context, MaterialPageRoute(builder: (context) => const ScanQrPage()));
+//                               },
+//                               icon: const Icon(Icons.qr_code_scanner_rounded),
+//                               label: const Text("Scan QR"),
+//                               style: ElevatedButton.styleFrom(
+//                                 padding: const EdgeInsets.symmetric(vertical: 14),
+//                                 backgroundColor: Colors.deepPurple.shade50,
+//                                 foregroundColor: Colors.deepPurple,
+//                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//                               ),
+//                             ),
+//                           ),
+//                           const SizedBox(width: 10),
+//                           Expanded(
+//                             child: ElevatedButton.icon(
+//                               onPressed: () {
+//                                 if (_idController.text.isNotEmpty) {
+//                                   setState(() {
+//                                     isProcessing = true;
+//                                   });
+//
+//                                   Future.delayed(const Duration(seconds: 3), () {
+//                                     Navigator.pop(context);
+//                                     onEnroll(_idController.text.trim());
+//                                   });
+//                                 } else {
+//                                   ScaffoldMessenger.of(context).showSnackBar(
+//                                     const SnackBar(content: Text("Please enter a Tracking Number.")),
+//                                   );
+//                                 }
+//                               },
+//                               icon: const Icon(Icons.check_circle_rounded),
+//                               label: const Text("Enroll"),
+//                               style: ElevatedButton.styleFrom(
+//                                 padding: const EdgeInsets.symmetric(vertical: 14),
+//                                 backgroundColor: Colors.deepPurple,
+//                                 foregroundColor: Colors.white,
+//                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//                               ),
+//                             ),
+//                           ),
+//                         ],
+//                       )
+//                     else
+//                       Column(
+//                         children: const [
+//                           CircularProgressIndicator(color: Colors.deepPurple),
+//                           SizedBox(height: 20),
+//                           Text(
+//                             "Processing enrollment...",
+//                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.deepPurple),
+//                           ),
+//                         ],
+//                       ),
+//                   ],
+//                 ),
+//               ),
+//             ),
+//           );
+//         },
+//       );
+//     },
+//   );
 // }
