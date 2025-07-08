@@ -410,6 +410,102 @@ class SchoolViewState extends State<SchoolView> {
 
 class _ProfileHeader extends StatelessWidget {
   final User user;
+
+  void showEnrollCourseDialog(BuildContext context, Function(String uniqueId) onEnroll) {
+    final TextEditingController _idController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          insetPadding: const EdgeInsets.all(20),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.school_rounded, size: 50, color: Colors.deepPurple),
+                  const SizedBox(height: 15),
+                  const Text(
+                    "Enroll in a Course",
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "Enter the course Tracking Number / Unique ID below or scan a QR code to enroll.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Input field
+                  TextField(
+                    controller: _idController,
+                    decoration: InputDecoration(
+                      labelText: "Tracking Number / Unique ID",
+                      prefixIcon: const Icon(Icons.numbers_rounded),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            // trigger your scanner screen here (e.g., push QR scanner page)
+                            // Navigator.push(context, MaterialPageRoute(builder: (context) => YourScannerScreen()));
+                          },
+                          icon: const Icon(Icons.qr_code_scanner_rounded),
+                          label: const Text("Scan QR"),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            backgroundColor: Colors.deepPurple.shade50,
+                            foregroundColor: Colors.deepPurple,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            if (_idController.text.isNotEmpty) {
+                              Navigator.pop(context);
+                              onEnroll(_idController.text.trim());
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Please enter a Tracking Number.")),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.check_circle_rounded),
+                          label: const Text("Enroll"),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            backgroundColor: Colors.deepPurple,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
   const _ProfileHeader({required this.user});
   @override
   Widget build(BuildContext context) {
@@ -449,7 +545,9 @@ class _ProfileHeader extends StatelessWidget {
           )),
           InkWell(
             onTap: () {
-
+              showEnrollCourseDialog(context, (uniqueId) {
+                _enrollCourseById(uniqueId);
+              });
             },
             child: Padding(
               padding: EdgeInsets.all(10.0),
@@ -482,6 +580,10 @@ class _ProfileHeader extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _enrollCourseById(String uniqueId) {
+
   }
 }
 
