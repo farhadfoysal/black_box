@@ -35,7 +35,7 @@ class AppDatabase {
         created_at TEXT,
         duration_minutes INTEGER,
         status INTEGER,
-        type TEXT,
+        exam_type TEXT,
         subject_id TEXT,
         course_id TEXT,
         user_id TEXT,

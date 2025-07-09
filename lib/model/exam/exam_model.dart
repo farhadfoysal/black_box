@@ -4,7 +4,7 @@ import 'package:black_box/model/exam/question_model.dart';
 class ExamModel {
   int? id; // SQLite local id
   final String uniqueId; // Unique Exam Instance ID
-  final String examId;   // Firebase Template Exam ID
+  String examId;   // Firebase Template Exam ID
   final String title;
   final String description;
   final String createdAt;
@@ -52,9 +52,6 @@ class ExamModel {
     'user_id': userId,
     'media_url': mediaUrl,
     'media_type': mediaType,
-    'questions': questions != null
-        ? questions!.map((q) => q.toJson()).toList()
-        : null,
   };
 
   /// From SQLite Map
@@ -73,11 +70,6 @@ class ExamModel {
     userId: map['user_id'],
     mediaUrl: map['media_url'],
     mediaType: map['media_type'],
-    questions: map['questions'] != null
-        ? (map['questions'] as List)
-        .map((q) => QuestionModel.fromJson(Map<String, dynamic>.from(q)))
-        .toList()
-        : null,
   );
 
   /// JSON for Firebase / Web API

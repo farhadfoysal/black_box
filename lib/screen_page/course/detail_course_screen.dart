@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:black_box/db/exam/exam_dao.dart';
 import 'package:black_box/model/exam/exam_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
@@ -13,12 +14,14 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../components/course/review_card.dart';
 import '../../components/course/tools_card.dart';
+import '../../db/firebase/exam_firebase_service.dart';
 import '../../model/course/course_model.dart';
 import '../../model/course/teacher.dart';
 import '../../model/school/school.dart';
 import '../../model/user/user.dart';
 import '../../preference/logout.dart';
 import '../../style/color/app_color.dart';
+import '../../utility/unique.dart';
 
 class DetailCourseScreen extends StatefulWidget {
   final CourseModel course;
@@ -28,8 +31,8 @@ class DetailCourseScreen extends StatefulWidget {
   State<DetailCourseScreen> createState() => _DetailCourseScreenState();
 }
 
-class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTickerProviderStateMixin {
-
+class _DetailCourseScreenState extends State<DetailCourseScreen>
+    with SingleTickerProviderStateMixin {
   String _userName = 'Farhad Foysal';
   String? userName;
   String? userPhone;
@@ -84,7 +87,7 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
 
     Map<String, dynamic>? userMap = await logout.getUser(key: 'user_logged_in');
     Map<String, dynamic>? schoolMap =
-    await logout.getSchool(key: 'school_data');
+        await logout.getSchool(key: 'school_data');
 
     if (userMap != null) {
       User user_data = User.fromMap(userMap);
@@ -156,12 +159,15 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-
   Future<void> _loadQuizzesForCourse() async {
     setState(() => _isQuizLoading = true);
+    setState(() {
+      isLoading = true;
+    });
 
     try {
-      final hasInternet = await InternetConnectionChecker.instance.hasConnection;
+      final hasInternet =
+          await InternetConnectionChecker.instance.hasConnection;
 
       if (hasInternet) {
         final querySnapshot = await FirebaseFirestore.instance
@@ -178,14 +184,17 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
             ..clear()
             ..addAll(fetchedQuizzes);
           _quizzesLoadedOnce = true;
+          isLoading = false;
         });
       } else {
-        final localQuizzes = await ExamDAO().getExamsByCourseId(widget.course.uniqueId!);
+        final localQuizzes =
+            await ExamDAO().getExamsByCourseId(widget.course.uniqueId!);
         setState(() {
           _quizzes
             ..clear()
             ..addAll(localQuizzes);
           _quizzesLoadedOnce = true;
+          isLoading = false;
         });
       }
     } catch (e) {
@@ -194,11 +203,248 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
       );
     } finally {
       setState(() => _isQuizLoading = false);
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
   Future<void> _enterQuizRoom(ExamModel quiz) async {
     // TODO: Add your quiz entry logic here
+  }
+
+  void _addExamOrQuiz(BuildContext context) {
+    final TextEditingController titleController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+    final TextEditingController durationController = TextEditingController();
+    final TextEditingController subjectIdController = TextEditingController();
+    final TextEditingController mediaUrlController = TextEditingController();
+    final TextEditingController mediaTypeController = TextEditingController();
+
+    String selectedExamType = ExamTypes.quiz;
+    bool isSaving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 16,
+              right: 16,
+              top: 20,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Title bar
+                  Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        "Create New Exam / Quiz",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  _buildTextField(titleController, 'Title', Icons.title),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(
+                      descriptionController, 'Description', Icons.description),
+                  const SizedBox(height: 12),
+
+                  _buildNumberField(
+                      durationController, 'Duration (minutes)', Icons.timer),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(
+                      subjectIdController, 'Subject ID', Icons.book),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(
+                      mediaUrlController, 'Media URL (optional)', Icons.image),
+                  const SizedBox(height: 12),
+
+                  _buildTextField(mediaTypeController,
+                      'Media Type (image, video, etc)', Icons.perm_media),
+                  const SizedBox(height: 12),
+
+                  // Exam Type Dropdown
+                  DropdownButtonFormField<String>(
+                    value: selectedExamType,
+                    decoration: InputDecoration(
+                      labelText: 'Exam Type',
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    items: ExamTypes.values
+                        .map((e) => DropdownMenuItem(
+                            value: e, child: Text(e.toUpperCase())))
+                        .toList(),
+                    onChanged: (val) => setModalState(
+                        () => selectedExamType = val ?? ExamTypes.quiz),
+                  ),
+                  const SizedBox(height: 20),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: isSaving
+                          ? null
+                          : () async {
+                        if (titleController.text.isEmpty ||
+                            descriptionController.text.isEmpty ||
+                            durationController.text.isEmpty ||
+                            subjectIdController.text.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("All fields except media are required")),
+                          );
+                          return;
+                        }
+
+                        setModalState(() => isSaving = true);
+
+                        try {
+                          String uniqueId = Unique().generateUniqueID();
+                          String examId = uniqueId;
+
+                          final exam = ExamModel(
+                            uniqueId: uniqueId,
+                            examId: examId,
+                            title: titleController.text.trim(),
+                            description: descriptionController.text.trim(),
+                            createdAt: DateTime.now().toIso8601String(),
+                            durationMinutes: int.tryParse(durationController.text.trim()) ?? 1,
+                            status: 1,
+                            examType: selectedExamType,
+                            subjectId: subjectIdController.text.trim(),
+                            courseId: widget.course.uniqueId,
+                            userId: _user?.userid,
+                            mediaUrl: mediaUrlController.text.trim().isEmpty
+                                ? null
+                                : mediaUrlController.text.trim(),
+                            mediaType: mediaTypeController.text.trim().isEmpty
+                                ? null
+                                : mediaTypeController.text.trim(),
+                            questions: [],
+                          );
+
+                          await _createExam(exam);
+
+                          setModalState(() => isSaving = false);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Exam/Quiz created successfully!")),
+                          );
+
+                          Navigator.pop(context);
+                        } catch (e) {
+                          setModalState(() => isSaving = false);
+                          print("Error creating exam: $e");
+                        }
+                      },
+                      // onPressed: isSaving
+                      //     ? null
+                      //     : () async {
+                      //         if (titleController.text.isEmpty ||
+                      //             descriptionController.text.isEmpty ||
+                      //             durationController.text.isEmpty ||
+                      //             subjectIdController.text.isEmpty) {
+                      //           ScaffoldMessenger.of(context).showSnackBar(
+                      //             const SnackBar(
+                      //                 content: Text(
+                      //                     "All fields except media are required")),
+                      //           );
+                      //           return;
+                      //         }
+                      //
+                      //         setModalState(() => isSaving = true);
+                      //
+                      //         String uniqueId = Unique().generateUniqueID();
+                      //         String examId = uniqueId;
+                      //
+                      //         final exam = ExamModel(
+                      //           uniqueId: uniqueId,
+                      //           examId: examId,
+                      //           title: titleController.text.trim(),
+                      //           description: descriptionController.text.trim(),
+                      //           createdAt: DateTime.now().toIso8601String(),
+                      //           durationMinutes: int.tryParse(
+                      //                   durationController.text.trim()) ??
+                      //               1,
+                      //           status: 1,
+                      //           examType: selectedExamType,
+                      //           subjectId: subjectIdController.text.trim(),
+                      //           courseId: widget.course.uniqueId,
+                      //           userId: _user?.userid,
+                      //           mediaUrl: mediaUrlController.text.trim().isEmpty
+                      //               ? null
+                      //               : mediaUrlController.text.trim(),
+                      //           mediaType:
+                      //               mediaTypeController.text.trim().isEmpty
+                      //                   ? null
+                      //                   : mediaTypeController.text.trim(),
+                      //           questions: [],
+                      //         );
+                      //
+                      //         // await ExamDAO().insertExam(exam);
+                      //
+                      //         await _createExam(exam);
+                      //
+                      //         setModalState(() => isSaving = false);
+                      //
+                      //         ScaffoldMessenger.of(context).showSnackBar(
+                      //           const SnackBar(
+                      //               content: Text(
+                      //                   "Exam/Quiz created successfully!")),
+                      //         );
+                      //
+                      //         Navigator.pop(context);
+                      //       },
+                      icon: isSaving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Icon(Icons.save),
+                      label:
+                          Text(isSaving ? 'Saving...' : 'Create Exam / Quiz'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -219,7 +465,8 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
           elevation: 0,
           backgroundColor: Colors.transparent,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textLight),
+            icon: const Icon(Icons.arrow_back_ios_new,
+                color: AppColors.textLight),
             onPressed: () => Navigator.of(context).pop(),
           ),
           centerTitle: true,
@@ -233,7 +480,8 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.dashboard_customize, color: AppColors.textLight),
+              icon: const Icon(Icons.dashboard_customize,
+                  color: AppColors.textLight),
               tooltip: 'Course Manager',
               onPressed: () {
                 // TODO: Add navigation or action
@@ -270,8 +518,10 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
                     const SizedBox(height: 16),
                     TextButton.icon(
                       onPressed: () {
-                        final firstVideoUrl = course.sections?.first.materials?.first.url ?? '';
-                        final videoId = YoutubePlayer.convertUrlToId(firstVideoUrl);
+                        final firstVideoUrl =
+                            course.sections?.first.materials?.first.url ?? '';
+                        final videoId =
+                            YoutubePlayer.convertUrlToId(firstVideoUrl);
                         if (videoId != null) {
                           showDialog(
                             context: context,
@@ -283,7 +533,8 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
                                   child: YoutubePlayer(
                                     controller: YoutubePlayerController(
                                       initialVideoId: videoId,
-                                      flags: const YoutubePlayerFlags(autoPlay: true),
+                                      flags: const YoutubePlayerFlags(
+                                          autoPlay: true),
                                     ),
                                     bottomActions: const [
                                       CurrentPosition(),
@@ -297,7 +548,8 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
                           );
                         }
                       },
-                      icon: const Icon(Icons.play_circle_outline_outlined, color: AppColors.textLight),
+                      icon: const Icon(Icons.play_circle_outline_outlined,
+                          color: AppColors.textLight),
                       label: const Text(
                         'Preview Course',
                         style: TextStyle(
@@ -308,7 +560,8 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
                       ),
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
                       ),
                     ),
                   ],
@@ -340,7 +593,8 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
             padding: const EdgeInsets.all(24),
             child: Text(
               course.description ?? 'No description available.',
-              style: const TextStyle(fontSize: 16, height: 1.5, color: AppColors.textPrimary),
+              style: const TextStyle(
+                  fontSize: 16, height: 1.5, color: AppColors.textPrimary),
             ),
           ),
 
@@ -421,7 +675,8 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
                     return Center(
                       child: Text(
                         'No quizzes available for this course.',
-                        style: TextStyle(fontSize: 16, color: AppColors.textMuted),
+                        style:
+                            TextStyle(fontSize: 16, color: AppColors.textMuted),
                       ),
                     );
                   }
@@ -434,7 +689,8 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         elevation: 5,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
                         color: Colors.deepPurple.shade50,
                         child: ListTile(
                           contentPadding: const EdgeInsets.all(16),
@@ -458,22 +714,26 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
                                 quiz.description,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(color: Colors.deepPurple.shade700),
+                                style: TextStyle(
+                                    color: Colors.deepPurple.shade700),
                               ),
                               const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  Icon(Icons.timer, size: 16, color: Colors.deepPurple),
+                                  Icon(Icons.timer,
+                                      size: 16, color: Colors.deepPurple),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${quiz.durationMinutes} mins',
-                                    style: TextStyle(color: Colors.deepPurple.shade800),
+                                    style: TextStyle(
+                                        color: Colors.deepPurple.shade800),
                                   ),
                                 ],
                               ),
                             ],
                           ),
-                          trailing: Icon(Icons.arrow_forward_ios_rounded, color: Colors.deepPurple),
+                          trailing: Icon(Icons.arrow_forward_ios_rounded,
+                              color: Colors.deepPurple),
                           onTap: () => _enterQuizRoom(quiz),
                         ),
                       );
@@ -481,23 +741,24 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
                   );
                 },
               ),
-
               if (widget.course.userId == _user?.userid)
                 Positioned(
                   bottom: 16,
                   right: 16,
                   child: ElevatedButton(
-                    // onPressed: () => _addCourse(context),
+                    onPressed: () => _addExamOrQuiz(context),
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.white, // Text color
                       backgroundColor: Colors.blue, // Button color
-                      padding: EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 8, horizontal: 10),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25), // Rounded edges
+                        borderRadius:
+                            BorderRadius.circular(25), // Rounded edges
                       ),
                       elevation: 5, // Shadow effect
                     ),
-                    onPressed: () {  },
+                    // onPressed: () {  },
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -505,25 +766,24 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
                         SizedBox(width: 10),
                         isLoading
                             ? SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
                             : Text(
-                          "Add new Exam/Quiz",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
+                                "Add new Exam/Quiz",
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
                       ],
                     ),
                   ),
                 ),
-
             ],
           ),
-
 
           // Tools
           ListView.builder(
@@ -563,8 +823,200 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
       ),
     );
   }
+
+  Future<void> _createExam(ExamModel exam) async {
+    if (!mounted) return;
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // Save exam online (Firebase) and get the generated examId if necessary
+      final firebaseExam = await ExamFirebaseService().addOrUpdateExam(exam);
+
+      // Save exam locally (SQLite)
+      await ExamDAO().insertExam(firebaseExam);
+
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Exam Created Successfully!')),
+      );
+
+      Navigator.pop(context);
+
+    } catch (e, stacktrace) {
+      print("Error creating exam: $e\n$stacktrace");
+
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to create exam. Please try again.')),
+      );
+    }
+  }
+
 }
 
+Widget _buildTextField(
+    TextEditingController controller, String labelText, IconData icon) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: labelText,
+        labelStyle: TextStyle(color: Colors.pinkAccent),
+        prefixIcon: Icon(icon, color: Colors.pinkAccent),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.pinkAccent),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.pinkAccent, width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      ),
+    ),
+  );
+}
+
+Widget _buildNumberField(
+    TextEditingController controller, String labelText, IconData icon) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: labelText,
+        labelStyle: TextStyle(color: Colors.pinkAccent),
+        prefixIcon: Icon(icon, color: Colors.pinkAccent),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.pinkAccent),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.pinkAccent, width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      ),
+    ),
+  );
+}
+
+Widget _buildComboTextDropdownField({
+  required TextEditingController controller,
+  required String labelText,
+  required IconData icon,
+  required List<String> items,
+}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          labelText,
+          style: const TextStyle(
+            color: Colors.pinkAccent,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            // Text input field
+            Expanded(
+              flex: 2,
+              child: TextField(
+                controller: controller,
+                decoration: InputDecoration(
+                  prefixIcon: Icon(icon, color: Colors.pinkAccent),
+                  hintText: "Enter or pick",
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                    borderSide: const BorderSide(color: Colors.pinkAccent),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                    borderSide:
+                        const BorderSide(color: Colors.pinkAccent, width: 2),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Searchable Dropdown Button
+            SizedBox(
+              width: 50,
+              height: 50,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: Colors.pinkAccent,
+                ),
+                child: DropdownSearch<String>(
+                  popupProps: PopupProps.dialog(
+                    showSearchBox: true,
+                    searchFieldProps: TextFieldProps(
+                      decoration: InputDecoration(
+                        hintText: 'Search...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 10),
+                      ),
+                    ),
+                    itemBuilder: (context, item, isSelected) => ListTile(
+                      title: Text(item),
+                    ),
+                  ),
+                  dropdownDecoratorProps: const DropDownDecoratorProps(
+                    dropdownSearchDecoration: InputDecoration(
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  items: items,
+                  onChanged: (value) {
+                    if (value != null) {
+                      controller.text = value;
+                    }
+                  },
+                  dropdownBuilder: (context, selectedItem) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Icon(Icons.arrow_drop_down, color: Colors.white),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
 
 // import 'package:black_box/db/exam/exam_dao.dart';
 // import 'package:black_box/model/exam/exam_model.dart';
@@ -961,8 +1413,6 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
 //     );
 //   }
 // }
-
-
 
 // import 'package:black_box/db/exam/exam_dao.dart';
 // import 'package:black_box/model/exam/exam_model.dart';
@@ -1569,8 +2019,6 @@ class _DetailCourseScreenState extends State<DetailCourseScreen> with SingleTick
 //     );
 //   }
 // }
-
-
 
 // flexibleSpace: (course.courseImage != null && course.courseImage!.isNotEmpty)
 // ? Container(
