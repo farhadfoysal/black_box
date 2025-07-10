@@ -32,7 +32,7 @@ class QuestionDAO {
     final db = await AppDatabase().database;
     final result = await db.query(
       'questions',
-      where: 'exam_id = ?',
+      where: 'quiz_id = ?',
       whereArgs: [examId],
     );
     return result.map((q) => QuestionModel.fromMap(q)).toList();
@@ -79,7 +79,7 @@ class QuestionDAO {
     final db = await AppDatabase().database;
     return await db.delete(
       'questions',
-      where: 'unique_id = ?',
+      where: 'q_id = ?',
       whereArgs: [id],
     );
   }
@@ -99,7 +99,7 @@ class QuestionDAO {
     final db = await AppDatabase().database;
     return await db.delete(
       'questions',
-      where: 'exam_id = ?',
+      where: 'quiz_id = ?',
       whereArgs: [examId],
     );
   }

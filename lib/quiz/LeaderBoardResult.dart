@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 
 import '../db/firebase/QuizFirestoreHelper.dart';
@@ -113,6 +114,33 @@ class _QuizzesResultPageState extends State<Leaderboardresult> {
 
   // Build a custom card for each student
   Widget _buildStudentCard(QResult result) {
+    // Format timestamp
+    String formattedDateTime(String timestamp) {
+      try {
+        final dateTime = DateTime.parse(timestamp);
+        final daySuffix = (int day) {
+          if (day >= 11 && day <= 13) return 'th';
+          switch (day % 10) {
+            case 1:
+              return 'st';
+            case 2:
+              return 'nd';
+            case 3:
+              return 'rd';
+            default:
+              return 'th';
+          }
+        }(dateTime.day);
+
+        final formattedDate = "${dateTime.day}$daySuffix ${DateFormat('MMMM, yy').format(dateTime)}";
+        final formattedTime = DateFormat('h:mm a').format(dateTime);
+
+        return "$formattedDate, $formattedTime";
+      } catch (e) {
+        return timestamp; // fallback if parsing fails
+      }
+    }
+
     return Card(
       margin: EdgeInsets.symmetric(vertical: 10),
       shape: RoundedRectangleBorder(
@@ -180,7 +208,7 @@ class _QuizzesResultPageState extends State<Leaderboardresult> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Timestamp: ${result.timestamp}',
+                  'Time: ${formattedDateTime(result.timestamp.toString())}',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],

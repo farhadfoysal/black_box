@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:black_box/db/exam/exam_dao.dart';
 import 'package:black_box/model/exam/exam_model.dart';
+import 'package:black_box/screen_page/exam/exam_panel.dart';
 import 'package:black_box/screen_page/exam/exam_question_management_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -24,6 +25,7 @@ import '../../preference/logout.dart';
 import '../../quiz/QuestionManagementDetailPage.dart';
 import '../../style/color/app_color.dart';
 import '../../utility/unique.dart';
+import '../exam/exam_results_page.dart';
 
 class DetailCourseScreen extends StatefulWidget {
   final CourseModel course;
@@ -220,7 +222,12 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
         ),
       );
     }else{
-
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ExamPanel(user: _user!, exam: quiz),
+        ),
+      );
     }
   }
 
@@ -362,7 +369,6 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                                       mediaTypeController.text.trim().isEmpty
                                           ? null
                                           : mediaTypeController.text.trim(),
-                                  questions: [],
                                 );
 
                                 await _createExam(exam);
@@ -755,10 +761,20 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                                     onSelected: (value) async {
                                       if (value == 'favourite') {
                                         // widget.onMark?.call();
-                                      } else if (value == 'copy') {
-                                        // copyCourseCode(widget.courseModel);
-                                      } else if (value == 'share') {
-                                        // shareCourse(widget.courseModel);
+                                      } else if (value == 'room') {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ExamPanel(user: _user!, exam: quiz),
+                                          ),
+                                        );
+                                      } else if (value == 'result') {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ExamResultsPage(quizId: quiz.uniqueId),
+                                          ),
+                                        );
                                       } else if (value == 'mentor') {
                                         // _openWhatsApp(student.phone??"");
                                       } else if (value == 'enroll') {
@@ -810,10 +826,10 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                                     },
                                     itemBuilder: (context) => [
                                       const PopupMenuItem(
-                                          value: 'copy',
-                                          child: Text('Copy Code')),
+                                          value: 'room',
+                                          child: Text('Enter Quiz Room')),
                                       const PopupMenuItem(
-                                          value: 'share', child: Text('Share')),
+                                          value: 'result', child: Text('Result')),
                                       const PopupMenuItem(
                                           value: 'enroll',
                                           child: Text('Enroll')),

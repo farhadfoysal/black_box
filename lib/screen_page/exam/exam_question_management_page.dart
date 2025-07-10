@@ -40,9 +40,13 @@ class _ExamQuestionManagementPageState
       if (isOnline) {
         _questions = await ExamQuestionFirebaseService()
             .getQuestionsByExamId(widget.exam.uniqueId);
+        widget.exam.questions?.clear();
+        widget.exam.questions?.addAll(_questions);
       } else {
         _questions =
             await QuestionDAO().getQuestionsByExamId(widget.exam.uniqueId);
+        widget.exam.questions?.clear();
+        widget.exam.questions?.addAll(_questions);
       }
       setState(() {});
     } catch (e) {
@@ -204,13 +208,15 @@ class _ExamQuestionManagementPageState
                             }
 
                             String uniqueId = Unique().generateUniqueID();
+                            final questionAnswers = optionControllers.map((controller) => controller.text).toList();
+                            final correctAnswer = questionAnswers.isNotEmpty ? questionAnswers[0] : '';
 
                             final newQuestion = QuestionModel(
                               qId: question?.qId ?? uniqueId,
                               quizId: widget.exam.uniqueId,
                               questionTitle: questionTitleController.text,
                               questionAnswers: optionControllers.map((controller) => controller.text).toList(),
-                              correctAnswer: '', // Optionally handle correct answer selection
+                              correctAnswer: correctAnswer,
                               explanation: explanationController.text,
                               source: sourceController.text,
                               type: selectedType,
@@ -220,8 +226,12 @@ class _ExamQuestionManagementPageState
                             try {
                               if (isOnline) {
                                 await ExamQuestionFirebaseService().addOrUpdateExamQuestion(newQuestion);
+                                _questions.add(newQuestion);
+                                widget.exam.questions?.add(newQuestion);
                               } else {
                                 await QuestionDAO().insertQuestion(newQuestion);
+                                _questions.add(newQuestion);
+                                widget.exam.questions?.add(newQuestion);
                               }
                               Navigator.of(context).pop();
                               _loadQuestions();

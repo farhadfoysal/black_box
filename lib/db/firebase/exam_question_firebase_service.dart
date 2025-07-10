@@ -9,13 +9,13 @@ class ExamQuestionFirebaseService {
     try {
       // If no qId set, create a new document
       if (question.qId == null || question.qId!.isEmpty) {
-        final docRef = await _firestore.collection('exam_questions').add(question.toJson());
+        final docRef = await _firestore.collection('questions').add(question.toJson());
 
         // Update question object with generated Firestore document ID
         question.qId = docRef.id;
       } else {
         // If qId exists, update the document
-        await _firestore.collection('exam_questions').doc(question.qId).set(question.toJson());
+        await _firestore.collection('questions').doc(question.qId).set(question.toJson());
       }
 
       return question;
@@ -29,8 +29,8 @@ class ExamQuestionFirebaseService {
   Future<List<QuestionModel>> getQuestionsByExamId(String examId) async {
     try {
       final querySnapshot = await _firestore
-          .collection('exam_questions')
-          .where('exam_id', isEqualTo: examId)
+          .collection('questions')
+          .where('quiz_id', isEqualTo: examId)
           .get();
 
       return querySnapshot.docs
@@ -45,7 +45,7 @@ class ExamQuestionFirebaseService {
   /// Delete a question by its ID
   Future<void> deleteExamQuestion(String questionId) async {
     try {
-      await _firestore.collection('exam_questions').doc(questionId).delete();
+      await _firestore.collection('questions').doc(questionId).delete();
     } catch (e) {
       print("Error deleting exam question: $e");
     }
@@ -55,8 +55,8 @@ class ExamQuestionFirebaseService {
   Future<void> deleteQuestionsByExamId(String examId) async {
     try {
       final querySnapshot = await _firestore
-          .collection('exam_questions')
-          .where('exam_id', isEqualTo: examId)
+          .collection('questions')
+          .where('quiz_id', isEqualTo: examId)
           .get();
 
       for (var doc in querySnapshot.docs) {

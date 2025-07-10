@@ -9,6 +9,39 @@ class QuizResultDAO {
     return await db.insert('quiz_results', result.toMap());
   }
 
+  Future<bool> hasUserPerformedQuiz(String studentId, String phoneNumber, String quizId) async {
+    final db = await AppDatabase().database;
+
+    // Query to check if a record exists with matching studentId, phoneNumber, and quizId
+    final result = await db.query(
+      'quiz_results',
+      where: 'student_id = ? AND phone_number = ? AND quiz_id = ?',
+      whereArgs: [studentId, phoneNumber, quizId],
+    );
+
+    // If result is empty, user hasn't performed the quiz yet
+    return result.isNotEmpty;
+  }
+
+  Future<QuizResultModel?> getQuizResult(String studentId, String phoneNumber, String quizId) async {
+    final db = await AppDatabase().database;
+
+    // Query to get the quiz result based on studentId, phoneNumber, and quizId
+    final result = await db.query(
+      'quiz_results',
+      where: 'student_id = ? AND phone_number = ? AND quiz_id = ?',
+      whereArgs: [studentId, phoneNumber, quizId],
+    );
+
+    // If result is found, convert the first row to a QuizResult object
+    if (result.isNotEmpty) {
+      // Assuming your QuizResult class has a fromMap method to convert data to an object
+      return QuizResultModel.fromMap(result.first);
+    } else {
+      return null; // Return null if no result is found
+    }
+  }
+
   /// Fetch all results
   Future<List<QuizResultModel>> getAllResults() async {
     final db = await AppDatabase().database;

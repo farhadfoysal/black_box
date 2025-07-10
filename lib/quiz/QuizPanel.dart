@@ -14,7 +14,11 @@ class QuizPanel extends StatefulWidget {
   final String phoneNumber;
   final Quiz quiz;
 
-  const QuizPanel({super.key, required this.studentId, required this.phoneNumber, required this.quiz});
+  const QuizPanel(
+      {super.key,
+      required this.studentId,
+      required this.phoneNumber,
+      required this.quiz});
 
   @override
   State<QuizPanel> createState() => _QuizState();
@@ -22,12 +26,12 @@ class QuizPanel extends StatefulWidget {
 
 class _QuizState extends State<QuizPanel> {
   var activeScreen = "start-screen";
-  Map<int, String> selectedAnswer = {};  // Changed to non-nullable String
+  Map<int, String> selectedAnswer = {}; // Changed to non-nullable String
   bool hasFinished = false;
 
   void switchScreen() {
     setState(() {
-      selectedAnswer = {};  // Clear the selected answers when switching screens
+      selectedAnswer = {}; // Clear the selected answers when switching screens
       activeScreen = "question-screen";
     });
   }
@@ -39,13 +43,18 @@ class _QuizState extends State<QuizPanel> {
   }
 
   bool isQuizComplete() {
-    return selectedAnswer.length == questions.length; // Ensure quiz is complete when all answers are selected
+    return selectedAnswer.length ==
+        questions
+            .length; // Ensure quiz is complete when all answers are selected
   }
 
-  void onSelectedAnswer(String answer, String questionText, int currentQuestionIndex) {
+  void onSelectedAnswer(
+      String answer, String questionText, int currentQuestionIndex) {
     setState(() {
-      selectedAnswer[currentQuestionIndex] = answer;  // Track selected answer for each question
-      if (isQuizComplete()) {  // Check if quiz is complete
+      selectedAnswer[currentQuestionIndex] =
+          answer; // Track selected answer for each question
+      if (isQuizComplete()) {
+        // Check if quiz is complete
         finishedExam();
       }
     });
@@ -83,15 +92,22 @@ class _QuizState extends State<QuizPanel> {
   Widget build(BuildContext context) {
     // Choose the active screen widget based on the value of activeScreen
     final screenWidget = activeScreen == "start-screen"
-        ? QuizStart(switchScreen,widget.studentId,widget.phoneNumber,widget.quiz)
+        ? QuizStart(
+            switchScreen, widget.studentId, widget.phoneNumber, widget.quiz)
         : activeScreen == "question-screen"
-        ? QuizRoom(
-        selectedAnswers: selectedAnswer,
-        onSelectedAnswer: onSelectedAnswer,
-        switchResult: switchResult,studentId: widget.studentId,phoneNumber: widget.phoneNumber,quiz: widget.quiz)
-        : QuizResultScreen(
-        switchScreen: switchScreen,
-        selectedAnswer: selectedAnswer,studentId: widget.studentId,phoneNumber: widget.phoneNumber,quiz: widget.quiz);
+            ? QuizRoom(
+                selectedAnswers: selectedAnswer,
+                onSelectedAnswer: onSelectedAnswer,
+                switchResult: switchResult,
+                studentId: widget.studentId,
+                phoneNumber: widget.phoneNumber,
+                quiz: widget.quiz)
+            : QuizResultScreen(
+                switchScreen: switchScreen,
+                selectedAnswer: selectedAnswer,
+                studentId: widget.studentId,
+                phoneNumber: widget.phoneNumber,
+                quiz: widget.quiz);
 
     return Scaffold(
       body: Container(

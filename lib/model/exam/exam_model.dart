@@ -16,7 +16,7 @@ class ExamModel {
   final String? userId;
   final String? mediaUrl;
   final String? mediaType;
-  final List<QuestionModel>? questions;
+  List<QuestionModel>? questions;
 
   ExamModel({
     this.id,

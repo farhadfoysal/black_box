@@ -1,13 +1,13 @@
+import 'package:black_box/model/exam/quiz_result_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../model/quiz/QuizResult.dart';
 
 class QuizResultFirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   /// Add a new quiz result to Firestore
-  Future<void> addQuizResult(QuizResult quizResult) async {
+  Future<void> addQuizResult(QuizResultModel quizResult) async {
     try {
-      await _firestore.collection('quiz_results').add(quizResult.toMap());
+      await _firestore.collection('quiz_results').add(quizResult.toJson());
     } catch (e) {
       print('Error saving quiz result to Firestore: $e');
       rethrow;
@@ -20,9 +20,9 @@ class QuizResultFirebaseService {
     try {
       final querySnapshot = await _firestore
           .collection('quiz_results')
-          .where('studentId', isEqualTo: studentId)
-          .where('phoneNumber', isEqualTo: phoneNumber)
-          .where('quizId', isEqualTo: quizId)
+          .where('student_id', isEqualTo: studentId)
+          .where('phone_number', isEqualTo: phoneNumber)
+          .where('quiz_id', isEqualTo: quizId)
           .get();
 
       return querySnapshot.docs.isNotEmpty;
@@ -33,19 +33,19 @@ class QuizResultFirebaseService {
   }
 
   /// Get a specific quiz result by student ID, phone number, and quiz ID
-  Future<QuizResult?> getQuizResult(
+  Future<QuizResultModel?> getQuizResult(
       String studentId, String phoneNumber, String quizId) async {
     try {
       final querySnapshot = await _firestore
           .collection('quiz_results')
-          .where('studentId', isEqualTo: studentId)
-          .where('phoneNumber', isEqualTo: phoneNumber)
-          .where('quizId', isEqualTo: quizId)
+          .where('student_id', isEqualTo: studentId)
+          .where('phone_number', isEqualTo: phoneNumber)
+          .where('quiz_id', isEqualTo: quizId)
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
         final document = querySnapshot.docs.first;
-        return QuizResult.fromMap(document.data() as Map<String, dynamic>);
+        return QuizResultModel.fromJson(document.data() as Map<String, dynamic>);
       } else {
         return null;
       }
@@ -56,19 +56,36 @@ class QuizResultFirebaseService {
   }
 
   /// Get all quiz results for a specific quiz
-  Future<List<QuizResult>> getResultsByQuizId(String quizId) async {
+  Future<List<QuizResultModel>> getResultsByQuizId(String quizId) async {
     try {
       final querySnapshot = await _firestore
           .collection('quiz_results')
-          .where('quizId', isEqualTo: quizId)
+          .where('quiz_id', isEqualTo: quizId)
           .orderBy('timestamp', descending: true)
           .get();
 
       return querySnapshot.docs
-          .map((doc) => QuizResult.fromMap(doc.data() as Map<String, dynamic>))
+          .map((doc) => QuizResultModel.fromJson(doc.data() as Map<String, dynamic>))
           .toList();
     } catch (e) {
       print('Error fetching quiz results: $e');
+      return [];
+    }
+  }
+
+  /// Get all quiz results for a quiz (alternate method)
+  Future<List<QuizResultModel>> getOnlineResults(String quizId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('quiz_results')
+          .where('quiz_id', isEqualTo: quizId)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => QuizResultModel.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Error fetching online quiz results: $e');
       return [];
     }
   }
@@ -87,7 +104,7 @@ class QuizResultFirebaseService {
     try {
       final querySnapshot = await _firestore
           .collection('quiz_results')
-          .where('quizId', isEqualTo: quizId)
+          .where('quiz_id', isEqualTo: quizId)
           .get();
 
       for (var doc in querySnapshot.docs) {
