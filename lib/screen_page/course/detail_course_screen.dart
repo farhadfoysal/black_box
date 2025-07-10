@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:black_box/db/exam/exam_dao.dart';
 import 'package:black_box/model/exam/exam_model.dart';
+import 'package:black_box/screen_page/exam/exam_question_management_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -20,6 +21,7 @@ import '../../model/course/teacher.dart';
 import '../../model/school/school.dart';
 import '../../model/user/user.dart';
 import '../../preference/logout.dart';
+import '../../quiz/QuestionManagementDetailPage.dart';
 import '../../style/color/app_color.dart';
 import '../../utility/unique.dart';
 
@@ -210,7 +212,16 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
   }
 
   Future<void> _enterQuizRoom(ExamModel quiz) async {
-    // TODO: Add your quiz entry logic here
+    if (quiz.userId == _user?.userid){
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ExamQuestionManagementPage(exam: quiz),
+        ),
+      );
+    }else{
+
+    }
   }
 
   void _addExamOrQuiz(BuildContext context) {
@@ -310,57 +321,66 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                       onPressed: isSaving
                           ? null
                           : () async {
-                        if (titleController.text.isEmpty ||
-                            descriptionController.text.isEmpty ||
-                            durationController.text.isEmpty ||
-                            subjectIdController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("All fields except media are required")),
-                          );
-                          return;
-                        }
+                              if (titleController.text.isEmpty ||
+                                  descriptionController.text.isEmpty ||
+                                  durationController.text.isEmpty ||
+                                  subjectIdController.text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          "All fields except media are required")),
+                                );
+                                return;
+                              }
 
-                        setModalState(() => isSaving = true);
+                              setModalState(() => isSaving = true);
 
-                        try {
-                          String uniqueId = Unique().generateUniqueID();
-                          String examId = uniqueId;
+                              try {
+                                String uniqueId = Unique().generateUniqueID();
+                                String examId = uniqueId;
 
-                          final exam = ExamModel(
-                            uniqueId: uniqueId,
-                            examId: examId,
-                            title: titleController.text.trim(),
-                            description: descriptionController.text.trim(),
-                            createdAt: DateTime.now().toIso8601String(),
-                            durationMinutes: int.tryParse(durationController.text.trim()) ?? 1,
-                            status: 1,
-                            examType: selectedExamType,
-                            subjectId: subjectIdController.text.trim(),
-                            courseId: widget.course.uniqueId,
-                            userId: _user?.userid,
-                            mediaUrl: mediaUrlController.text.trim().isEmpty
-                                ? null
-                                : mediaUrlController.text.trim(),
-                            mediaType: mediaTypeController.text.trim().isEmpty
-                                ? null
-                                : mediaTypeController.text.trim(),
-                            questions: [],
-                          );
+                                final exam = ExamModel(
+                                  uniqueId: uniqueId,
+                                  examId: examId,
+                                  title: titleController.text.trim(),
+                                  description:
+                                      descriptionController.text.trim(),
+                                  createdAt: DateTime.now().toIso8601String(),
+                                  durationMinutes: int.tryParse(
+                                          durationController.text.trim()) ??
+                                      1,
+                                  status: 1,
+                                  examType: selectedExamType,
+                                  subjectId: subjectIdController.text.trim(),
+                                  courseId: widget.course.uniqueId,
+                                  userId: _user?.userid,
+                                  mediaUrl:
+                                      mediaUrlController.text.trim().isEmpty
+                                          ? null
+                                          : mediaUrlController.text.trim(),
+                                  mediaType:
+                                      mediaTypeController.text.trim().isEmpty
+                                          ? null
+                                          : mediaTypeController.text.trim(),
+                                  questions: [],
+                                );
 
-                          await _createExam(exam);
+                                await _createExam(exam);
 
-                          setModalState(() => isSaving = false);
+                                setModalState(() => isSaving = false);
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Exam/Quiz created successfully!")),
-                          );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          "Exam/Quiz created successfully!")),
+                                );
 
-                          Navigator.pop(context);
-                        } catch (e) {
-                          setModalState(() => isSaving = false);
-                          print("Error creating exam: $e");
-                        }
-                      },
+                                Navigator.pop(context);
+                              } catch (e) {
+                                setModalState(() => isSaving = false);
+                                print("Error creating exam: $e");
+                              }
+                            },
                       // onPressed: isSaving
                       //     ? null
                       //     : () async {
@@ -728,6 +748,89 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                                     style: TextStyle(
                                         color: Colors.deepPurple.shade800),
                                   ),
+                                  SizedBox(
+                                    width: 4,
+                                  ),
+                                  PopupMenuButton<String>(
+                                    onSelected: (value) async {
+                                      if (value == 'favourite') {
+                                        // widget.onMark?.call();
+                                      } else if (value == 'copy') {
+                                        // copyCourseCode(widget.courseModel);
+                                      } else if (value == 'share') {
+                                        // shareCourse(widget.courseModel);
+                                      } else if (value == 'mentor') {
+                                        // _openWhatsApp(student.phone??"");
+                                      } else if (value == 'enroll') {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            title: const Text('Confirm'),
+                                            content: Text(
+                                                'Are you sure you want to enroll "${quiz.title}"?'),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(
+                                                    context, false),
+                                                child: const Text('Cancel'),
+                                              ),
+                                              TextButton(
+                                                onPressed: () {
+                                                  // widget.onEnroll?.call();
+                                                  Navigator.pop(context, true);
+                                                },
+                                                child: const Text(
+                                                  'Continue to Enroll',
+                                                  style: TextStyle(
+                                                      color: Colors.red),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      } else if (value == 'schedule') {
+                                        // Navigator.push(
+                                        //   context,
+                                        //   MaterialPageRoute(
+                                        //     builder: (context) =>
+                                        //         TutorStudentProfile(
+                                        //             student: student),
+                                        //   ),
+                                        // );
+                                      } else if (value == 'go') {
+                                        // Navigator.push(
+                                        //   context,
+                                        //   MaterialPageRoute(
+                                        //     builder: (context) =>
+                                        //         TutorStudentMonthly(
+                                        //             student: student),
+                                        //   ),
+                                        // );
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                          value: 'copy',
+                                          child: Text('Copy Code')),
+                                      const PopupMenuItem(
+                                          value: 'share', child: Text('Share')),
+                                      const PopupMenuItem(
+                                          value: 'enroll',
+                                          child: Text('Enroll')),
+                                      const PopupMenuItem(
+                                          value: 'schedule',
+                                          child: Text('Schedule')),
+                                      const PopupMenuItem(
+                                          value: 'go',
+                                          child: Text('Attendance')),
+                                      const PopupMenuItem(
+                                          value: 'mentor',
+                                          child: Text('Mentor')),
+                                      const PopupMenuItem(
+                                          value: 'favourite',
+                                          child: Text('Favourite')),
+                                    ],
+                                  ),
                                 ],
                               ),
                             ],
@@ -847,7 +950,6 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
       );
 
       Navigator.pop(context);
-
     } catch (e, stacktrace) {
       print("Error creating exam: $e\n$stacktrace");
 
@@ -857,11 +959,11 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to create exam. Please try again.')),
+        const SnackBar(
+            content: Text('Failed to create exam. Please try again.')),
       );
     }
   }
-
 }
 
 Widget _buildTextField(

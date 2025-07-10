@@ -334,9 +334,7 @@ class _QuestionManagementDetailPageState
                         child: ElevatedButton.icon(
                           onPressed: () {
                             if (questionTitleController.text.isEmpty ||
-                                optionControllers.any((controller) => controller.text.isEmpty) ||
-                                explanationController.text.isEmpty ||
-                                sourceController.text.isEmpty) {
+                                optionControllers.any((controller) => controller.text.isEmpty)) {
                               _showError('Please fill in all fields.');
                             } else {
                               String uniqueId = Unique().generateUniqueID();

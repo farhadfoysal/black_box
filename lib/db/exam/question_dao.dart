@@ -74,6 +74,16 @@ class QuestionDAO {
     );
   }
 
+  /// Delete a question by uniqueId
+  Future<int> deleteQuestionByUniqueId(String id) async {
+    final db = await AppDatabase().database;
+    return await db.delete(
+      'questions',
+      where: 'unique_id = ?',
+      whereArgs: [id],
+    );
+  }
+
   /// Delete all questions by quizId
   Future<int> deleteQuestionsByQuizId(String quizId) async {
     final db = await AppDatabase().database;
