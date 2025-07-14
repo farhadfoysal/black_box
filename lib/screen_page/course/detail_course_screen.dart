@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:barcode_widget/barcode_widget.dart';
 import 'package:black_box/db/exam/exam_dao.dart';
 import 'package:black_box/model/exam/exam_model.dart';
 import 'package:black_box/screen_page/exam/exam_panel.dart';
@@ -9,6 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -474,6 +476,76 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
     );
   }
 
+  void copyExam(ExamModel exam) {
+    String? tempNum = exam.uniqueId;
+
+    if (tempNum != null && tempNum.isNotEmpty) {
+      Clipboard.setData(ClipboardData(text: tempNum)).then((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Exam Code copied: $tempNum')),
+        );
+      }).catchError((error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to copy: $error')),
+        );
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No Exam Code to copy')),
+      );
+    }
+  }
+
+  void shareExam(ExamModel exam) {
+    String? tempNum = exam.uniqueId;
+    String? tempCode = exam.uniqueId;
+
+    if (tempNum != null && tempCode != null) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Share Exam'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Barcode for Tracking Number:'),
+                SizedBox(height: 10),
+                BarcodeWidget(
+                  barcode: Barcode.code128(), // Choose the barcode format
+                  data: tempNum,
+                  width: 200,
+                  height: 100,
+                ),
+                SizedBox(height: 20),
+                Text('QR Code for Exam Code:'),
+                SizedBox(height: 10),
+                BarcodeWidget(
+                  barcode: Barcode.qrCode(), // QR code format
+                  data: tempCode,
+                  width: 200,
+                  height: 200,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                child: Text('Close'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Exam data is incomplete for sharing')),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -760,8 +832,8 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                                   ),
                                   PopupMenuButton<String>(
                                     onSelected: (value) async {
-                                      if (value == 'favourite') {
-                                        // widget.onMark?.call();
+                                      if (value == 'copy') {
+                                        copyExam(quiz);
                                       } else if (value == 'room') {
                                         Navigator.push(
                                           context,
@@ -805,15 +877,8 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                                             ],
                                           ),
                                         );
-                                      } else if (value == 'schedule') {
-                                        // Navigator.push(
-                                        //   context,
-                                        //   MaterialPageRoute(
-                                        //     builder: (context) =>
-                                        //         TutorStudentProfile(
-                                        //             student: student),
-                                        //   ),
-                                        // );
+                                      } else if (value == 'share') {
+                                        shareExam(quiz);
                                       } else if (value == 'go') {
                                         // Navigator.push(
                                         //   context,
@@ -832,11 +897,11 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                                       const PopupMenuItem(
                                           value: 'result', child: Text('Result')),
                                       const PopupMenuItem(
-                                          value: 'enroll',
-                                          child: Text('Enroll')),
+                                          value: 'copy',
+                                          child: Text('Copy')),
                                       const PopupMenuItem(
-                                          value: 'schedule',
-                                          child: Text('Schedule')),
+                                          value: 'share',
+                                          child: Text('Share')),
                                       const PopupMenuItem(
                                           value: 'go',
                                           child: Text('Attendance')),

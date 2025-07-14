@@ -65,42 +65,6 @@ class _CoursesOfCategoryPageState extends State<CoursesOfCategoryPage> {
       createdAt: DateTime.now(),
       status: 'active',
     ),
-    CourseModel(
-      courseName: 'Dart Fundamentals',
-      totalVideo: 8,
-      totalRating: 4.2,
-      totalTime: '1h 50m',
-      courseImage:
-          'https://fastly.picsum.photos/id/50/200/300.jpg?hmac=wlHRGoenBSt-gzxGvJp3cBEIUD71NKbWEXmiJC2mQYE',
-      level: 'Beginner',
-      countStudents: 95,
-      createdAt: DateTime.now(),
-      status: 'active',
-    ),
-    CourseModel(
-      courseName: 'Mobile App Security',
-      totalVideo: 7,
-      totalRating: 4.8,
-      totalTime: '3h 20m',
-      courseImage:
-          'https://fastly.picsum.photos/id/443/200/300.jpg?grayscale&hmac=3KGsrU5Oo_hghp3-Xuzs6myA2cu1cKEvgsz05yWhKWA',
-      level: 'Intermediate',
-      countStudents: 80,
-      createdAt: DateTime.now(),
-      status: 'inactive',
-    ),
-    CourseModel(
-      courseName: 'Backend Development',
-      totalVideo: 12,
-      totalRating: 4.7,
-      totalTime: '2h 45m',
-      courseImage:
-          'https://fastly.picsum.photos/id/866/200/300.jpg?hmac=rcadCENKh4rD6MAp6V_ma-AyWv641M4iiOpe1RyFHeI',
-      level: 'Intermediate',
-      countStudents: 150,
-      createdAt: DateTime.now(),
-      status: 'active',
-    ),
   ];
 
   List<CourseModel> filteredCourses = [];
