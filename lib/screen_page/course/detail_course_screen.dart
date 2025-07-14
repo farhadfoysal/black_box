@@ -16,6 +16,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../../components/course/review_card.dart';
 import '../../components/course/tools_card.dart';
+import '../../db/exam/question_dao.dart';
 import '../../db/firebase/exam_firebase_service.dart';
 import '../../model/course/course_model.dart';
 import '../../model/course/teacher.dart';
@@ -777,13 +778,13 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                                         );
                                       } else if (value == 'mentor') {
                                         // _openWhatsApp(student.phone??"");
-                                      } else if (value == 'enroll') {
+                                      } else if (value == 'delete') {
                                         showDialog(
                                           context: context,
                                           builder: (context) => AlertDialog(
                                             title: const Text('Confirm'),
                                             content: Text(
-                                                'Are you sure you want to enroll "${quiz.title}"?'),
+                                                'Are you sure you want to Delete "${quiz.title}"?'),
                                             actions: [
                                               TextButton(
                                                 onPressed: () => Navigator.pop(
@@ -792,7 +793,7 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                                               ),
                                               TextButton(
                                                 onPressed: () {
-                                                  // widget.onEnroll?.call();
+                                                  _deleteExamQuiz(quiz);
                                                   Navigator.pop(context, true);
                                                 },
                                                 child: const Text(
@@ -843,8 +844,8 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                                           value: 'mentor',
                                           child: Text('Mentor')),
                                       const PopupMenuItem(
-                                          value: 'favourite',
-                                          child: Text('Favourite')),
+                                          value: 'delete',
+                                          child: Text('Delete')),
                                     ],
                                   ),
                                 ],
@@ -943,6 +944,47 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
     );
   }
 
+  Future<void> _deleteExamQuiz(ExamModel exam) async {
+    if (!mounted) return;
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // Delete from Firebase
+      await ExamFirebaseService().deleteExam(exam.examId);
+
+      // Delete related questions locally
+      await QuestionDAO().deleteQuestionsByExamId(exam.examId);
+
+      // Delete exam locally
+      await ExamDAO().deleteExamByUniqueId(exam.examId);
+
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Exam and related data deleted successfully!')),
+      );
+
+      Navigator.pop(context);
+    } catch (e, stacktrace) {
+      print("Error deleting exam: $e\n$stacktrace");
+
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to delete exam. Please try again.')),
+      );
+    }
+  }
+
+
   Future<void> _createExam(ExamModel exam) async {
     if (!mounted) return;
     setState(() {
@@ -981,6 +1023,8 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
     }
   }
 }
+
+
 
 Widget _buildTextField(
     TextEditingController controller, String labelText, IconData icon) {

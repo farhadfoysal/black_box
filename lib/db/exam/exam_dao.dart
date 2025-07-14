@@ -55,6 +55,11 @@ class ExamDAO {
     return await db.delete('exams', where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<int> deleteExamByUniqueId(String uniqueId) async {
+    final db = await AppDatabase().database;
+    return await db.delete('exams', where: 'unique_id = ?', whereArgs: [uniqueId]);
+  }
+
   /// Delete exams by courseId
   Future<int> deleteExamsByCourseId(String courseId) async {
     final db = await AppDatabase().database;
