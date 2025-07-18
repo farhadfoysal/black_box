@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as path;
+import 'package:share_plus/share_plus.dart';
 import 'file_transfer.dart';
 
 class ServerPage extends StatefulWidget {
@@ -310,8 +312,7 @@ class _ServerPageState extends State<ServerPage> with SingleTickerProviderStateM
     }
 
     return ListView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: BouncingScrollPhysics(),
       itemCount: files.length,
       itemBuilder: (ctx, i) {
         final file = files[i];
@@ -347,10 +348,48 @@ class _ServerPageState extends State<ServerPage> with SingleTickerProviderStateM
     return Icon(Icons.insert_drive_file, color: Colors.grey);
   }
 
-  void _shareFile(FileSystemEntity file) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Sharing ${path.basename(file.path)}')),
-    );
+
+  Future<void> _shareFile(FileSystemEntity file) async {
+    try {
+      // Check if the file exists
+      if (!await file.exists()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('File not found: ${path.basename(file.path)}')),
+        );
+        return;
+      }
+
+      final fileName = path.basename(file.path);
+
+      // Show a loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Preparing to share $fileName...'),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Prepare the file for sharing
+      final files = [XFile(file.path)];
+
+      // Share the file
+      await Share.shareXFiles(
+        files,
+        text: 'Check out this file: $fileName',
+        subject: 'File shared via File Share App',
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to share file: ${e.toString()}')),
+      );
+    }
   }
 
   String get _connectionString => 'http://$_serverIp:${_fileServer.port}';
