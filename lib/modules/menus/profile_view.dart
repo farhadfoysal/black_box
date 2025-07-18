@@ -8,6 +8,8 @@ import 'package:black_box/model/user/user.dart';
 import 'package:black_box/modules/settings/settings.dart';
 import 'package:black_box/routes/app_router.dart';
 import 'package:black_box/routes/routes.dart';
+import 'package:black_box/web/server/client_page.dart';
+import 'package:black_box/web/server/server_page.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as b;
@@ -21,10 +23,10 @@ import '../../model/mess/mess_user.dart';
 import '../../model/school/school.dart';
 import '../../model/school/teacher.dart';
 import '../../preference/logout.dart';
+import '../../web/p2p/client_screen.dart';
+import '../../web/p2p/host_screen.dart';
 
 class ProfileView extends StatefulWidget {
-
-
   const ProfileView({super.key});
 
   @override
@@ -65,14 +67,12 @@ class ProfileViewState extends State<ProfileView> {
   DateTime selectedDate = DateTime.now();
   String? selectedMonthYear;
 
-
   @override
   void initState() {
     loadData();
     _loadUserName();
     _initializeData();
     super.initState();
-
   }
 
   Future<void> _loadUserName() async {
@@ -93,7 +93,7 @@ class ProfileViewState extends State<ProfileView> {
 
     Map<String, dynamic>? userMap = await logout.getUser(key: 'user_logged_in');
     Map<String, dynamic>? schoolMap =
-    await logout.getSchool(key: 'school_data');
+        await logout.getSchool(key: 'school_data');
 
     if (userMap != null) {
       User user_data = User.fromMap(userMap);
@@ -138,8 +138,6 @@ class ProfileViewState extends State<ProfileView> {
     // First load user data
     await _loadUserData();
     // await _loadMessUserData();
-
-
   }
 
   void showConnectivitySnackBar(bool isOnline) {
@@ -181,7 +179,6 @@ class ProfileViewState extends State<ProfileView> {
     );
     await AppRouter.logoutUser(context);
     // context.go("/logout");
-
   }
 
   @override
@@ -193,7 +190,8 @@ class ProfileViewState extends State<ProfileView> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _ProfileHeader(user: user),
-            SizedBox(height: 20), // Add some space between the header and the button
+            SizedBox(
+                height: 20), // Add some space between the header and the button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: ElevatedButton(
@@ -273,6 +271,66 @@ class ProfileViewState extends State<ProfileView> {
                 ),
               ),
             ),
+            SizedBox(height: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: ElevatedButton(
+                onPressed: () {
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) => Dis(),
+                  //   ),
+                  // );
+                  // GoRouter.of(context).go(Routes.settingsPage);
+                  // context.push(Routes.settingsPage);
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                ),
+                child: Text(
+                  'Connection',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.wifi),
+                    label: const Text('Start as Host'),
+                    style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 50)),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) =>  ServerPage()),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.qr_code_scanner),
+                    label: const Text('Join as Client'),
+                    style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 50)),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) =>  ClientPage()),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -324,16 +382,20 @@ class _ProfileHeader extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.all(18.0),
               child: b.Badge(
-                  badgeStyle: b.BadgeStyle(
-                    borderSide: const BorderSide(color: Colors.white, width: 2),
-                    badgeColor: Colors.red.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(13),
-                    elevation: 0,
-                  ),
-                  badgeContent: Text("7",style: TextStyle(color: Colors.white,fontSize: 12)),
-                child: Icon(Icons.notifications,size: 40,),
+                badgeStyle: b.BadgeStyle(
+                  borderSide: const BorderSide(color: Colors.white, width: 2),
+                  badgeColor: Colors.red.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(13),
+                  elevation: 0,
+                ),
+                badgeContent: Text("7",
+                    style: TextStyle(color: Colors.white, fontSize: 12)),
+                child: Icon(
+                  Icons.notifications,
+                  size: 40,
+                ),
+              ),
             ),
-          ),
           ),
         ],
       ),

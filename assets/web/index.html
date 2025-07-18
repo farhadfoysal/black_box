@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Share Server</title>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --background-color: #f8f9fa;
+            --card-color: #ffffff;
+            --text-color: #333333;
+            --text-light: #6c757d;
+            --success-color: #4bb543;
+            --error-color: #ff3333;
+            --photo-color: #4cc9f0;
+            --video-color: #f72585;
+            --doc-color: #4895ef;
+            --other-color: #560bad;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--success-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        main {
+            padding: 30px 0;
+        }
+
+        .card {
+            background-color: var(--card-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .photo-section .section-title {
+            color: var(--photo-color);
+        }
+
+        .video-section .section-title {
+            color: var(--video-color);
+        }
+
+        .doc-section .section-title {
+            color: var(--doc-color);
+        }
+
+        .other-section .section-title {
+            color: var(--other-color);
+        }
+
+        .section-title svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .file-list {
+            list-style: none;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+
+        .file-item:hover {
+            background-color: #f5f5f5;
+            transform: translateX(5px);
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .file-icon {
+            font-size: 1.2rem;
+        }
+
+        .photo-section .file-icon {
+            color: var(--photo-color);
+        }
+
+        .video-section .file-icon {
+            color: var(--video-color);
+        }
+
+        .doc-section .file-icon {
+            color: var(--doc-color);
+        }
+
+        .other-section .file-icon {
+            color: var(--other-color);
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .file-path {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-top: 3px;
+        }
+
+        .download-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .download-btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            opacity: 0.7;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .file-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .download-btn {
+                align-self: flex-end;
+            }
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            margin: 30px auto;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .category-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .category-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .category-tab.active {
+            border-bottom: 3px solid var(--primary-color);
+            font-weight: 500;
+        }
+
+        .category-tab:hover {
+            background-color: #f5f5f5;
+        }
+
+        .category-content {
+            display: none;
+        }
+
+        .category-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="container header-content">
+        <h1>File Share Server</h1>
+        <div class="status">
+            <div class="status-indicator"></div>
+            <span>Online</span>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <div class="card">
+        <h2 class="section-title">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Available Files
+        </h2>
+
+        <div class="category-tabs">
+            <div class="category-tab active" data-category="photos">Photos</div>
+            <div class="category-tab" data-category="videos">Videos</div>
+            <div class="category-tab" data-category="documents">Documents</div>
+            <div class="category-tab" data-category="others">Other Files</div>
+        </div>
+
+        <div class="spinner" id="loadingSpinner"></div>
+
+        <div id="photos-content" class="category-content active">
+            <div id="photos-list" class="file-list"></div>
+            <div id="photos-empty" class="empty-state" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p>No photos available</p>
+            </div>
+        </div>
+
+        <div id="videos-content" class="category-content">
+            <div id="videos-list" class="file-list"></div>
+            <div id="videos-empty" class="empty-state" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <p>No videos available</p>
+            </div>
+        </div>
+
+        <div id="documents-content" class="category-content">
+            <div id="documents-list" class="file-list"></div>
+            <div id="documents-empty" class="empty-state" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p>No documents available</p>
+            </div>
+        </div>
+
+        <div id="others-content" class="category-content">
+            <div id="others-list" class="file-list"></div>
+            <div id="others-empty" class="empty-state" style="display: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                </svg>
+                <p>No other files available</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <div class="container">
+        <p>File Share Server &copy; 2023 | Connect to the same network to access files</p>
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const categoryTabs = document.querySelectorAll('.category-tab');
+
+        // Tab switching functionality
+        categoryTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs and content
+                categoryTabs.forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.category-content').forEach(c => c.classList.remove('active'));
+
+                // Add active class to clicked tab and corresponding content
+                this.classList.add('active');
+                const category = this.getAttribute('data-category');
+                document.getElementById(`${category}-content`).classList.add('active');
+            });
+        });
+
+        // Show loading spinner
+        loadingSpinner.style.display = 'block';
+
+        // Load files for each category
+        loadCategoryFiles('photos');
+        loadCategoryFiles('videos');
+        loadCategoryFiles('documents');
+        loadCategoryFiles('others');
+
+        function loadCategoryFiles(category) {
+            fetch(`/files/${category}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
+                .then(data => {
+                    const files = data.split('\n').filter(file => file.trim());
+                    const fileList = document.getElementById(`${category}-list`);
+                    const emptyState = document.getElementById(`${category}-empty`);
+
+                    // Clear previous content
+                    fileList.innerHTML = '';
+
+                    if (files.length === 0) {
+                        emptyState.style.display = 'block';
+                        return;
+                    }
+
+                    emptyState.style.display = 'none';
+
+                    files.forEach(file => {
+                        const fileItem = document.createElement('li');
+                        fileItem.className = 'file-item';
+
+                        const icon = getFileIcon(file, category);
+                        const fileName = file.split('/').pop();
+
+                        fileItem.innerHTML = `
+                            <div class="file-info">
+                                <div class="file-icon">
+                                    ${icon}
+                                </div>
+                                <div>
+                                    <div class="file-name">${fileName}</div>
+                                    <div class="file-path">${file}</div>
+                                </div>
+                            </div>
+                            <a href="/download/${encodeURIComponent(file)}" class="download-btn">
+                                Download
+                            </a>
+                        `;
+
+                        fileList.appendChild(fileItem);
+                    });
+
+                    // Hide spinner when all categories are loaded
+                    if (category === 'others') {
+                        loadingSpinner.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error(`Error loading ${category}:`, error);
+                    const emptyState = document.getElementById(`${category}-empty`);
+                    emptyState.style.display = 'block';
+                    emptyState.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <p>Error loading ${category}. Please try again.</p>
+                    `;
+
+                    if (category === 'others') {
+                        loadingSpinner.style.display = 'none';
+                    }
+                });
+        }
+
+        function getFileIcon(filePath, category) {
+            const ext = filePath.split('.').pop().toLowerCase();
+
+            if (category === 'photos') {
+                return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>`;
+            }
+
+            if (category === 'videos') {
+                return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>`;
+            }
+
+            if (category === 'documents') {
+                if (ext === 'pdf') {
+                    return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>`;
+                }
+                return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>`;
+            }
+
+            return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            </svg>`;
+        }
+    });
+</script>
+</body>
+</html>
+
+
+
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>File Share Server</title>-->
+<!--    <style>-->
+<!--        :root {-->
+<!--            &#45;&#45;primary-color: #4361ee;-->
+<!--            &#45;&#45;secondary-color: #3a0ca3;-->
+<!--            &#45;&#45;background-color: #f8f9fa;-->
+<!--            &#45;&#45;card-color: #ffffff;-->
+<!--            &#45;&#45;text-color: #333333;-->
+<!--            &#45;&#45;text-light: #6c757d;-->
+<!--            &#45;&#45;success-color: #4bb543;-->
+<!--            &#45;&#45;error-color: #ff3333;-->
+<!--        }-->
+
+<!--        * {-->
+<!--            margin: 0;-->
+<!--            padding: 0;-->
+<!--            box-sizing: border-box;-->
+<!--        }-->
+
+<!--        body {-->
+<!--            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;-->
+<!--            background-color: var(&#45;&#45;background-color);-->
+<!--            color: var(&#45;&#45;text-color);-->
+<!--            line-height: 1.6;-->
+<!--            padding: 0;-->
+<!--            margin: 0;-->
+<!--        }-->
+
+<!--        .container {-->
+<!--            max-width: 1200px;-->
+<!--            margin: 0 auto;-->
+<!--            padding: 20px;-->
+<!--        }-->
+
+<!--        header {-->
+<!--            background-color: var(&#45;&#45;primary-color);-->
+<!--            color: white;-->
+<!--            padding: 20px 0;-->
+<!--            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);-->
+<!--        }-->
+
+<!--        .header-content {-->
+<!--            display: flex;-->
+<!--            justify-content: space-between;-->
+<!--            align-items: center;-->
+<!--        }-->
+
+<!--        h1 {-->
+<!--            font-size: 1.8rem;-->
+<!--            font-weight: 600;-->
+<!--        }-->
+
+<!--        .status {-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            gap: 8px;-->
+<!--        }-->
+
+<!--        .status-indicator {-->
+<!--            width: 12px;-->
+<!--            height: 12px;-->
+<!--            border-radius: 50%;-->
+<!--            background-color: var(&#45;&#45;success-color);-->
+<!--            animation: pulse 2s infinite;-->
+<!--        }-->
+
+<!--        @keyframes pulse {-->
+<!--            0% { opacity: 1; }-->
+<!--            50% { opacity: 0.5; }-->
+<!--            100% { opacity: 1; }-->
+<!--        }-->
+
+<!--        main {-->
+<!--            padding: 30px 0;-->
+<!--        }-->
+
+<!--        .card {-->
+<!--            background-color: var(&#45;&#45;card-color);-->
+<!--            border-radius: 8px;-->
+<!--            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);-->
+<!--            padding: 25px;-->
+<!--            margin-bottom: 30px;-->
+<!--        }-->
+
+<!--        .section-title {-->
+<!--            font-size: 1.4rem;-->
+<!--            margin-bottom: 20px;-->
+<!--            color: var(&#45;&#45;primary-color);-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            gap: 10px;-->
+<!--        }-->
+
+<!--        .section-title svg {-->
+<!--            width: 24px;-->
+<!--            height: 24px;-->
+<!--        }-->
+
+<!--        .file-list {-->
+<!--            list-style: none;-->
+<!--        }-->
+
+<!--        .file-item {-->
+<!--            display: flex;-->
+<!--            justify-content: space-between;-->
+<!--            align-items: center;-->
+<!--            padding: 12px 15px;-->
+<!--            border-bottom: 1px solid #eee;-->
+<!--            transition: all 0.3s ease;-->
+<!--        }-->
+
+<!--        .file-item:hover {-->
+<!--            background-color: #f5f5f5;-->
+<!--            transform: translateX(5px);-->
+<!--        }-->
+
+<!--        .file-item:last-child {-->
+<!--            border-bottom: none;-->
+<!--        }-->
+
+<!--        .file-info {-->
+<!--            flex: 1;-->
+<!--            display: flex;-->
+<!--            align-items: center;-->
+<!--            gap: 12px;-->
+<!--        }-->
+
+<!--        .file-icon {-->
+<!--            color: var(&#45;&#45;primary-color);-->
+<!--            font-size: 1.2rem;-->
+<!--        }-->
+
+<!--        .file-name {-->
+<!--            font-weight: 500;-->
+<!--            color: var(&#45;&#45;text-color);-->
+<!--        }-->
+
+<!--        .file-path {-->
+<!--            font-size: 0.85rem;-->
+<!--            color: var(&#45;&#45;text-light);-->
+<!--            margin-top: 3px;-->
+<!--        }-->
+
+<!--        .download-btn {-->
+<!--            background-color: var(&#45;&#45;primary-color);-->
+<!--            color: white;-->
+<!--            border: none;-->
+<!--            padding: 8px 15px;-->
+<!--            border-radius: 4px;-->
+<!--            cursor: pointer;-->
+<!--            font-weight: 500;-->
+<!--            transition: all 0.2s ease;-->
+<!--            text-decoration: none;-->
+<!--            display: inline-block;-->
+<!--        }-->
+
+<!--        .download-btn:hover {-->
+<!--            background-color: var(&#45;&#45;secondary-color);-->
+<!--            transform: translateY(-2px);-->
+<!--        }-->
+
+<!--        .empty-state {-->
+<!--            text-align: center;-->
+<!--            padding: 40px 20px;-->
+<!--            color: var(&#45;&#45;text-light);-->
+<!--        }-->
+
+<!--        .empty-state svg {-->
+<!--            width: 60px;-->
+<!--            height: 60px;-->
+<!--            margin-bottom: 15px;-->
+<!--            opacity: 0.7;-->
+<!--        }-->
+
+<!--        footer {-->
+<!--            text-align: center;-->
+<!--            padding: 20px;-->
+<!--            color: var(&#45;&#45;text-light);-->
+<!--            font-size: 0.9rem;-->
+<!--        }-->
+
+<!--        @media (max-width: 768px) {-->
+<!--            .container {-->
+<!--                padding: 15px;-->
+<!--            }-->
+
+<!--            .file-item {-->
+<!--                flex-direction: column;-->
+<!--                align-items: flex-start;-->
+<!--                gap: 8px;-->
+<!--            }-->
+
+<!--            .download-btn {-->
+<!--                align-self: flex-end;-->
+<!--            }-->
+<!--        }-->
+
+<!--        /* Loading spinner */-->
+<!--        .spinner {-->
+<!--            display: none;-->
+<!--            width: 40px;-->
+<!--            height: 40px;-->
+<!--            margin: 30px auto;-->
+<!--            border: 4px solid rgba(0, 0, 0, 0.1);-->
+<!--            border-radius: 50%;-->
+<!--            border-top: 4px solid var(&#45;&#45;primary-color);-->
+<!--            animation: spin 1s linear infinite;-->
+<!--        }-->
+
+<!--        @keyframes spin {-->
+<!--            0% { transform: rotate(0deg); }-->
+<!--            100% { transform: rotate(360deg); }-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<header>-->
+<!--    <div class="container header-content">-->
+<!--        <h1>File Share Server</h1>-->
+<!--        <div class="status">-->
+<!--            <div class="status-indicator"></div>-->
+<!--            <span>Online</span>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</header>-->
+
+<!--<main class="container">-->
+<!--    <div class="card">-->
+<!--        <h2 class="section-title">-->
+<!--            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">-->
+<!--                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />-->
+<!--            </svg>-->
+<!--            Available Files-->
+<!--        </h2>-->
+
+<!--        <div class="spinner" id="loadingSpinner"></div>-->
+
+<!--        <ul class="file-list" id="fileList">-->
+<!--            &lt;!&ndash; Files will be inserted here by JavaScript &ndash;&gt;-->
+<!--        </ul>-->
+
+<!--        <div class="empty-state" id="emptyState" style="display: none;">-->
+<!--            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">-->
+<!--                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />-->
+<!--            </svg>-->
+<!--            <p>No files available for download</p>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</main>-->
+
+<!--<footer>-->
+<!--    <div class="container">-->
+<!--        <p>File Share Server &copy; 2023 | Connect to the same network to access files</p>-->
+<!--    </div>-->
+<!--</footer>-->
+
+<!--<script>-->
+<!--    document.addEventListener('DOMContentLoaded', function() {-->
+<!--        const fileList = document.getElementById('fileList');-->
+<!--        const emptyState = document.getElementById('emptyState');-->
+<!--        const loadingSpinner = document.getElementById('loadingSpinner');-->
+
+<!--        // Show loading spinner-->
+<!--        loadingSpinner.style.display = 'block';-->
+
+<!--        fetch('/files')-->
+<!--            .then(response => {-->
+<!--                if (!response.ok) throw new Error('Network response was not ok');-->
+<!--                return response.text();-->
+<!--            })-->
+<!--            .then(data => {-->
+<!--                const files = data.split('\n').filter(file => file.trim());-->
+
+<!--                loadingSpinner.style.display = 'none';-->
+
+<!--                if (files.length === 0) {-->
+<!--                    emptyState.style.display = 'block';-->
+<!--                    return;-->
+<!--                }-->
+
+<!--                files.forEach(file => {-->
+<!--                    const fileItem = document.createElement('li');-->
+<!--                    fileItem.className = 'file-item';-->
+
+<!--                    fileItem.innerHTML = `-->
+<!--                        <div class="file-info">-->
+<!--                            <div class="file-icon">-->
+<!--                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">-->
+<!--                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />-->
+<!--                                </svg>-->
+<!--                            </div>-->
+<!--                            <div>-->
+<!--                                <div class="file-name">${file.split('/').pop()}</div>-->
+<!--                                <div class="file-path">${file}</div>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <a href="/download/${encodeURIComponent(file)}" class="download-btn">-->
+<!--                            Download-->
+<!--                        </a>-->
+<!--                    `;-->
+
+<!--                    fileList.appendChild(fileItem);-->
+<!--                });-->
+<!--            })-->
+<!--            .catch(error => {-->
+<!--                loadingSpinner.style.display = 'none';-->
+<!--                emptyState.style.display = 'block';-->
+<!--                emptyState.innerHTML = `-->
+<!--                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">-->
+<!--                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />-->
+<!--                    </svg>-->
+<!--                    <p>Error loading files. Please try again.</p>-->
+<!--                `;-->
+<!--                console.error('Error:', error);-->
+<!--            });-->
+<!--    });-->
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->
+
+<!--&lt;!&ndash; assets/web/index.html &ndash;&gt;-->
+<!--<!DOCTYPE html>-->
+<!--<html>-->
+<!--<head>-->
+<!--    <title>File Share Server</title>-->
+<!--    <style>-->
+<!--        body { font-family: Arial, sans-serif; margin: 20px; }-->
+<!--        h1 { color: #333; }-->
+<!--        ul { list-style-type: none; padding: 0; }-->
+<!--        li { margin: 5px 0; }-->
+<!--        a { color: #0066cc; text-decoration: none; }-->
+<!--        a:hover { text-decoration: underline; }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<h1>File Share Server</h1>-->
+<!--<p>Available files:</p>-->
+<!--<ul id="fileList"></ul>-->
+<!--<script>-->
+<!--    fetch('/files')-->
+<!--        .then(response => response.text())-->
+<!--        .then(data => {-->
+<!--            const files = data.split('\n');-->
+<!--            const list = document.getElementById('fileList');-->
+<!--            files.forEach(file => {-->
+<!--                if (file.trim()) {-->
+<!--                    const li = document.createElement('li');-->
+<!--                    const a = document.createElement('a');-->
+<!--                    a.href = '/download/' + encodeURIComponent(file);-->
+<!--                    a.textContent = file.split('/').pop() + ' (' + file + ')';-->
+<!--                    li.appendChild(a);-->
+<!--                    list.appendChild(li);-->
+<!--                }-->
+<!--            });-->
+<!--        });-->
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->
+
+
+<!--<!DOCTYPE html>-->
+<!--<html>-->
+<!--<head>-->
+<!--    <title>File Share Server</title>-->
+<!--    <style>-->
+<!--        body { font-family: Arial, sans-serif; padding: 20px; }-->
+<!--        h1 { color: #333; }-->
+<!--        .file-list { margin-top: 20px; }-->
+<!--        .file-item {-->
+<!--            padding: 10px;-->
+<!--            border-bottom: 1px solid #eee;-->
+<!--            display: flex;-->
+<!--            justify-content: space-between;-->
+<!--        }-->
+<!--        .download-btn {-->
+<!--            background-color: #4CAF50;-->
+<!--            color: white;-->
+<!--            padding: 5px 10px;-->
+<!--            text-decoration: none;-->
+<!--            border-radius: 4px;-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<h1>File Share Server</h1>-->
+<!--<p>Server is running. Shared files:</p>-->
+
+<!--<div class="file-list" id="fileList">-->
+<!--    &lt;!&ndash; Files will be loaded here by JavaScript &ndash;&gt;-->
+<!--</div>-->
+
+<!--<script>-->
+<!--    async function loadFiles() {-->
+<!--        try {-->
+<!--            const response = await fetch('/files');-->
+<!--            const files = await response.text();-->
+<!--            const fileList = document.getElementById('fileList');-->
+
+<!--            fileList.innerHTML = '';-->
+<!--            files.split('\n').forEach(file => {-->
+<!--                if (file.trim()) {-->
+<!--                    const fileItem = document.createElement('div');-->
+<!--                    fileItem.className = 'file-item';-->
+<!--                    fileItem.innerHTML = `-->
+<!--                        <span>${file}</span>-->
+<!--                        <a href="/download/${file}" class="download-btn">Download</a>-->
+<!--                    `;-->
+<!--                    fileList.appendChild(fileItem);-->
+<!--                }-->
+<!--            });-->
+<!--        } catch (error) {-->
+<!--            console.error('Error loading files:', error);-->
+<!--        }-->
+<!--    }-->
+
+<!--    // Load files initially and every 5 seconds-->
+<!--    loadFiles();-->
+<!--    setInterval(loadFiles, 5000);-->
+<!--</script>-->
+<!--</body>-->
+<!--</html>-->
