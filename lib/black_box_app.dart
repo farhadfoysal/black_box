@@ -1,3 +1,4 @@
+import 'package:black_box/cores/network/connection_manager.dart';
 import 'package:black_box/provider/connectivity_provider.dart';
 import 'package:black_box/provider/user/user_provider.dart';
 import 'package:black_box/screen_page/splash/splash.dart';
@@ -24,6 +25,7 @@ class BlackBoxApp extends StatelessWidget{
           ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
           ChangeNotifierProvider(create: (_) => LoginProvider()),
           ChangeNotifierProvider(create: (_) => HomeProvider()),
+          ChangeNotifierProvider(create: (_) => ConnectionManager()),
         ],
         child: Obx(
               () => GetMaterialApp(

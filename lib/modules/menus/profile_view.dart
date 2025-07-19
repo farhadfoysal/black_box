@@ -8,6 +8,8 @@ import 'package:black_box/model/user/user.dart';
 import 'package:black_box/modules/settings/settings.dart';
 import 'package:black_box/routes/app_router.dart';
 import 'package:black_box/routes/routes.dart';
+import 'package:black_box/ui/screens/discovery_screen.dart';
+import 'package:black_box/ui/screens/server_home_screen.dart';
 import 'package:black_box/web/server/client_page.dart';
 import 'package:black_box/web/server/server_page.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -276,12 +278,12 @@ class ProfileViewState extends State<ProfileView> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: ElevatedButton(
                 onPressed: () {
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) => Dis(),
-                  //   ),
-                  // );
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ServerHomeScreen(),
+                    ),
+                  );
                   // GoRouter.of(context).go(Routes.settingsPage);
                   // context.push(Routes.settingsPage);
                 },
@@ -325,7 +327,10 @@ class ProfileViewState extends State<ProfileView> {
                         minimumSize: const Size(double.infinity, 50)),
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) =>  ClientPage()),
+                      // MaterialPageRoute(builder: (_) =>  DiscoveryScreen()),
+                      // MaterialPageRoute(builder: (_) =>  DiscoveryScreen()),
+                      MaterialPageRoute(builder: (_) =>  ClientPage()
+                      ),
                     ),
                   ),
                 ],
