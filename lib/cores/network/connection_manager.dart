@@ -401,17 +401,36 @@ class ConnectionManager with ChangeNotifier {
     }
   }
 
-  // In ConnectionManager
   void _handleIncomingMessage(Message message) {
-    // Ensure message isn't duplicated
-    if (!_messages.any((m) => m.id == message.id)) {
+    // Ensure message isn't duplicated and comes from another device
+    if (!_messages.any((m) => m.id == message.id) && message.senderId != _localDeviceId) {
+      // Mark as received message (not sent by this device)
+      message.isSent = false;
+
+      // Add to messages list
       _messages.add(message);
+
+      // Notify listeners to update UI
       notifyListeners();
-      debugPrint('New message received: ${message.text}');
-    } else {
-      debugPrint('Duplicate message ignored: ${message.id}');
+
+      debugPrint('Received message from ${message.senderId}: ${message.text}');
+
+      // Send delivery confirmation
+      _sendDeliveryConfirmation(message);
     }
   }
+
+  // // In ConnectionManager
+  // void _handleIncomingMessage(Message message) {
+  //   // Ensure message isn't duplicated
+  //   if (!_messages.any((m) => m.id == message.id)) {
+  //     _messages.add(message);
+  //     notifyListeners();
+  //     debugPrint('New message received: ${message.text}');
+  //   } else {
+  //     debugPrint('Duplicate message ignored: ${message.id}');
+  //   }
+  // }
 
   @override
   void dispose() {

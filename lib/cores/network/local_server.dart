@@ -52,6 +52,13 @@ class LocalServer {
     this.customTempDirectory,
   }) {
     _router = Router()
+      ..options('/<ignored|.*>', (Request request) {
+        return Response.ok('', headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        });
+      })
       ..post('/message', _handleMessage)
       ..post('/file', _handleFileUpload)
       ..post('/confirm', _handleConfirmation)
@@ -59,16 +66,60 @@ class LocalServer {
       ..get('/health', _handleHealthCheck);
   }
 
+  // Future<Response> _handleConfirmation(Request request) async {
+  //   try {
+  //     final body = await request.readAsString();
+  //     final data = jsonDecode(body) as Map<String, dynamic>;
+  //
+  //     // Process confirmation (update message status)
+  //     return Response.ok(jsonEncode({'status': 'confirmed'}));
+  //   } catch (e) {
+  //     return Response.internalServerError(
+  //       body: jsonEncode({'error': 'Confirmation failed'}),
+  //     );
+  //   }
+  // }
+
   Future<Response> _handleConfirmation(Request request) async {
+    String? clientIp;
     try {
+      clientIp = (request.context['shelf.io.connection_info']
+      as HttpConnectionInfo?)?.remoteAddress.address;
+
       final body = await request.readAsString();
+      debugPrint('Confirmation received from $clientIp: $body');
+
       final data = jsonDecode(body) as Map<String, dynamic>;
 
-      // Process confirmation (update message status)
-      return Response.ok(jsonEncode({'status': 'confirmed'}));
-    } catch (e) {
+      if (data['messageId'] == null) {
+        return Response.badRequest(
+          body: jsonEncode({'error': 'Missing messageId'}),
+          headers: {'Content-Type': 'application/json'},
+        );
+      }
+
+      // In a real app, you would update the message status here
+      debugPrint('Confirmed delivery of message ${data['messageId']}');
+
+      return Response.ok(
+        jsonEncode({
+          'status': 'confirmed',
+          'messageId': data['messageId'],
+          'timestamp': DateTime.now().toIso8601String(),
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Connection': 'close',
+        },
+      );
+    } catch (e, stackTrace) {
+      debugPrint('Confirmation error from $clientIp: $e\n$stackTrace');
       return Response.internalServerError(
-        body: jsonEncode({'error': 'Confirmation failed'}),
+        body: jsonEncode({
+          'error': 'Confirmation processing failed',
+          'details': e.toString()
+        }),
+        headers: {'Content-Type': 'application/json'},
       );
     }
   }
@@ -145,6 +196,45 @@ class LocalServer {
   //   }
   // }
 
+  // Future<Response> _handleMessage(Request request) async {
+  //   try {
+  //     // Get client IP
+  //     final clientIp = (request.context['shelf.io.connection_info']
+  //     as HttpConnectionInfo?)?.remoteAddress.address;
+  //
+  //     // Read and parse message
+  //     final messageJson = await request.readAsString();
+  //     final messageData = jsonDecode(messageJson) as Map<String, dynamic>;
+  //
+  //     // Validate message structure
+  //     if (messageData['text'] == null || messageData['senderId'] == null) {
+  //       return Response.badRequest(body: 'Invalid message format');
+  //     }
+  //
+  //     // Create message object
+  //     final message = Message.fromJson(messageData);
+  //     message.isSent = false; // Mark as received message
+  //
+  //     if (enableLogging) {
+  //       debugPrint('Received message from ${clientIp ?? 'unknown'}');
+  //       debugPrint('Message content: ${message.text}');
+  //     }
+  //
+  //     // Process the message
+  //     onMessageReceived(message);
+  //
+  //     return Response.ok(
+  //       jsonEncode({'status': 'success'}),
+  //       headers: {'Content-Type': 'application/json'},
+  //     );
+  //   } catch (e, stackTrace) {
+  //     debugPrint('Message handling error: $e\n$stackTrace');
+  //     return Response.internalServerError(
+  //       body: jsonEncode({'error': 'Message processing failed'}),
+  //     );
+  //   }
+  // }
+
   Future<Response> _handleMessage(Request request) async {
     try {
       // Get client IP
@@ -153,69 +243,178 @@ class LocalServer {
 
       // Read and parse message
       final messageJson = await request.readAsString();
+      debugPrint('Received raw message: $messageJson');
+
       final messageData = jsonDecode(messageJson) as Map<String, dynamic>;
 
-      // Validate message structure
+      // Validate required fields
       if (messageData['text'] == null || messageData['senderId'] == null) {
-        return Response.badRequest(body: 'Invalid message format');
+        return Response.badRequest(
+          body: jsonEncode({'error': 'Invalid message format'}),
+          headers: {'Content-Type': 'application/json'},
+        );
       }
 
       // Create message object
       final message = Message.fromJson(messageData);
       message.isSent = false; // Mark as received message
 
-      if (enableLogging) {
-        debugPrint('Received message from ${clientIp ?? 'unknown'}');
-        debugPrint('Message content: ${message.text}');
-      }
+      debugPrint('Processing message from ${message.senderId}');
 
       // Process the message
       onMessageReceived(message);
 
       return Response.ok(
-        jsonEncode({'status': 'success'}),
-        headers: {'Content-Type': 'application/json'},
+        jsonEncode({
+          'status': 'received',
+          'messageId': message.id,
+          'timestamp': DateTime.now().toIso8601String(),
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Connection': 'close',
+        },
       );
     } catch (e, stackTrace) {
       debugPrint('Message handling error: $e\n$stackTrace');
       return Response.internalServerError(
-        body: jsonEncode({'error': 'Message processing failed'}),
+        body: jsonEncode({
+          'error': 'Message processing failed',
+          'details': e.toString()
+        }),
+        headers: {'Content-Type': 'application/json'},
       );
     }
   }
 
-  Future<Response> _handleFileUpload(Request request) async {
-    String? transferId;
-    try {
-      // Verify authorization
-      final authHeader = request.headers['Authorization'];
-      if (!SecurityUtils.verifyMessageAuthHeader(
-        authHeader,
-        expectedDeviceId: deviceId,
-      )) {
-        return Response.unauthorized('Invalid authorization');
-      }
+  // Future<Response> _handleFileUpload(Request request) async {
+  //   String? transferId;
+  //   try {
+  //     // Verify authorization
+  //     final authHeader = request.headers['Authorization'];
+  //     if (!SecurityUtils.verifyMessageAuthHeader(
+  //       authHeader,
+  //       expectedDeviceId: deviceId,
+  //     )) {
+  //       return Response.unauthorized('Invalid authorization');
+  //     }
+  //
+  //     transferId = authHeader?.split('|').firstOrNull;
+  //     final contentLength = request.contentLength;
+  //     if (contentLength == null || contentLength <= 0) {
+  //       return Response.badRequest(
+  //         body: jsonEncode({'error': 'Invalid file size'}),
+  //       );
+  //     }
+  //
+  //     final contentType = request.headers['content-type'] ?? 'application/octet-stream';
+  //     final fileName = request.headers['x-file-name'] ?? 'file_${_uuid.v4()}';
+  //     final extension = fileName.contains('.') ? '.${fileName.split('.').last}' : '';
+  //
+  //     final tempDir = await _getTempDirectory();
+  //     final uniqueFileName = '${_uuid.v4()}$extension';
+  //     final filePath = '${tempDir.path}/$uniqueFileName';
+  //     final file = File(filePath);
+  //
+  //     // Create transfer status
+  //     final transfer = TransferStatus(
+  //       id: transferId ?? _uuid.v4(),
+  //       fileName: fileName,
+  //       fileSize: contentLength,
+  //       status: TransferStatusType.inProgress,
+  //       isIncoming: true,
+  //     );
+  //     onFileReceived(transfer);
+  //
+  //     // Write the file
+  //     final sink = file.openWrite();
+  //     int receivedBytes = 0;
+  //     const int logInterval = 1024 * 1024; // 1MB
+  //     int nextLog = logInterval;
+  //
+  //     await request.read().listen(
+  //           (chunk) {
+  //         receivedBytes += chunk.length;
+  //         sink.add(chunk);
+  //
+  //         // Update progress
+  //         final progress = (receivedBytes / contentLength * 100).toInt();
+  //         final updatedTransfer = transfer.copyWith(
+  //           progress: progress.clamp(0, 100),
+  //         );
+  //         onFileReceived(updatedTransfer);
+  //
+  //         if (enableLogging && receivedBytes >= nextLog) {
+  //           debugPrint('Received ${receivedBytes ~/ (1024 * 1024)}MB of $fileName');
+  //           nextLog += logInterval;
+  //         }
+  //       },
+  //       onDone: () async {
+  //         await sink.close();
+  //         if (enableLogging) {
+  //           debugPrint('File saved to $filePath');
+  //         }
+  //
+  //         // Mark transfer as complete
+  //         final completedTransfer = transfer.copyWith(
+  //           progress: 100,
+  //           status: TransferStatusType.completed,
+  //           endTime: DateTime.now(),
+  //         );
+  //         onFileReceived(completedTransfer);
+  //       },
+  //       onError: (e) {
+  //         sink.close();
+  //         debugPrint('File upload error: $e');
+  //
+  //         final failedTransfer = transfer.copyWith(
+  //           status: TransferStatusType.failed,
+  //           endTime: DateTime.now(),
+  //         );
+  //         onFileReceived(failedTransfer);
+  //         throw e;
+  //       },
+  //     ).asFuture();
+  //
+  //     return Response.ok(
+  //       jsonEncode({
+  //         'status': 'success',
+  //         'filePath': filePath,
+  //         'fileName': fileName,
+  //         'size': receivedBytes,
+  //       }),
+  //     );
+  //   } catch (e, stackTrace) {
+  //     debugPrint('File upload failed: $e\n$stackTrace');
+  //     return Response.internalServerError(
+  //       body: jsonEncode({'error': 'File upload failed'}),
+  //     );
+  //   }
+  // }
 
-      transferId = authHeader?.split('|').firstOrNull;
+  Future<Response> _handleFileUpload(Request request) async {
+    String? clientIp;
+    try {
+      clientIp = (request.context['shelf.io.connection_info']
+      as HttpConnectionInfo?)?.remoteAddress.address;
+
+      debugPrint('File upload request from $clientIp');
+
       final contentLength = request.contentLength;
       if (contentLength == null || contentLength <= 0) {
         return Response.badRequest(
-          body: jsonEncode({'error': 'Invalid file size'}),
+          body: jsonEncode({'error': 'Invalid content length'}),
+          headers: {'Content-Type': 'application/json'},
         );
       }
 
-      final contentType = request.headers['content-type'] ?? 'application/octet-stream';
       final fileName = request.headers['x-file-name'] ?? 'file_${_uuid.v4()}';
-      final extension = fileName.contains('.') ? '.${fileName.split('.').last}' : '';
-
       final tempDir = await _getTempDirectory();
-      final uniqueFileName = '${_uuid.v4()}$extension';
-      final filePath = '${tempDir.path}/$uniqueFileName';
+      final filePath = '${tempDir.path}/$fileName';
       final file = File(filePath);
 
       // Create transfer status
       final transfer = TransferStatus(
-        id: transferId ?? _uuid.v4(),
         fileName: fileName,
         fileSize: contentLength,
         status: TransferStatusType.inProgress,
@@ -226,8 +425,6 @@ class LocalServer {
       // Write the file
       final sink = file.openWrite();
       int receivedBytes = 0;
-      const int logInterval = 1024 * 1024; // 1MB
-      int nextLog = logInterval;
 
       await request.read().listen(
             (chunk) {
@@ -236,39 +433,20 @@ class LocalServer {
 
           // Update progress
           final progress = (receivedBytes / contentLength * 100).toInt();
-          final updatedTransfer = transfer.copyWith(
-            progress: progress.clamp(0, 100),
-          );
-          onFileReceived(updatedTransfer);
-
-          if (enableLogging && receivedBytes >= nextLog) {
-            debugPrint('Received ${receivedBytes ~/ (1024 * 1024)}MB of $fileName');
-            nextLog += logInterval;
-          }
+          onFileReceived(transfer.copyWith(progress: progress));
         },
         onDone: () async {
           await sink.close();
-          if (enableLogging) {
-            debugPrint('File saved to $filePath');
-          }
-
-          // Mark transfer as complete
-          final completedTransfer = transfer.copyWith(
-            progress: 100,
+          onFileReceived(transfer.copyWith(
             status: TransferStatusType.completed,
-            endTime: DateTime.now(),
-          );
-          onFileReceived(completedTransfer);
+            progress: 100,
+          ));
         },
         onError: (e) {
           sink.close();
-          debugPrint('File upload error: $e');
-
-          final failedTransfer = transfer.copyWith(
+          onFileReceived(transfer.copyWith(
             status: TransferStatusType.failed,
-            endTime: DateTime.now(),
-          );
-          onFileReceived(failedTransfer);
+          ));
           throw e;
         },
       ).asFuture();
@@ -276,15 +454,23 @@ class LocalServer {
       return Response.ok(
         jsonEncode({
           'status': 'success',
-          'filePath': filePath,
-          'fileName': fileName,
+          'path': filePath,
           'size': receivedBytes,
+          'originalName': fileName,
         }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Connection': 'close',
+        },
       );
     } catch (e, stackTrace) {
-      debugPrint('File upload failed: $e\n$stackTrace');
+      debugPrint('File upload error from $clientIp: $e\n$stackTrace');
       return Response.internalServerError(
-        body: jsonEncode({'error': 'File upload failed'}),
+        body: jsonEncode({
+          'error': 'File upload failed',
+          'details': e.toString()
+        }),
+        headers: {'Content-Type': 'application/json'},
       );
     }
   }

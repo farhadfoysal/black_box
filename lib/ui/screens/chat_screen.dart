@@ -5,11 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../cores/models/message.dart';
+import '../../cores/models/peer_device.dart';
 import '../../cores/network/connection_manager.dart';
 import '../../cores/utils/network_utils.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
+// class ChatScreen extends StatefulWidget {
+//   final PeerDevice peerDevice;
+//
+//   const ChatScreen({super.key, required this.peerDevice});
+
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -18,6 +24,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  late ConnectionManager _connectionManager;
 
   // Add this to your chat screen's initState
   @override
@@ -26,10 +33,85 @@ class _ChatScreenState extends State<ChatScreen> {
     // _testMessageFlow();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkConnection();
+      _scrollToBottom();
       final connectionManager = Provider.of<ConnectionManager>(context, listen: false);
       connectionManager.debugPrintConnections();
       connectionManager.debugPrintMessages();
+      _setupConnection();
     });
+  }
+
+  Future<void> _setupConnection() async {
+    // Get ConnectionManager from Provider
+    final connectionManager = Provider.of<ConnectionManager>(context, listen: false);
+
+    try {
+      // First check if we have a connected device
+      if (connectionManager.connectedDevice == null) {
+        throw Exception('No device selected for connection');
+      }
+
+      // Connect to the device
+      await connectionManager.connectToDevice(connectionManager.connectedDevice!);
+
+      // Set up message listener
+      connectionManager.addListener(_handleIncomingMessages);
+
+      // Send initial connection message
+      await connectionManager.sendMessage(
+        'Connected to chat',
+        isSystemMessage: true,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Connection failed: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  // Future<void> _setupConnection() async {
+  //   final connectionManager = Provider.of<ConnectionManager>(context);
+  //
+  //   try {
+  //     // Connect to the device
+  //     await _connectionManager.connectToDevice(connectionManager.connectedDevice);
+  //
+  //     // Set up message listener
+  //     _connectionManager.addListener(_handleIncomingMessages);
+  //
+  //     // Send initial connection message
+  //     await _connectionManager.sendMessage(
+  //       'Connected to chat',
+  //       isSystemMessage: true,
+  //     );
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Connection failed: ${e.toString()}')),
+  //     );
+  //   }
+  // }
+
+  void _handleIncomingMessages() {
+    // This will be called whenever new messages arrive
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   Future<void> _checkConnection() async {
@@ -101,6 +183,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
       body: Consumer<ConnectionManager>(
         builder: (context, manager, child) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _scrollToBottom();
+          });
+
           return Column(
             children: [
               // GestureDetector(
