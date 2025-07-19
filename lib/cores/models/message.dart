@@ -9,7 +9,7 @@ class Message {
   final String senderId;
   final String? receiverId;
   final DateTime timestamp;
-  final bool isSent;
+  late final bool isSent;
   MessageStatus status;
   final String? filePath;
   final String? fileName;

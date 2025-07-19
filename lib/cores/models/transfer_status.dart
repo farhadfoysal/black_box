@@ -8,7 +8,7 @@ class TransferStatus {
   final int fileSize;
   final int progress;
   final TransferStatusType status;
-  final bool isIncoming;
+  late final bool isIncoming;
   final DateTime startTime;
   final DateTime? endTime;
 

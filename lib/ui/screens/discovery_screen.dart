@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../cores/models/peer_device.dart';
 import '../../cores/network/connection_manager.dart';
+import '../../cores/utils/network_utils.dart';
 
 class DiscoveryScreen extends StatefulWidget {
   const DiscoveryScreen({super.key});
@@ -14,6 +15,32 @@ class DiscoveryScreen extends StatefulWidget {
 
 class _DiscoveryScreenState extends State<DiscoveryScreen> {
   bool _isScanning = false;
+
+  void _checkNetworkConditions() async {
+    // Verify basic network connectivity
+    final localIp = await NetworkUtils.getLocalIp();
+    if (localIp == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No network connection detected')),
+      );
+      return;
+    }
+
+    // Check if server port is accessible
+    final serverReachable = await NetworkUtils.testConnection(localIp, 8080);
+    if (!serverReachable) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Firewall may be blocking connections')),
+      );
+    }
+  }
+
+// Call this in initState
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkNetworkConditions());
+  }
 
   @override
   Widget build(BuildContext context) {

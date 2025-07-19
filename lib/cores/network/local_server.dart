@@ -30,6 +30,19 @@ class LocalServer {
   final Uuid _uuid = const Uuid();
   DateTime? _serverStartTime;
 
+//   // In LocalServer
+//   final message = Message.fromJson(messageData);
+//
+// // Validate required fields
+//   if (message.text.isEmpty || message.senderId.isEmpty) {
+//   return Response.badRequest(body: 'Invalid message data');
+//   }
+//
+// // Verify timestamp is recent (prevent replay attacks)
+//   if (message.timestamp.isBefore(DateTime.now().subtract(const Duration(hours: 1)))) {
+//   return Response.badRequest(body: 'Expired message');
+//   }
+
   LocalServer({
     required this.onMessageReceived,
     required this.onFileReceived,
@@ -41,8 +54,23 @@ class LocalServer {
     _router = Router()
       ..post('/message', _handleMessage)
       ..post('/file', _handleFileUpload)
+      ..post('/confirm', _handleConfirmation)
       ..get('/status', _handleStatusRequest)
       ..get('/health', _handleHealthCheck);
+  }
+
+  Future<Response> _handleConfirmation(Request request) async {
+    try {
+      final body = await request.readAsString();
+      final data = jsonDecode(body) as Map<String, dynamic>;
+
+      // Process confirmation (update message status)
+      return Response.ok(jsonEncode({'status': 'confirmed'}));
+    } catch (e) {
+      return Response.internalServerError(
+        body: jsonEncode({'error': 'Confirmation failed'}),
+      );
+    }
   }
 
   Future<void> start(int port) async {
@@ -86,20 +114,60 @@ class LocalServer {
     }
   }
 
+  // Future<Response> _handleMessage(Request request) async {
+  //   try {
+  //     // Verify authorization
+  //     final authHeader = request.headers['Authorization'];
+  //     if (!SecurityUtils.verifyMessageAuthHeader(
+  //       authHeader,
+  //       expectedDeviceId: deviceId,
+  //     )) {
+  //       return Response.unauthorized('Invalid authorization');
+  //     }
+  //
+  //     final messageJson = await request.readAsString();
+  //     final messageData = jsonDecode(messageJson) as Map<String, dynamic>;
+  //     final message = Message.fromJson(messageData);
+  //
+  //     // Process the message
+  //     onMessageReceived(message);
+  //
+  //     return Response.ok(
+  //       jsonEncode({'status': 'success'}),
+  //       headers: {'Content-Type': 'application/json'},
+  //     );
+  //   } catch (e, stackTrace) {
+  //     debugPrint('Message handling error: $e\n$stackTrace');
+  //     return Response.internalServerError(
+  //       body: jsonEncode({'error': 'Message processing failed'}),
+  //       headers: {'Content-Type': 'application/json'},
+  //     );
+  //   }
+  // }
+
   Future<Response> _handleMessage(Request request) async {
     try {
-      // Verify authorization
-      final authHeader = request.headers['Authorization'];
-      if (!SecurityUtils.verifyMessageAuthHeader(
-        authHeader,
-        expectedDeviceId: deviceId,
-      )) {
-        return Response.unauthorized('Invalid authorization');
-      }
+      // Get client IP
+      final clientIp = (request.context['shelf.io.connection_info']
+      as HttpConnectionInfo?)?.remoteAddress.address;
 
+      // Read and parse message
       final messageJson = await request.readAsString();
       final messageData = jsonDecode(messageJson) as Map<String, dynamic>;
+
+      // Validate message structure
+      if (messageData['text'] == null || messageData['senderId'] == null) {
+        return Response.badRequest(body: 'Invalid message format');
+      }
+
+      // Create message object
       final message = Message.fromJson(messageData);
+      message.isSent = false; // Mark as received message
+
+      if (enableLogging) {
+        debugPrint('Received message from ${clientIp ?? 'unknown'}');
+        debugPrint('Message content: ${message.text}');
+      }
 
       // Process the message
       onMessageReceived(message);
@@ -112,7 +180,6 @@ class LocalServer {
       debugPrint('Message handling error: $e\n$stackTrace');
       return Response.internalServerError(
         body: jsonEncode({'error': 'Message processing failed'}),
-        headers: {'Content-Type': 'application/json'},
       );
     }
   }

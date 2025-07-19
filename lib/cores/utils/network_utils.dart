@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import '../models/peer_device.dart';
 import '../exceptions/p2p_exceptions.dart';
@@ -19,6 +20,74 @@ class NetworkUtils {
       throw P2PNetworkException('Failed to get local IP: ${e.toString()}');
     }
     return null;
+  }
+
+  static Future<bool> testConnection(String ip, int port, {
+    Duration timeout = const Duration(seconds: 2),
+  }) async {
+    try {
+      final socket = await Socket.connect(ip, port, timeout: timeout);
+      await socket.close();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // static Future<bool> testConnection(String ip, int port) async {
+  //   try {
+  //     final socket = await Socket.connect(ip, port, timeout: const Duration(seconds: 2));
+  //     socket.destroy();
+  //     return true;
+  //   } catch (_) {
+  //     return false;
+  //   }
+  // }
+
+  // static Future<String?> getLocalIp() async {
+  //   try {
+  //     for (final interface in await NetworkInterface.list()) {
+  //       for (final addr in interface.addresses) {
+  //         if (!addr.isLoopback && addr.type == InternetAddressType.IPv4) {
+  //           return addr.address;
+  //         }
+  //       }
+  //     }
+  //   } catch (e) {
+  //     debugPrint('Error getting local IP: $e');
+  //   }
+  //   return null;
+  // }
+
+  static Future<bool> canConnectToDevice(String ip, int port) async {
+    try {
+      final socket = await Socket.connect(ip, port,
+          timeout: const Duration(seconds: 2));
+      await socket.close();
+      return true;
+    } catch (e) {
+      debugPrint('Connection test failed to $ip:$port - $e');
+      return false;
+    }
+  }
+
+  static Future<void> verifyNetwork() async {
+    final localIp = await NetworkUtils.getLocalIp();
+    debugPrint('Local IP: $localIp');
+
+    if (localIp == null) {
+      debugPrint('No local IP address found');
+      return;
+    }
+
+    final subnet = localIp.substring(0, localIp.lastIndexOf('.'));
+    debugPrint('Testing connectivity to gateway $subnet.1');
+
+    final gatewayReachable = await testConnection('$subnet.1', 80);
+    debugPrint('Gateway reachable: $gatewayReachable');
+
+    final serverReachable = await testConnection(localIp, 8080);
+    debugPrint('Local server reachable: $serverReachable');
   }
 
   static Future<List<PeerDevice>> scanLocalNetwork({

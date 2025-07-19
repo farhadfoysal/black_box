@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../cores/models/message.dart';
 import '../../cores/network/connection_manager.dart';
+import '../../cores/utils/network_utils.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -18,6 +19,51 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  // Add this to your chat screen's initState
+  @override
+  void initState() {
+    super.initState();
+    // _testMessageFlow();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkConnection();
+      final connectionManager = Provider.of<ConnectionManager>(context, listen: false);
+      connectionManager.debugPrintConnections();
+      connectionManager.debugPrintMessages();
+    });
+  }
+
+  Future<void> _checkConnection() async {
+    final connectionManager = context.read<ConnectionManager>();
+    if (connectionManager.connectedDevice == null) return;
+
+    final isReachable = await NetworkUtils.canConnectToDevice(
+      connectionManager.connectedDevice!.ipAddress,
+      ConnectionManager.serverPort,
+    );
+
+    if (!isReachable && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Connection lost, attempting to reconnect')),
+      );
+      connectionManager.disconnect();
+    }
+  }
+
+// Test message flow
+  void _testMessageFlow() async {
+    final connectionManager = Provider.of<ConnectionManager>(context, listen: false);
+
+    // Test local message
+    await connectionManager.sendMessage('Local test message', isSystemMessage: true);
+
+    // Test network message if connected
+    if (connectionManager.connectedDevice != null) {
+      await connectionManager.sendMessage('Network test message');
+    }
+
+    connectionManager.debugPrintMessages();
+  }
+
   @override
   void dispose() {
     _messageController.dispose();
@@ -28,6 +74,9 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final connectionManager = Provider.of<ConnectionManager>(context);
+
+    // Debugging - print when messages change
+    debugPrint('Messages updated: ${connectionManager.messages.length}');
 
     return Scaffold(
       appBar: AppBar(
@@ -41,14 +90,43 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _buildMessageList(connectionManager),
-          ),
-          _buildMessageInput(connectionManager),
-        ],
+      // body: Column(
+      //   children: [
+      //     Expanded(
+      //       child: _buildMessageList(connectionManager),
+      //     ),
+      //     _buildMessageInput(connectionManager),
+      //   ],
+      // ),
+
+      body: Consumer<ConnectionManager>(
+        builder: (context, manager, child) {
+          return Column(
+            children: [
+              // GestureDetector(
+              //   onLongPress: _testMessageFlow,
+              //   child: Container(color: Colors.transparent),
+              // ),
+              // Expanded(
+              //   child: _buildMessageList(connectionManager),
+              // ),
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  itemCount: manager.messages.length,
+                  itemBuilder: (context, index) {
+                    final message = manager.messages[index];
+                    debugPrint('Displaying message: ${message.text}');
+                    return _buildMessageBubble(message);
+                  },
+                ),
+              ),
+              _buildMessageInput(manager),
+            ],
+          );
+        },
       ),
+
     );
   }
 
