@@ -22,7 +22,7 @@ class DatabaseManager {
 
   Future<int> insertMessUser(MessUser user) async {
     Database db = await DatabaseHelper().database;
-    return await db.insert('MUser', user.toMap());
+    return await db.insert('mess_user', user.toMap());
   }
 
   Future<int> updateUser(User user) async {
@@ -63,7 +63,7 @@ class DatabaseManager {
 
   Future<MessUser?> getMessUserByPhone(String id) async {
     Database db = await DatabaseHelper().database;
-    List<Map<String, dynamic>> maps = await db.query('MUser', where: 'phone = ?', whereArgs: [id]);
+    List<Map<String, dynamic>> maps = await db.query('mess_user', where: 'phone = ?', whereArgs: [id]);
     if (maps.isNotEmpty) {
       return MessUser.fromMap(maps.first);
     }
