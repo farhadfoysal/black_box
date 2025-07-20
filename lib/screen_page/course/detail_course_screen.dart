@@ -29,6 +29,7 @@ import '../../quiz/QuestionManagementDetailPage.dart';
 import '../../style/color/app_color.dart';
 import '../../utility/unique.dart';
 import '../exam/exam_results_page.dart';
+import 'course_manager_page.dart';
 
 class DetailCourseScreen extends StatefulWidget {
   final CourseModel course;
@@ -583,7 +584,12 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                   color: AppColors.textLight),
               tooltip: 'Course Manager',
               onPressed: () {
-                // TODO: Add navigation or action
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CourseManagerScreen(user: _user!, course: widget.course),
+                  ),
+                );
               },
             ),
           ],
