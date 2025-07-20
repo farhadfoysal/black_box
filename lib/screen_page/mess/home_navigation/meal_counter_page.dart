@@ -1735,6 +1735,8 @@ extension PressEffect on Widget {
 }
 
 
+
+
 class BazarListPage1 extends StatelessWidget {
   final List<Map<String, String>> bazarList = [
     {'name': 'Rafsan', 'from': 'From 3rd Mar', 'to': 'End 5th Mar'},
@@ -1751,39 +1753,69 @@ class BazarListPage1 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text('January ~ Bazar List',
-            style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.teal.shade700,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            )),
+        centerTitle: true,
+        backgroundColor: Color(0xFF00897B), // Teal 700
         elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(15),
+          ),
+        ),
         actions: [
           IconButton(
-            icon: Icon(Icons.add, color: Colors.white),
+            icon: Icon(Icons.add, color: Colors.white, size: 28),
             onPressed: () {},
+            tooltip: 'Add new entry',
           ),
+          SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
           // Financial Summary Card
-          Card(
+          Container(
             margin: EdgeInsets.all(16),
-            elevation: 3,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFE0F2F1), Color(0xFFB2DFDB)],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Financial Summary',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.teal.shade800,
-                    ),
+                  Row(
+                    children: [
+                      Icon(Icons.assessment, color: Color(0xFF00796B)),
+                      SizedBox(width: 8),
+                      Text(
+                        'Financial Summary',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF00796B),
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: 12),
                   FinancialSummaryTable(),
@@ -1792,63 +1824,124 @@ class BazarListPage1 extends StatelessWidget {
             ),
           ),
 
+          // Header for Bazar List
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Bazar Schedule',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                Text(
+                  '${bazarList.length} Members',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 8),
+
           // Bazar List
           Expanded(
             child: ListView.builder(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: bazarList.length,
               itemBuilder: (context, index) {
                 final item = bazarList[index];
-                return Container(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        blurRadius: 6,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
+                return Card(
+                  margin: EdgeInsets.symmetric(vertical: 6),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: ListTile(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.teal.shade100,
-                      child: Text(
-                        item['name']!.substring(0, 1),
-                        style: TextStyle(color: Colors.teal.shade800),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {},
+                    child: Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          // Avatar with colored background based on index
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: _getAvatarColor(index),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                item['name']!.substring(0, 1),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item['name']!,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                    color: Colors.grey[800],
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.calendar_today,
+                                      size: 14,
+                                      color: Colors.grey[500],
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      '${item['from']} - ${item['to']}',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Action buttons
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildActionButton(
+                                icon: Icons.edit,
+                                color: Colors.blue[600]!,
+                                onPressed: () {},
+                              ),
+                              SizedBox(width: 8),
+                              _buildActionButton(
+                                icon: Icons.lock,
+                                color: Colors.grey[600]!,
+                                onPressed: () {},
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ),
-                    title: Text(
-                      item['name']!,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
-                    subtitle: Row(
-                      children: [
-                        Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-                        SizedBox(width: 4),
-                        Text(
-                          '${item['from']} - ${item['to']}',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.edit, color: Colors.blue.shade600),
-                          onPressed: () {},
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.lock, color: Colors.grey.shade600),
-                          onPressed: () {},
-                        ),
-                      ],
                     ),
                   ),
                 );
@@ -1857,7 +1950,48 @@ class BazarListPage1 extends StatelessWidget {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Color(0xFF00897B),
+        child: Icon(Icons.add, color: Colors.white),
+        onPressed: () {},
+        elevation: 4,
+      ),
     );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        shape: BoxShape.circle,
+      ),
+      child: IconButton(
+        icon: Icon(icon, size: 18, color: color),
+        onPressed: onPressed,
+        padding: EdgeInsets.zero,
+      ),
+    );
+  }
+
+  Color _getAvatarColor(int index) {
+    final colors = [
+      Color(0xFFE53935), // Red
+      Color(0xFF8E24AA), // Purple
+      Color(0xFF3949AB), // Indigo
+      Color(0xFF039BE5), // Light Blue
+      Color(0xFF00897B), // Teal
+      Color(0xFF7CB342), // Light Green
+      Color(0xFFFDD835), // Yellow
+      Color(0xFFFB8C00), // Orange
+      Color(0xFFD81B60), // Pink
+    ];
+    return colors[index % colors.length];
   }
 }
 
@@ -1865,12 +1999,10 @@ class FinancialSummaryTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Table(
-      border: TableBorder(
-        horizontalInside: BorderSide(
-          color: Colors.grey.shade200,
-          width: 1,
-        ),
-      ),
+      columnWidths: {
+        0: FlexColumnWidth(2),
+        1: FlexColumnWidth(1),
+      },
       children: [
         _buildTableRow('#মোট মিলঃ', '1'),
         _buildTableRow('#মিল রেইটঃ', '0.00'),
@@ -1886,26 +2018,41 @@ class FinancialSummaryTable extends StatelessWidget {
   TableRow _buildTableRow(String label, String value, {bool isHighlighted = false, bool isTotal = false}) {
     return TableRow(
       decoration: BoxDecoration(
-        color: isTotal ? Colors.teal.shade50 : Colors.transparent,
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.grey[200]!,
+            width: 1,
+          ),
+        ),
       ),
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
+          padding: EdgeInsets.symmetric(vertical: 10),
           child: Text(
             label,
             style: TextStyle(
-              color: isHighlighted ? Colors.orange.shade800 : Colors.grey.shade700,
-              fontWeight: isHighlighted ? FontWeight.bold : FontWeight.normal,
+              fontSize: 14,
+              color: isHighlighted
+                  ? Colors.orange[800]
+                  : isTotal
+                  ? Color(0xFF00796B)
+                  : Colors.grey[700],
+              fontWeight: isHighlighted || isTotal
+                  ? FontWeight.bold
+                  : FontWeight.normal,
             ),
           ),
         ),
         Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
+          padding: EdgeInsets.symmetric(vertical: 10),
           child: Text(
             value,
             textAlign: TextAlign.end,
             style: TextStyle(
-              color: isTotal ? Colors.teal.shade800 : Colors.grey.shade800,
+              fontSize: 14,
+              color: isTotal
+                  ? Color(0xFF00796B)
+                  : Colors.grey[800],
               fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
             ),
           ),
@@ -1914,7 +2061,6 @@ class FinancialSummaryTable extends StatelessWidget {
     );
   }
 }
-
 
 // class SchedulePage extends StatelessWidget {
 //   @override
