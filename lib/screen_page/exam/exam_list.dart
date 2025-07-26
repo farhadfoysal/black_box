@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:black_box/model/exam/exam_model.dart';
 import 'package:black_box/model/exam/question_model.dart';
 import '../../services/exam/exam_service.dart';
+import 'exam_details.dart';
 
 // The main Exam List Page.
 class ExamListPage extends StatefulWidget {
@@ -28,6 +29,7 @@ class _ExamListPageState extends State<ExamListPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ExamService>(context, listen: false).loadExams();
     });
+
   }
 
   @override
@@ -68,7 +70,8 @@ class _ExamListPageState extends State<ExamListPage> {
   Future<List<ExamModel>> _fetchExams() async {
     try {
       final examService = Provider.of<ExamService>(context, listen: false);
-      return await examService.getAllExams();
+      // return await examService.getAllExams();
+      return await examService.getUserExams();
     } catch (e) {
       _showErrorSnackbar('Error loading exams: ${e.toString()}');
       return [];
@@ -170,6 +173,113 @@ class _ExamListPageState extends State<ExamListPage> {
   }
 
   // Builds each exam card.
+  // Widget _buildExamCard(ExamModel exam) {
+  //   return Card(
+  //     elevation: 4,
+  //     margin: const EdgeInsets.only(bottom: 16),
+  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  //     child: InkWell(
+  //       borderRadius: BorderRadius.circular(12),
+  //       onTap: () => _showExamDetails(exam),
+  //       onLongPress: () => _showExamOptions(exam),
+  //       child: Padding(
+  //         padding: const EdgeInsets.all(16.0),
+  //         child: Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             // Title and status.
+  //             Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //               children: [
+  //                 Expanded(
+  //                   child: Text(
+  //                     exam.title,
+  //                     style: const TextStyle(
+  //                         fontSize: 18,
+  //                         fontWeight: FontWeight.bold,
+  //                         color: Color(0xFF2C3E50)),
+  //                   ),
+  //                 ),
+  //                 Container(
+  //                   padding: const EdgeInsets.symmetric(
+  //                       horizontal: 8, vertical: 4),
+  //                   decoration: BoxDecoration(
+  //                     color: _getStatusColor(exam.status),
+  //                     borderRadius: BorderRadius.circular(12),
+  //                   ),
+  //                   child: Text(
+  //                     exam.status == 1 ? 'Active' : 'Inactive',
+  //                     style:
+  //                     const TextStyle(color: Colors.white, fontSize: 12),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //             const SizedBox(height: 8),
+  //             // Description.
+  //             Text(exam.description,
+  //                 style:
+  //                 TextStyle(fontSize: 14, color: Colors.grey[600])),
+  //             const SizedBox(height: 12),
+  //             // Type and duration row.
+  //             Row(
+  //               children: [
+  //                 Icon(_getExamTypeIcon(exam.examType),
+  //                     size: 16, color: const Color(0xFF3A7BD5)),
+  //                 const SizedBox(width: 4),
+  //                 Text(_formatExamType(exam.examType),
+  //                     style: TextStyle(
+  //                         fontSize: 13, color: Colors.grey[700])),
+  //                 const Spacer(),
+  //                 Icon(Icons.timer_outlined,
+  //                     size: 16, color: Colors.grey[600]),
+  //                 const SizedBox(width: 4),
+  //                 Text('${exam.durationMinutes} min',
+  //                     style: TextStyle(
+  //                         fontSize: 13, color: Colors.grey[700])),
+  //               ],
+  //             ),
+  //             const SizedBox(height: 12),
+  //             // Created date and exam actions.
+  //             Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //               children: [
+  //                 Text('Created: ${_formatDate(exam.createdAt)}',
+  //                     style: TextStyle(
+  //                         fontSize: 12, color: Colors.grey[500])),
+  //                 Row(
+  //                   children: [
+  //                     TextButton(
+  //                       onPressed: () => _navigateToExamStart(exam),
+  //                       style: TextButton.styleFrom(
+  //                         padding: EdgeInsets.zero,
+  //                         minimumSize: const Size(50, 30),
+  //                         tapTargetSize:
+  //                         MaterialTapTargetSize.shrinkWrap,
+  //                       ),
+  //                       child: const Text('START',
+  //                           style: TextStyle(
+  //                               color: Color(0xFF3A7BD5),
+  //                               fontWeight: FontWeight.bold)),
+  //                     ),
+  //                     IconButton(
+  //                       icon: const Icon(Icons.more_vert, size: 20),
+  //                       onPressed: () => _showExamOptions(exam),
+  //                       color: Colors.grey[600],
+  //                       padding: EdgeInsets.zero,
+  //                       constraints: const BoxConstraints(),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ],
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
+
   Widget _buildExamCard(ExamModel exam) {
     return Card(
       elevation: 4,
@@ -184,66 +294,47 @@ class _ExamListPageState extends State<ExamListPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title and status.
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
                     child: Text(
                       exam.title,
-                      style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2C3E50)),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF2C3E50)),
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: _getStatusColor(exam.status),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       exam.status == 1 ? 'Active' : 'Inactive',
-                      style:
-                      const TextStyle(color: Colors.white, fontSize: 12),
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              // Description.
-              Text(exam.description,
-                  style:
-                  TextStyle(fontSize: 14, color: Colors.grey[600])),
+              Text(exam.description, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
               const SizedBox(height: 12),
-              // Type and duration row.
               Row(
                 children: [
-                  Icon(_getExamTypeIcon(exam.examType),
-                      size: 16, color: const Color(0xFF3A7BD5)),
+                  Icon(_getExamTypeIcon(exam.examType), size: 16, color: const Color(0xFF3A7BD5)),
                   const SizedBox(width: 4),
-                  Text(_formatExamType(exam.examType),
-                      style: TextStyle(
-                          fontSize: 13, color: Colors.grey[700])),
+                  Text(_formatExamType(exam.examType), style: TextStyle(fontSize: 13, color: Colors.grey[700])),
                   const Spacer(),
-                  Icon(Icons.timer_outlined,
-                      size: 16, color: Colors.grey[600]),
+                  Icon(Icons.timer_outlined, size: 16, color: Colors.grey[600]),
                   const SizedBox(width: 4),
-                  Text('${exam.durationMinutes} min',
-                      style: TextStyle(
-                          fontSize: 13, color: Colors.grey[700])),
+                  Text('${exam.durationMinutes} min', style: TextStyle(fontSize: 13, color: Colors.grey[700])),
                 ],
               ),
               const SizedBox(height: 12),
-              // Created date and exam actions.
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Created: ${_formatDate(exam.createdAt)}',
-                      style: TextStyle(
-                          fontSize: 12, color: Colors.grey[500])),
+                  Text('Created: ${_formatDate(exam.createdAt)}', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
                   Row(
                     children: [
                       TextButton(
@@ -251,13 +342,9 @@ class _ExamListPageState extends State<ExamListPage> {
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
                           minimumSize: const Size(50, 30),
-                          tapTargetSize:
-                          MaterialTapTargetSize.shrinkWrap,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
-                        child: const Text('START',
-                            style: TextStyle(
-                                color: Color(0xFF3A7BD5),
-                                fontWeight: FontWeight.bold)),
+                        child: const Text('START', style: TextStyle(color: Color(0xFF3A7BD5), fontWeight: FontWeight.bold)),
                       ),
                       IconButton(
                         icon: const Icon(Icons.more_vert, size: 20),
@@ -276,6 +363,8 @@ class _ExamListPageState extends State<ExamListPage> {
       ),
     );
   }
+
+
 
   // Returns the color for exam status.
   Color _getStatusColor(int status) =>
@@ -641,6 +730,47 @@ class _ExamListPageState extends State<ExamListPage> {
                 ),
                 child: const Text(
                   'Start Exam',
+                  style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ExamDetailsPage(exam: exam,),
+                    ),
+                  );
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (context) => ExamDetailsPage(
+                  //       questions: exam.questions ?? [],
+                  //       examTitle: exam.title,
+                  //       examDescription: exam.description,
+                  //       durationMinutes: exam.durationMinutes,
+                  //       examType: exam.examType,
+                  //       createdAt: exam.createdAt,
+                  //     ),
+                  //   ),
+                  // );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3A7BD5),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Details Exam',
                   style: TextStyle(
                       fontSize: 16, fontWeight: FontWeight.bold),
                 ),
