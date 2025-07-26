@@ -5,6 +5,8 @@ import 'package:video_player/video_player.dart';
 
 import '../../model/exam/exam_model.dart';
 import '../../model/exam/question_model.dart';
+import '../../model/exam/quiz_result_model.dart';
+import 'exam_result.dart';
 
 class AttemptExamPage extends StatefulWidget {
   final ExamModel exam;
@@ -191,6 +193,7 @@ class _AttemptExamPageState extends State<AttemptExamPage> {
     );
   }
 
+
   Future<void> _submitExam() async {
     setState(() {
       _isSubmitting = true;
@@ -214,7 +217,29 @@ class _AttemptExamPageState extends State<AttemptExamPage> {
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Return to previous screen
+              final result = QuizResultModel(
+                studentId: 'STU12345',
+                phoneNumber: '+1234567890',
+                quizId: widget.exam.uniqueId,
+                quizName: widget.exam.title,
+                correctCount: 7,
+                incorrectCount: 2,
+                uncheckedCount: 1,
+                percentage: 70.0,
+                timestamp: DateTime.now(),
+              );
+
+              setState(() {
+                _isSubmitting = false;
+              });
+
+              // Navigate to result page
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => QuizResultPage(result: result),
+                ),
+              );
             },
             child: const Text('OK'),
           ),
