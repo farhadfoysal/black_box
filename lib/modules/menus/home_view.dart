@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:black_box/cores/cores.dart';
+import 'package:black_box/screen_page/exam/exam_list.dart';
 import 'package:black_box/screen_page/tutor/tutor_main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as b;
@@ -36,7 +37,7 @@ class HomeView extends StatelessWidget {
         '/budget-tracker': (context) => const TuitionFinderPage(),
         '/bazar-list': (context) => const TuitionFinderPage(),
         '/course-finder': (context) => const TuitionFinderPage(),
-        '/exam-management': (context) => const TuitionFinderPage(),
+        '/exam-management': (context) => ExamListPage(),
         '/seba-manager': (context) => const TuitionFinderPage(),
         '/hisab-manager': (context) => const TuitionFinderPage(),
         '/vocabulary-manager': (context) => const TuitionFinderPage(),

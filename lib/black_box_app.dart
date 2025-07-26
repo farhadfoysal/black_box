@@ -2,6 +2,7 @@ import 'package:black_box/cores/network/connection_manager.dart';
 import 'package:black_box/provider/connectivity_provider.dart';
 import 'package:black_box/provider/user/user_provider.dart';
 import 'package:black_box/screen_page/splash/splash.dart';
+import 'package:black_box/services/exam/exam_service.dart';
 import 'package:black_box/utility/controller/theme_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -26,6 +27,7 @@ class BlackBoxApp extends StatelessWidget{
           ChangeNotifierProvider(create: (_) => LoginProvider()),
           ChangeNotifierProvider(create: (_) => HomeProvider()),
           ChangeNotifierProvider(create: (_) => ConnectionManager()),
+          ChangeNotifierProvider(create: (_) => ExamService()),
         ],
         child: Obx(
               () => GetMaterialApp(

@@ -36,6 +36,42 @@ class ExamModel {
     this.questions,
   });
 
+  ExamModel copyWith({
+    int? id,
+    String? uniqueId,
+    String? examId,
+    String? title,
+    String? description,
+    String? createdAt,
+    int? durationMinutes,
+    int? status,
+    String? examType,
+    String? subjectId,
+    String? courseId,
+    String? userId,
+    String? mediaUrl,
+    String? mediaType,
+    List<QuestionModel>? questions,
+  }) {
+    return ExamModel(
+      id: id ?? this.id,
+      uniqueId: uniqueId ?? this.uniqueId,
+      examId: examId ?? this.examId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      createdAt: createdAt ?? this.createdAt,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
+      status: status ?? this.status,
+      examType: examType ?? this.examType,
+      subjectId: subjectId ?? this.subjectId,
+      courseId: courseId ?? this.courseId,
+      userId: userId ?? this.userId,
+      mediaUrl: mediaUrl ?? this.mediaUrl,
+      mediaType: mediaType ?? this.mediaType,
+      questions: questions ?? this.questions,
+    );
+  }
+
   /// Map for SQLite
   Map<String, dynamic> toMap() => {
     'id': id,
