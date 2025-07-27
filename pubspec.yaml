@@ -71,7 +71,7 @@ dependencies:
   material_design_icons_flutter: ^7.0.7296
   file_picker: ^8.3.7
   excel: ^4.0.6
-  video_player: ^2.10.0
+  video_player: ^2.7.0
   google_sign_in: ^6.3.0
   googleapis: ^14.0.0
   googleapis_auth: ^2.0.0
@@ -103,6 +103,7 @@ dependencies:
   share_plus: ^11.0.0
   image_picker: ^1.0.4
   webview_flutter: ^4.13.0
+  pod_player: ^0.2.2
 
 
 
