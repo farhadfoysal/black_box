@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
 import '../../model/exam/quiz_result_model.dart';
 
 class QuizResultPage extends StatelessWidget {

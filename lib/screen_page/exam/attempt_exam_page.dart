@@ -1,10 +1,6 @@
-// attempt_exam_page.dart
 import 'package:black_box/screen_page/exam/widget/question_card.dart';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
-
 import '../../model/exam/exam_model.dart';
-import '../../model/exam/question_model.dart';
 import '../../model/exam/quiz_result_model.dart';
 import 'exam_result.dart';
 

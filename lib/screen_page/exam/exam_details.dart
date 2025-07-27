@@ -1,7 +1,6 @@
 import 'package:black_box/screen_page/exam/attempt_exam_page.dart';
 import 'package:flutter/material.dart';
 import 'package:black_box/model/exam/exam_model.dart';
-
 import '../../model/exam/question_model.dart';
 
 class ExamDetailsPage extends StatelessWidget {

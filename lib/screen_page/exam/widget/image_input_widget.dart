@@ -1,8 +1,7 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:permission_handler/permission_handler.dart';
 
 class ImageInputWidget extends StatefulWidget {
   final ValueChanged<String?> onImageSelected;
@@ -70,14 +69,47 @@ class _ImageInputWidgetState extends State<ImageInputWidget> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final permissionStatus = await Permission.photos.request(); // For iOS
+    final storageStatus = await Permission.storage.request();   // For Android
 
-    if (pickedFile != null) {
-      setState(() {
-        _imagePath = pickedFile.path;
-      });
-      widget.onImageSelected(_imagePath);
+    if (permissionStatus.isGranted || storageStatus.isGranted) {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedFile != null) {
+        setState(() {
+          _imagePath = pickedFile.path;
+        });
+        widget.onImageSelected(_imagePath);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Permission denied to access photos.')),
+      );
     }
   }
+
+  // Future<void> _pickImage() async {
+  //   final source = await showDialog<ImageSource>(
+  //     context: context,
+  //     builder: (_) => AlertDialog(
+  //       title: const Text("Select Image Source"),
+  //       actions: [
+  //         TextButton(onPressed: () => Navigator.pop(context, ImageSource.camera), child: const Text("Camera")),
+  //         TextButton(onPressed: () => Navigator.pop(context, ImageSource.gallery), child: const Text("Gallery")),
+  //       ],
+  //     ),
+  //   );
+  //
+  //   if (source != null) {
+  //     final status = await Permission.photos.request();
+  //     final pickedFile = await ImagePicker().pickImage(source: source);
+  //     if (pickedFile != null) {
+  //       setState(() => _imagePath = pickedFile.path);
+  //       widget.onImageSelected(_imagePath);
+  //     }
+  //   }
+  // }
+
+
 }

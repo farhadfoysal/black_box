@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../model/exam/question_model.dart';
 import 'edpuzzle_video_widget.dart';
-import 'image_input_widget.dart';
 
 class QuestionCard extends StatefulWidget {
   final QuestionModel question;

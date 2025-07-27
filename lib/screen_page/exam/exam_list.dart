@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:black_box/model/exam/exam_model.dart';
-import 'package:black_box/model/exam/question_model.dart';
 import '../../services/exam/exam_service.dart';
 import 'exam_details.dart';
 
