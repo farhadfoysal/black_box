@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../model/exam/question_model.dart';
 import 'edpuzzle_video_widget.dart';
+import 'image_input_widget.dart';
 
 class QuestionCard extends StatefulWidget {
   final QuestionModel question;
@@ -101,6 +102,7 @@ class _QuestionCardState extends State<QuestionCard> {
 
   Widget _buildImageQuestion() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           widget.question.questionTitle,
@@ -114,7 +116,7 @@ class _QuestionCardState extends State<QuestionCard> {
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: Image.network(
-            widget.question.url!,
+            widget.question.url ?? '',
             height: 200,
             width: double.infinity,
             fit: BoxFit.cover,
@@ -144,9 +146,19 @@ class _QuestionCardState extends State<QuestionCard> {
             },
           ),
         ),
+        const SizedBox(height: 16),
+
+        // Image input widget for uploading the answer
+        ImageInputWidget(
+          onImageSelected: (String? imagePath) {
+            // Save the image path or upload logic
+            print("User selected answer image path: $imagePath");
+          },
+        ),
       ],
     );
   }
+
 
   Widget _buildVideoQuestion() {
     return Column(

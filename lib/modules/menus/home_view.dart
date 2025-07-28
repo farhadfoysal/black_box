@@ -2,6 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:black_box/cores/cores.dart';
+import 'package:black_box/extra/quiz/exam_attempt_page.dart';
+import 'package:black_box/extra/quiz/exam_attempt_page_main.dart';
+import 'package:black_box/extra/quiz/quiz_four.dart';
+import 'package:black_box/extra/quiz/quiz_three.dart';
+import 'package:black_box/extra/quiz/quiz_two.dart';
+import 'package:black_box/quiz/quiz_screen.dart';
 import 'package:black_box/screen_page/exam/exam_list.dart';
 import 'package:black_box/screen_page/tutor/tutor_main_screen.dart';
 import 'package:flutter/material.dart';
@@ -34,8 +40,8 @@ class HomeView extends StatelessWidget {
         '/tutor-finder': (context) => const TutorFinderPage(),
         '/roommate-finder': (context) => const RoommateFinderPage(),
         '/tuition-finder': (context) => const TuitionFinderPage(),
-        '/budget-tracker': (context) => const TuitionFinderPage(),
-        '/bazar-list': (context) => const TuitionFinderPage(),
+        '/budget-tracker': (context) =>  ExamAttemptPage(),
+        '/bazar-list': (context) =>  ExamAttemptPagee(),
         '/course-finder': (context) => const TuitionFinderPage(),
         '/exam-management': (context) => ExamListPage(),
         '/seba-manager': (context) => const TuitionFinderPage(),

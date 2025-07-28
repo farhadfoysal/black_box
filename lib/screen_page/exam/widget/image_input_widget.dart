@@ -9,11 +9,12 @@ class ImageInputWidget extends StatefulWidget {
   const ImageInputWidget({Key? key, required this.onImageSelected}) : super(key: key);
 
   @override
-  _ImageInputWidgetState createState() => _ImageInputWidgetState();
+  State<ImageInputWidget> createState() => _ImageInputWidgetState();
 }
 
 class _ImageInputWidgetState extends State<ImageInputWidget> {
   String? _imagePath;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
@@ -28,38 +29,33 @@ class _ImageInputWidgetState extends State<ImageInputWidget> {
             color: Color(0xFF2C3E50),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         GestureDetector(
-          onTap: _pickImage,
+          onTap: _showImageSourceOptions,
           child: Container(
             height: 150,
+            width: double.infinity,
             decoration: BoxDecoration(
               color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: Colors.grey[300]!,
-                width: 1.5,
-              ),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.grey[300]!),
             ),
             child: _imagePath == null
                 ? Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
                 Icon(Icons.cloud_upload, size: 40, color: Color(0xFF3A7BD5)),
-                SizedBox(height: 8),
-                Text(
-                  'Tap to upload image',
-                  style: TextStyle(color: Color(0xFF3A7BD5)),
-                ),
+                SizedBox(height: 10),
+                Text('Tap to upload image', style: TextStyle(color: Color(0xFF3A7BD5))),
               ],
             )
                 : ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
               child: Image.file(
                 File(_imagePath!),
-                fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,
+                fit: BoxFit.cover,
               ),
             ),
           ),
@@ -68,14 +64,40 @@ class _ImageInputWidgetState extends State<ImageInputWidget> {
     );
   }
 
-  Future<void> _pickImage() async {
-    final permissionStatus = await Permission.photos.request(); // For iOS
-    final storageStatus = await Permission.storage.request();   // For Android
+  Future<void> _showImageSourceOptions() async {
+    final source = await showDialog<ImageSource>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Image Source'),
+        content: const Text('Choose where to pick the image from.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, ImageSource.camera),
+            child: const Text('Camera'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, ImageSource.gallery),
+            child: const Text('Gallery'),
+          ),
+        ],
+      ),
+    );
 
-    if (permissionStatus.isGranted || storageStatus.isGranted) {
-      final picker = ImagePicker();
-      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (source != null) {
+      await _pickImage(source);
+    }
+  }
 
+  Future<void> _pickImage(ImageSource source) async {
+    // Handle permission based on platform and source
+    final cameraStatus = await Permission.camera.request();
+    final storageStatus = Platform.isAndroid
+        ? await Permission.storage.request()
+        : await Permission.photos.request();
+
+    if ((source == ImageSource.camera && cameraStatus.isGranted) ||
+        (source == ImageSource.gallery && storageStatus.isGranted)) {
+      final pickedFile = await _picker.pickImage(source: source);
       if (pickedFile != null) {
         setState(() {
           _imagePath = pickedFile.path;
@@ -84,32 +106,8 @@ class _ImageInputWidgetState extends State<ImageInputWidget> {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permission denied to access photos.')),
+        const SnackBar(content: Text('Permission denied. Cannot pick image.')),
       );
     }
   }
-
-  // Future<void> _pickImage() async {
-  //   final source = await showDialog<ImageSource>(
-  //     context: context,
-  //     builder: (_) => AlertDialog(
-  //       title: const Text("Select Image Source"),
-  //       actions: [
-  //         TextButton(onPressed: () => Navigator.pop(context, ImageSource.camera), child: const Text("Camera")),
-  //         TextButton(onPressed: () => Navigator.pop(context, ImageSource.gallery), child: const Text("Gallery")),
-  //       ],
-  //     ),
-  //   );
-  //
-  //   if (source != null) {
-  //     final status = await Permission.photos.request();
-  //     final pickedFile = await ImagePicker().pickImage(source: source);
-  //     if (pickedFile != null) {
-  //       setState(() => _imagePath = pickedFile.path);
-  //       widget.onImageSelected(_imagePath);
-  //     }
-  //   }
-  // }
-
-
 }
