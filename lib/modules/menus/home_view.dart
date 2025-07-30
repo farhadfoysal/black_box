@@ -299,78 +299,16 @@ class _HomeViewState extends State<HomePage> with TickerProviderStateMixin{
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (_user == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    // Calculate the number of rows needed (4 items per row)
-    final rowCount = (items.length / 4).ceil();
-    // Calculate height based on row count (100px per row + spacing)
-    final gridHeight = rowCount * 100 + (rowCount - 1) * 8;
-
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      body: SafeArea(
-        child: SingleChildScrollView(
-          physics: ClampingScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildGlassProfileHeader(context),
-              const SizedBox(height: 2),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Manage Your All Services',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: gridHeight.toDouble(),
-                      child: GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                          childAspectRatio: 0.9,
-                        ),
-                        itemCount: items.length,
-                        itemBuilder: (context, index) {
-                          return Transform.translate(
-                            offset: index.isEven
-                                ? const Offset(0, 20)
-                                : Offset.zero,
-                            child: _buildHexItem(items[index]),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   // @override
   // Widget build(BuildContext context) {
   //   if (_user == null) {
   //     return const Center(child: CircularProgressIndicator());
   //   }
+  //
+  //   // Calculate the number of rows needed (4 items per row)
+  //   final rowCount = (items.length / 4).ceil();
+  //   // Calculate height based on row count (100px per row + spacing)
+  //   final gridHeight = rowCount * 100 + (rowCount - 1) * 8;
   //
   //   return Scaffold(
   //     backgroundColor: Colors.grey[50],
@@ -381,7 +319,7 @@ class _HomeViewState extends State<HomePage> with TickerProviderStateMixin{
   //           crossAxisAlignment: CrossAxisAlignment.stretch,
   //           children: [
   //             _buildGlassProfileHeader(context),
-  //             const SizedBox(height: 20),
+  //             const SizedBox(height: 2),
   //             Padding(
   //               padding: const EdgeInsets.all(16.0),
   //               child: Column(
@@ -396,24 +334,27 @@ class _HomeViewState extends State<HomePage> with TickerProviderStateMixin{
   //                     ),
   //                   ),
   //                   const SizedBox(height: 20),
-  //                   GridView.builder(
-  //                     shrinkWrap: true,
-  //                     physics: const NeverScrollableScrollPhysics(),
-  //                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-  //                       crossAxisCount: 4,
-  //                       mainAxisSpacing: 8,
-  //                       crossAxisSpacing: 8,
-  //                       childAspectRatio: 0.9,
+  //                   SizedBox(
+  //                     height: gridHeight.toDouble(),
+  //                     child: GridView.builder(
+  //                       shrinkWrap: true,
+  //                       physics: const NeverScrollableScrollPhysics(),
+  //                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+  //                         crossAxisCount: 4,
+  //                         mainAxisSpacing: 8,
+  //                         crossAxisSpacing: 8,
+  //                         childAspectRatio: 0.9,
+  //                       ),
+  //                       itemCount: items.length,
+  //                       itemBuilder: (context, index) {
+  //                         return Transform.translate(
+  //                           offset: index.isEven
+  //                               ? const Offset(0, 20)
+  //                               : Offset.zero,
+  //                           child: _buildHexItem(items[index]),
+  //                         );
+  //                       },
   //                     ),
-  //                     itemCount: items.length,
-  //                     itemBuilder: (context, index) {
-  //                       return Transform.translate(
-  //                         offset: index.isEven
-  //                             ? const Offset(0, 20)
-  //                             : Offset.zero,
-  //                         child: _buildHexItem(items[index]),
-  //                       );
-  //                     },
   //                   ),
   //                 ],
   //               ),
@@ -424,6 +365,64 @@ class _HomeViewState extends State<HomePage> with TickerProviderStateMixin{
   //     ),
   //   );
   // }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_user == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: ClampingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildGlassProfileHeader(context),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Manage Your All Services',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 4,
+                        mainAxisSpacing: 8,
+                        crossAxisSpacing: 8,
+                        childAspectRatio: 0.9,
+                      ),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        return Transform.translate(
+                          offset: index.isEven
+                              ? const Offset(0, 20)
+                              : Offset.zero,
+                          child: _buildHexItem(items[index]),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Color _adjustColor(Color color, int amount) {
     return Color.fromARGB(

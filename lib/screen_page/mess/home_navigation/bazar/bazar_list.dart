@@ -8,141 +8,141 @@ class BazarList extends StatefulWidget {
 class BazarListState extends State<BazarList> {
   @override
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Insaf Enterprise'),
-        actions: [
-          Icon(Icons.chat),
-          SizedBox(width: 8),
-          Icon(Icons.notifications),
-          SizedBox(width: 8),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            TrialPlanBanner(),
-            FinancialMetricsGrid(),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.countertops), label: 'Counter'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-        ],
-      ),
-    );
-  }
-
-
   // Widget build(BuildContext context) {
   //   return Scaffold(
   //     appBar: AppBar(
-  //       title: Text(
-  //         'Insaf Enterprise',
-  //         style: TextStyle(
-  //           color: Colors.white,
-  //           fontWeight: FontWeight.bold,
-  //         ),
-  //       ),
-  //       backgroundColor: Colors.teal.shade700,
-  //       elevation: 0,
+  //       title: Text('Insaf Enterprise'),
   //       actions: [
-  //         IconButton(
-  //           icon: Icon(Icons.chat, color: Colors.white),
-  //           onPressed: () {},
-  //         ),
-  //         Stack(
-  //           children: [
-  //             IconButton(
-  //               icon: Icon(Icons.notifications, color: Colors.white),
-  //               onPressed: () {},
-  //             ),
-  //             Positioned(
-  //               right: 8,
-  //               top: 8,
-  //               child: Container(
-  //                 padding: EdgeInsets.all(2),
-  //                 decoration: BoxDecoration(
-  //                   color: Colors.red,
-  //                   shape: BoxShape.circle,
-  //                 ),
-  //                 constraints: BoxConstraints(
-  //                   minWidth: 16,
-  //                   minHeight: 16,
-  //                 ),
-  //                 child: Text(
-  //                   '',
-  //                   style: TextStyle(
-  //                     color: Colors.white,
-  //                     fontSize: 10,
-  //                   ),
-  //                   textAlign: TextAlign.center,
-  //                 ),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
+  //         Icon(Icons.chat),
+  //         SizedBox(width: 8),
+  //         Icon(Icons.notifications),
+  //         SizedBox(width: 8),
   //       ],
   //     ),
   //     body: SingleChildScrollView(
   //       child: Column(
   //         children: [
-  //           WeeklySummaryCard(),
-  //           FeaturesGrid(),
+  //           TrialPlanBanner(),
+  //           FinancialMetricsGrid(),
   //         ],
   //       ),
   //     ),
-  //     bottomNavigationBar: Container(
-  //       decoration: BoxDecoration(
-  //         boxShadow: [
-  //           BoxShadow(
-  //             color: Colors.grey.withOpacity(0.3),
-  //             spreadRadius: 1,
-  //             blurRadius: 5,
-  //             offset: Offset(0, -2),
-  //           ),
-  //         ],
-  //       ),
-  //       child: ClipRRect(
-  //         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-  //         child: BottomNavigationBar(
-  //           type: BottomNavigationBarType.fixed,
-  //           backgroundColor: Colors.white,
-  //           selectedItemColor: Colors.teal.shade700,
-  //           unselectedItemColor: Colors.grey.shade600,
-  //           selectedLabelStyle: TextStyle(fontSize: 12),
-  //           items: [
-  //             BottomNavigationBarItem(
-  //               icon: Icon(Icons.home_outlined),
-  //               activeIcon: Icon(Icons.home),
-  //               label: 'Home',
-  //             ),
-  //             BottomNavigationBarItem(
-  //               icon: Icon(Icons.dashboard_outlined),
-  //               activeIcon: Icon(Icons.dashboard),
-  //               label: 'Dashboard',
-  //             ),
-  //             BottomNavigationBarItem(
-  //               icon: Icon(Icons.countertops_outlined),
-  //               activeIcon: Icon(Icons.countertops),
-  //               label: 'Counter',
-  //             ),
-  //             BottomNavigationBarItem(
-  //               icon: Icon(Icons.settings_outlined),
-  //               activeIcon: Icon(Icons.settings),
-  //               label: 'Settings',
-  //             ),
-  //           ],
-  //         ),
-  //       ),
+  //     bottomNavigationBar: BottomNavigationBar(
+  //       items: [
+  //         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+  //         BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+  //         BottomNavigationBarItem(icon: Icon(Icons.countertops), label: 'Counter'),
+  //         BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+  //       ],
   //     ),
   //   );
   // }
+
+
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Insaf Enterprise',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.teal.shade700,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.chat, color: Colors.white),
+            onPressed: () {},
+          ),
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(Icons.notifications, color: Colors.white),
+                onPressed: () {},
+              ),
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  padding: EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    '',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            WeeklySummaryCard(),
+            FeaturesGrid(),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.3),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          child: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.white,
+            selectedItemColor: Colors.teal.shade700,
+            unselectedItemColor: Colors.grey.shade600,
+            selectedLabelStyle: TextStyle(fontSize: 12),
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home_outlined),
+                activeIcon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard_outlined),
+                activeIcon: Icon(Icons.dashboard),
+                label: 'Dashboard',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.countertops_outlined),
+                activeIcon: Icon(Icons.countertops),
+                label: 'Counter',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings_outlined),
+                activeIcon: Icon(Icons.settings),
+                label: 'Settings',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class WeeklySummaryCard extends StatelessWidget {

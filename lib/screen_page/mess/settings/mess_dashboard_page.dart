@@ -55,14 +55,16 @@ class _MealCounterPageState extends State<MessDashboardPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Dashboard Grid
-            _buildDashboardGrid(),
 
             // Balance Summary Card
             _buildBalanceSummaryCard(),
 
             // Today's Meal Section
             _buildTodaysMealSection(formattedDate, banglaDate),
+
+            // Dashboard Grid
+            _buildDashboardGrid(),
+
 
             // Monthly Summary
             _buildMonthlySummary(),
@@ -1101,14 +1103,14 @@ class _MealCounterPageState extends State<MessDashboardPage> {
 
   Widget _buildMonthlySummary() {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(8.0),
       child: Card(
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(10.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

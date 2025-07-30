@@ -8,11 +8,14 @@ import 'package:black_box/screen_page/mess/home_navigation/payment/payment_page.
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../model/mess/mess_main.dart';
+import '../../../model/mess/mess_user.dart';
 import '../../../model/school/school.dart';
 import '../../../model/school/teacher.dart';
 import '../../../model/user/user.dart';
 import '../../../preference/logout.dart';
 import '../../../routes/app_router.dart';
+import 'bazar/bazar_schedule_list_page.dart';
 
 class BazarListPage extends StatefulWidget{
   @override
@@ -37,6 +40,53 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
   late TabController _tabController;
   int _currentIndex1 = 0;
   int _currentIndex2 = 0;
+
+
+  // Create dummy data
+  final MessMain dummyMessInfo = MessMain(
+    id: 1,
+    messId: 'MESS001',
+    messName: 'Delicious Food Mess',
+    messAddress: '123 Food Street, Flutter City',
+    currentMonth: 'August 2025',
+  );
+
+  final List<MessUser> dummyUsers = [
+    MessUser(
+      id: 1,
+      userId: 'John Doe',
+      phone: '+1 555-0101',
+      bazarStart: DateTime(2025, 8, 1),
+      bazarEnd: DateTime(2025, 8, 3),
+    ),
+    MessUser(
+      id: 2,
+      userId: 'Jane Smith',
+      phone: '+1 555-0102',
+      bazarStart: DateTime(2025, 8, 4),
+      bazarEnd: DateTime(2025, 8, 6),
+    ),
+    MessUser(
+      id: 3,
+      userId: 'Robert Johnson',
+      phone: '+1 555-0103',
+      bazarStart: DateTime(2025, 8, 7),
+      bazarEnd: DateTime(2025, 8, 9),
+    ),
+    MessUser(
+      id: 4,
+      userId: 'Emily Davis',
+      phone: '+1 555-0104',
+      bazarStart: DateTime(2025, 8, 10),
+      bazarEnd: DateTime(2025, 8, 12),
+    ),
+    MessUser(
+      id: 5,
+      userId: 'Michael Wilson',
+      phone: '+1 555-0105',
+      // No bazar schedule assigned for this user
+    ),
+  ];
 
 
   @override
@@ -195,8 +245,12 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
             child: TabBarView(
               controller: _tabController,
               children: [
+                // BazarList(),
+                BazarScheduleListPage(
+                  users: dummyUsers,
+                  messInfo: dummyMessInfo,
+                ),
                 BazarExpense(),
-                BazarList(),
               ],
             ),
           ),
