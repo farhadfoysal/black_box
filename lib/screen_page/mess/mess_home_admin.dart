@@ -4,6 +4,7 @@ import 'package:black_box/screen_page/mess/home_navigation/meal_counter_page.dar
 import 'package:black_box/screen_page/mess/home_navigation/mess_fee_page.dart';
 import 'package:black_box/screen_page/mess/home_navigation/payment_list_page.dart';
 import 'package:black_box/screen_page/mess/home_navigation/personal_details_page.dart';
+import 'package:black_box/screen_page/mess/settings/mess_dashboard_page.dart';
 import 'package:flutter/material.dart';
 import 'package:marquee/marquee.dart';
 
@@ -66,7 +67,7 @@ class MessHomeAdminState extends State<MessHomeAdmin> {
           });
         },
         children: [
-          MealCounterPage(),
+          MessDashboardPage(),
           BazarListPage(),
           PaymentListPage(),
           MessFeePage(),

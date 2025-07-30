@@ -10,8 +10,10 @@ import 'package:black_box/extra/quiz/quiz_two.dart';
 import 'package:black_box/quiz/quiz_screen.dart';
 import 'package:black_box/screen_page/exam/exam_list.dart';
 import 'package:black_box/screen_page/tutor/tutor_main_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as b;
+import 'package:google_fonts/google_fonts.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../components/common/photo_avatar.dart';
@@ -62,7 +64,11 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomePage> {
+class _HomeViewState extends State<HomePage> with TickerProviderStateMixin{
+
+  late AnimationController _notificationController;
+  late Animation<double> _notificationAnimation;
+
   late User user;
   String _userName = 'Farhad Foysal';
   String? userName;
@@ -81,14 +87,14 @@ class _HomeViewState extends State<HomePage> {
 
   final List<DashboardItem> items = [
     DashboardItem(
-      title: 'Property Manager',
+      title: 'Property-Manager',
       icon: MdiIcons.officeBuilding,
       color: Color(0xFF005F73),
       route: '/tenant',
       subtitle: 'Properties & Tenants',
     ),
     DashboardItem(
-      title: 'To Let',
+      title: 'To~Let',
       icon: MdiIcons.officeBuilding,
       color: Color(0xFF005F73),
       route: '/to-let',
@@ -195,8 +201,28 @@ class _HomeViewState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _notificationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true); // Automatically pulse continuously
+
+    // Initialize animation
+    _notificationAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
+      CurvedAnimation(
+        parent: _notificationController,
+        curve: Curves.easeInOut,
+      ),
+    );
     _loadUserName();
     _initializeData();
+  }
+
+  @override
+  void dispose() {
+    _notificationController.dispose();
+
+
+    super.dispose();
   }
 
   Future<void> _initializeData() async {
@@ -273,40 +299,224 @@ class _HomeViewState extends State<HomePage> {
     });
   }
 
+  @override
+  Widget build(BuildContext context) {
+    if (_user == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
+    // Calculate the number of rows needed (4 items per row)
+    final rowCount = (items.length / 4).ceil();
+    // Calculate height based on row count (100px per row + spacing)
+    final gridHeight = rowCount * 100 + (rowCount - 1) * 8;
+
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: ClampingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildGlassProfileHeader(context),
+              const SizedBox(height: 2),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Manage Your All Services',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      height: gridHeight.toDouble(),
+                      child: GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                          childAspectRatio: 0.9,
+                        ),
+                        itemCount: items.length,
+                        itemBuilder: (context, index) {
+                          return Transform.translate(
+                            offset: index.isEven
+                                ? const Offset(0, 20)
+                                : Offset.zero,
+                            child: _buildHexItem(items[index]),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   if (_user == null) {
+  //     return const Center(child: CircularProgressIndicator());
+  //   }
+  //
+  //   return Scaffold(
+  //     backgroundColor: Colors.grey[50],
+  //     body: SafeArea(
+  //       child: SingleChildScrollView(
+  //         physics: ClampingScrollPhysics(),
+  //         child: Column(
+  //           crossAxisAlignment: CrossAxisAlignment.stretch,
+  //           children: [
+  //             _buildGlassProfileHeader(context),
+  //             const SizedBox(height: 20),
+  //             Padding(
+  //               padding: const EdgeInsets.all(16.0),
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   const Text(
+  //                     'Manage Your All Services',
+  //                     style: TextStyle(
+  //                       fontSize: 16,
+  //                       fontWeight: FontWeight.w600,
+  //                       color: Colors.black87,
+  //                     ),
+  //                   ),
+  //                   const SizedBox(height: 20),
+  //                   GridView.builder(
+  //                     shrinkWrap: true,
+  //                     physics: const NeverScrollableScrollPhysics(),
+  //                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+  //                       crossAxisCount: 4,
+  //                       mainAxisSpacing: 8,
+  //                       crossAxisSpacing: 8,
+  //                       childAspectRatio: 0.9,
+  //                     ),
+  //                     itemCount: items.length,
+  //                     itemBuilder: (context, index) {
+  //                       return Transform.translate(
+  //                         offset: index.isEven
+  //                             ? const Offset(0, 20)
+  //                             : Offset.zero,
+  //                         child: _buildHexItem(items[index]),
+  //                       );
+  //                     },
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  Color _adjustColor(Color color, int amount) {
+    return Color.fromARGB(
+      color.alpha,
+      (color.red + amount).clamp(0, 255),
+      (color.green + amount).clamp(0, 255),
+      (color.blue + amount).clamp(0, 255),
+    );
+  }
+
+  Widget _buildHexItem(DashboardItem item) {
+    return ClipPath(
+      clipper: HexagonClipper(),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToFeature(item.route),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  item.color.withOpacity(0.2),
+                  item.color.withOpacity(0.1),
+                ],
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  item.icon,
+                  size: 24,
+                  color: item.color,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  item.title.split(' ').first,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
 
   // @override
   // Widget build(BuildContext context) {
+  //   if (_user == null) {
+  //     return const Center(child: CircularProgressIndicator());
+  //   }
   //   return SafeArea(
   //     child: SingleChildScrollView(
   //       physics: ClampingScrollPhysics(),
   //       child: Column(
   //         crossAxisAlignment: CrossAxisAlignment.stretch,
   //         children: [
-  //           _ProfileHeader(user: user),
-  //           SizedBox(height: 10,),
+  //           _buildGlassProfileHeader(context),
+  //           // _ProfileHeader(user: _user!),
+  //           SizedBox(height: 10),
   //           Padding(
   //             padding: const EdgeInsets.all(16.0),
   //             child: Column(
   //               crossAxisAlignment: CrossAxisAlignment.start,
   //               children: [
   //                 const Text(
-  //                   'Manage Your Services',
+  //                   'Manage, Your All Services',
   //                   style: TextStyle(
-  //                     fontSize: 24,
+  //                     decoration: TextDecoration.none,
+  //                     fontSize: 20,
+  //                     fontFamily: 'Lato',
+  //                     color: Color(0xFF005F73),
   //                     fontWeight: FontWeight.bold,
   //                   ),
   //                 ),
   //                 const SizedBox(height: 20),
-  //                 Expanded(
-  //                   child: GridView.count(
-  //                     crossAxisCount: 2,
-  //                     mainAxisSpacing: 16,
-  //                     crossAxisSpacing: 16,
-  //                     childAspectRatio: 1.2,
-  //                     children: items.map((item) => _buildDashboardItem(item)).toList(),
-  //                   ),
+  //                 GridView.count(
+  //                   shrinkWrap: true, // Ensure GridView adapts to its content height
+  //                   physics: NeverScrollableScrollPhysics(), // Prevent nested scrolling
+  //                   crossAxisCount: 2,
+  //                   mainAxisSpacing: 16,
+  //                   crossAxisSpacing: 16,
+  //                   childAspectRatio: 1.2,
+  //                   children: items.map((item) => _buildDashboardItem(item)).toList(),
   //                 ),
   //               ],
   //             ),
@@ -316,53 +526,6 @@ class _HomeViewState extends State<HomePage> {
   //     ),
   //   );
   // }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_user == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    return SafeArea(
-      child: SingleChildScrollView(
-        physics: ClampingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _ProfileHeader(user: _user!),
-            SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Manage, Your All Services',
-                    style: TextStyle(
-                      decoration: TextDecoration.none,
-                      fontSize: 20,
-                      fontFamily: 'Lato',
-                      color: Color(0xFF005F73),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  GridView.count(
-                    shrinkWrap: true, // Ensure GridView adapts to its content height
-                    physics: NeverScrollableScrollPhysics(), // Prevent nested scrolling
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                    childAspectRatio: 1.2,
-                    children: items.map((item) => _buildDashboardItem(item)).toList(),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
 
   Widget _buildDashboardItem(DashboardItem item) {
@@ -417,6 +580,236 @@ class _HomeViewState extends State<HomePage> {
     );
   }
 
+
+
+  Widget _buildGlassProfileHeader(BuildContext context) {
+    final user = _user;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.white.withOpacity(0.8),
+            Colors.white.withOpacity(0.4),
+          ],
+        ),
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.white.withOpacity(0.2),
+            width: 1.0,
+          ),
+        ),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.white.withOpacity(0.5),
+              spreadRadius: 5,
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Avatar with animated border
+            InkWell(
+              onTap: () => Scaffold.of(context).openDrawer(),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: SweepGradient(
+                        colors: [
+                          const Color(0xFF6A11CB),
+                          const Color(0xFF2575FC),
+                          const Color(0xFF6A11CB),
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: ClipOval(
+                        // child: Image.network(
+                        //   "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg",
+                        //   fit: BoxFit.cover,
+                        //   loadingBuilder: (context, child, loadingProgress) {
+                        //     if (loadingProgress == null) return child;
+                        //     return CircularProgressIndicator(
+                        //       value: loadingProgress.expectedTotalBytes != null
+                        //           ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                        //           : null,
+                        //     );
+                        //   },
+                        //   errorBuilder: (context, error, stackTrace) => Icon(Icons.person),
+                        // ),
+                        child: CachedNetworkImage(
+                          imageUrl: "https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg",
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => CircularProgressIndicator(),
+                          errorWidget: (context, url, error) => Icon(Icons.error),
+                        ),
+                      ),
+                    ),
+                  ),
+                  TweenAnimationBuilder(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(seconds: 3),
+                    curve: Curves.easeInOut,
+                    builder: (context, value, child) {
+                      final clampedValue = value.clamp(0.0, 1.0);
+                      return CircularProgressIndicator(
+                        value: clampedValue,
+                        strokeWidth: 2,
+                        backgroundColor: Colors.transparent,
+                        valueColor: AlwaysStoppedAnimation(Colors.white.withOpacity(0.5)),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // User info with subtle animation
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeOutBack,
+                    builder: (context, value, child) {
+                      final clampedValue = value.clamp(0.0, 1.0);
+                      return Transform.translate(
+                        offset: Offset(20 * (1 - clampedValue), 0),
+                        child: Opacity(
+                          opacity: clampedValue,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: Text(
+                      user?.uname ?? "User Name",
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF2D3748),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    user?.email ?? "user@example.com",
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: const Color(0xFF718096),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Notification icon with pulse animation
+            Stack(
+              alignment: Alignment.topRight,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    _notificationController
+                      ..reset()
+                      ..forward();
+                  },
+                  child: MouseRegion(
+                    onEnter: (_) => _notificationController.forward(),
+                    onExit: (_) => _notificationController.reverse(),
+                    child: AnimatedBuilder(
+                      animation: _notificationAnimation,
+                      builder: (context, child) {
+                        return Transform.scale(
+                          scale: _notificationAnimation.value,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withOpacity(0.7),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF2575FC).withOpacity(0.3),
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.notifications_outlined),
+                              color: const Color(0xFF4A5568),
+                              iconSize: 26,
+                              onPressed: () {},
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 8,
+                  top: 6,
+                  child: ScaleTransition(
+                    scale: _notificationAnimation,
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFFE53E3E),
+                            const Color(0xFFF56565),
+                          ],
+                        ),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFE53E3E).withOpacity(0.5),
+                            blurRadius: 6,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        "7",
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _ProfileHeader extends StatelessWidget {
@@ -571,4 +964,22 @@ class TuitionFinderPage extends StatelessWidget {
       body: const Center(child: Text('Tuition Finder Content')),
     );
   }
+}
+
+class HexagonClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.moveTo(size.width * 0.5, 0);
+    path.lineTo(size.width, size.height * 0.25);
+    path.lineTo(size.width, size.height * 0.75);
+    path.lineTo(size.width * 0.5, size.height);
+    path.lineTo(0, size.height * 0.75);
+    path.lineTo(0, size.height * 0.25);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
