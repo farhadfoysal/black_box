@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
+import '../home_navigation/flip_card_dashboard.dart';
+
 
 class MessDashboardPage extends StatefulWidget {
   const MessDashboardPage({super.key});
@@ -63,7 +65,8 @@ class _MealCounterPageState extends State<MessDashboardPage> {
             _buildTodaysMealSection(formattedDate, banglaDate),
 
             // Dashboard Grid
-            _buildDashboardGrid(),
+            // _buildDashboardGrid(),
+            FlipCardDashboard(),
 
 
             // Monthly Summary
