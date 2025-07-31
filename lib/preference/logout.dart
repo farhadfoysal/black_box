@@ -1,3 +1,4 @@
+import 'package:black_box/model/mess/mess_main.dart';
 import 'package:black_box/model/mess/mess_user.dart';
 import 'package:black_box/screen_page/signin/login.dart';
 import 'package:flutter/material.dart';
@@ -225,7 +226,7 @@ class Logout {
     }
   }
 
-  Future<Map<String, dynamic>?> getMess({String key = SCHOOL_KEY}) async {
+  Future<Map<String, dynamic>?> getMess({String key = MESS_KEY}) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String? messJson = prefs.getString(key);
     if (messJson != null) {
@@ -245,4 +246,16 @@ class Logout {
       return null;
     }
   }
+
+  Future<MessMain?> getMessDetails({String key = MESS_KEY}) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? schoolJson = prefs.getString(key);
+    if (schoolJson != null) {
+      Map<String, dynamic> schoolMap = jsonDecode(schoolJson);
+      return MessMain.fromJson(schoolMap);
+    } else {
+      return null;
+    }
+  }
+
 }

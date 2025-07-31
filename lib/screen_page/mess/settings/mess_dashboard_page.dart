@@ -1,15 +1,23 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
+import 'package:black_box/model/mess/mess_main.dart';
+import 'package:black_box/model/mess/mess_user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:marquee/marquee.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../../../model/user/user.dart';
 import '../../../modules/widget/mess_drawer.dart';
+import '../../../preference/logout.dart';
+import '../../../routes/routes.dart';
 import '../home_navigation/flip_card_dashboard.dart';
-
 
 class MessDashboardPage extends StatefulWidget {
   const MessDashboardPage({super.key});
@@ -22,6 +30,104 @@ class _MealCounterPageState extends State<MessDashboardPage> {
   int _currentMonth = DateTime.now().month;
   int _currentYear = DateTime.now().year;
   int _selectedIndex = 0;
+
+  User? _user, _user_data;
+  MessUser? messUser, messUser_data;
+  MessMain? messMain;
+  File? _selectedImage;
+  bool isLoading = false;
+  String? messUserType;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await checkLoggedInOrNot();
+    await _loadUserData();
+  }
+
+  Future<void> checkLoggedInOrNot() async {
+    bool isLoggedIn = await Logout().isMessLoggedIn();
+    String? muser_type = await Logout().getMessUserType();
+
+    if (!isLoggedIn) {
+      context.goNamed(Routes.homePage);
+    } else {
+      // User is not logged in, stay on the sign-in screen
+      setState(() => isLoading = false);
+
+      if(muser_type!=null)
+        messUserType = muser_type;
+        if(muser_type=="member"){
+          context.goNamed(Routes.messMember);
+        }else if(muser_type=="employee"){
+          context.goNamed(Routes.messEmployee);
+        }else{
+
+        }
+
+    }
+  }
+
+  Future<void> _loadUserData() async {
+    Logout logout = Logout();
+    User? user = await logout.getUserDetails(key: 'user_data');
+    MessUser? muser = await logout.getMessUserDetails(key: 'mess_user_data');
+
+    Map<String, dynamic>? userMap = await logout.getUser(key: 'user_logged_in');
+    Map<String, dynamic>? muserMap =
+        await logout.getMessUser(key: 'mess_user_logged_in');
+    Map<String, dynamic>? messMap = await logout.getMess(key: 'mess_data');
+
+    if (userMap != null) {
+      User user_data = User.fromMap(userMap);
+      setState(() {
+        _user_data = user_data;
+        _user = user;
+      });
+    } else {
+      print("User map is null");
+    }
+
+    if (muserMap != null) {
+      MessUser muser_data = MessUser.fromMap(muserMap);
+      setState(() {
+        messUser_data = muser_data;
+        messUser = muser;
+      });
+    } else {
+      print("Mess User map is null");
+    }
+
+    if (messMap != null) {
+      MessMain messData = MessMain.fromMap(messMap);
+      setState(() {
+        messMain = messData;
+        print(messData.messId);
+      });
+    } else {
+      print("Mess data is null");
+    }
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? userDataString = prefs.getString('user_logged_in');
+    String? imagePath = prefs.getString('profile_picture-${_user?.uniqueid!}');
+
+    if (userDataString != null) {
+      Map<String, dynamic> userData = jsonDecode(userDataString);
+      setState(() {
+        //set userData
+
+        if (imagePath != null) {
+          _selectedImage = File(imagePath);
+        }
+      });
+    }
+  }
 
   final List<DashboardItem> _dashboardItems = [
     DashboardItem(
@@ -89,8 +195,7 @@ class _MealCounterPageState extends State<MessDashboardPage> {
                   color: Colors.indigo.shade100,
                 ),
                 child: Icon(Icons.code_rounded,
-                    size: 16,
-                    color: Colors.indigo.shade800),
+                    size: 16, color: Colors.indigo.shade800),
               ),
               SizedBox(width: 8),
               Expanded(
@@ -98,7 +203,7 @@ class _MealCounterPageState extends State<MessDashboardPage> {
                   baseColor: Colors.indigo.shade800,
                   highlightColor: Colors.indigo.shade400,
                   child: Marquee(
-                    text: "MessHome Admin - Developed By Farhad Foysal",
+                    text: "Secondhome ${messUserType} - ${_user?.uname} - ${messUser?.email} - ${messUser?.phone} - Developed By Farhad Foysal",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -131,8 +236,7 @@ class _MealCounterPageState extends State<MessDashboardPage> {
                 ),
               ),
               child: IconButton(
-                icon: Icon(Icons.menu_rounded,
-                    color: Colors.indigo.shade800),
+                icon: Icon(Icons.menu_rounded, color: Colors.indigo.shade800),
                 onPressed: () {
                   Scaffold.of(context).openDrawer();
                 },
@@ -166,7 +270,6 @@ class _MealCounterPageState extends State<MessDashboardPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-
             // Balance Summary Card
             // _buildBalanceSummaryCard(),
             BalanceFlipCard(),
@@ -177,7 +280,6 @@ class _MealCounterPageState extends State<MessDashboardPage> {
             // Dashboard Grid
             // _buildDashboardGrid(),
             FlipCardDashboard(),
-
 
             // Monthly Summary
             _buildMonthlySummary(),
@@ -224,9 +326,7 @@ class _MealCounterPageState extends State<MessDashboardPage> {
               itemCount: _dashboardItems.length,
               itemBuilder: (context, index) {
                 return Transform.translate(
-                  offset: index.isEven
-                      ? const Offset(0, 20)
-                      : Offset.zero,
+                  offset: index.isEven ? const Offset(0, 20) : Offset.zero,
                   child: _buildHexItem(_dashboardItems[index]),
                 );
               },
@@ -279,8 +379,6 @@ class _MealCounterPageState extends State<MessDashboardPage> {
       ),
     );
   }
-
-
 
   // Widget _buildDashboardGrid() {
   //   return Padding(
@@ -449,7 +547,6 @@ class _MealCounterPageState extends State<MessDashboardPage> {
   //   );
   // }
 
-
   // Widget _buildDashboardGrid() {
   //   return Padding(
   //     padding: const EdgeInsets.all(16),
@@ -563,7 +660,6 @@ class _MealCounterPageState extends State<MessDashboardPage> {
   //     ),
   //   );
   // }
-
 
   // Widget _buildDashboardGrid() {
   //   return Padding(
@@ -782,7 +878,6 @@ class _MealCounterPageState extends State<MessDashboardPage> {
   //   );
   // }
 
-
   // Widget _buildDashboardGrid() {
   //   return Padding(
   //     padding: const EdgeInsets.all(16.0),
@@ -932,7 +1027,6 @@ class _MealCounterPageState extends State<MessDashboardPage> {
   //     ),
   //   );
   // }
-
 
   // Widget _buildDashboardGrid() {
   //   return Padding(
@@ -1107,14 +1201,16 @@ class _MealCounterPageState extends State<MessDashboardPage> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [Colors.pink.shade200, Colors.pink.shade100],
               ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1148,7 +1244,8 @@ class _MealCounterPageState extends State<MessDashboardPage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: Column(
               children: [
                 // Bengali Meal Cards
@@ -1254,7 +1351,8 @@ class _MealCounterPageState extends State<MessDashboardPage> {
                         InkWell(
                           onTap: () => _showCustomMonthPicker(context),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 2, vertical: 4),
                             decoration: BoxDecoration(
                               color: Colors.blue.shade50,
                               borderRadius: BorderRadius.circular(20),
@@ -1271,7 +1369,8 @@ class _MealCounterPageState extends State<MessDashboardPage> {
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                const Icon(Icons.calendar_today, size: 16, color: Colors.blue),
+                                const Icon(Icons.calendar_today,
+                                    size: 16, color: Colors.blue),
                               ],
                             ),
                           ),
@@ -1354,9 +1453,24 @@ class _MealCounterPageState extends State<MessDashboardPage> {
 
   Widget _buildTransactionItem(int index) {
     final transactions = [
-      {'title': 'Meal Payment', 'date': 'Today', 'amount': '৳ 150.00', 'isPositive': true},
-      {'title': 'Bazar Cost', 'date': 'Yesterday', 'amount': '৳ 200.00', 'isPositive': false},
-      {'title': 'Deposit', 'date': '2 days ago', 'amount': '৳ 500.00', 'isPositive': true},
+      {
+        'title': 'Meal Payment',
+        'date': 'Today',
+        'amount': '৳ 150.00',
+        'isPositive': true
+      },
+      {
+        'title': 'Bazar Cost',
+        'date': 'Yesterday',
+        'amount': '৳ 200.00',
+        'isPositive': false
+      },
+      {
+        'title': 'Deposit',
+        'date': '2 days ago',
+        'amount': '৳ 500.00',
+        'isPositive': true
+      },
     ];
 
     final transaction = transactions[index];
@@ -1371,12 +1485,17 @@ class _MealCounterPageState extends State<MessDashboardPage> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: transaction['isPositive'] as bool ? Colors.green.shade50 : Colors.red.shade50,
+            color: transaction['isPositive'] as bool
+                ? Colors.green.shade50
+                : Colors.red.shade50,
             shape: BoxShape.circle,
           ),
           child: Icon(
-            transaction['isPositive'] as bool ? Icons.arrow_downward : Icons.arrow_upward,
-            color: transaction['isPositive'] as bool ? Colors.green : Colors.red,
+            transaction['isPositive'] as bool
+                ? Icons.arrow_downward
+                : Icons.arrow_upward,
+            color:
+                transaction['isPositive'] as bool ? Colors.green : Colors.red,
           ),
         ),
         title: Text(transaction['title'] as String),
@@ -1385,7 +1504,8 @@ class _MealCounterPageState extends State<MessDashboardPage> {
           transaction['amount'] as String,
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: transaction['isPositive'] as bool ? Colors.green : Colors.red,
+            color:
+                transaction['isPositive'] as bool ? Colors.green : Colors.red,
           ),
         ),
       ),
@@ -1436,7 +1556,8 @@ class _MealCounterPageState extends State<MessDashboardPage> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: count > 0 ? Colors.green.shade800 : Colors.red.shade800,
+                  color:
+                      count > 0 ? Colors.green.shade800 : Colors.red.shade800,
                 ),
               ),
             ),
@@ -1520,18 +1641,28 @@ class _MealCounterPageState extends State<MessDashboardPage> {
     );
   }
 
-  TableRow _buildTableRow(String label, String value, {
+  TableRow _buildTableRow(
+    String label,
+    String value, {
     bool isHighlighted = false,
     bool isTotal = false,
     bool isDue = false,
   }) {
-    final textColor = isDue ? Colors.red.shade700 :
-    isTotal ? Colors.green.shade700 :
-    isHighlighted ? Colors.orange.shade700 : Colors.grey.shade800;
+    final textColor = isDue
+        ? Colors.red.shade700
+        : isTotal
+            ? Colors.green.shade700
+            : isHighlighted
+                ? Colors.orange.shade700
+                : Colors.grey.shade800;
 
-    final bgColor = isTotal ? Colors.green.shade50 :
-    isDue ? Colors.red.shade50 :
-    isHighlighted ? Colors.orange.shade50 : Colors.transparent;
+    final bgColor = isTotal
+        ? Colors.green.shade50
+        : isDue
+            ? Colors.red.shade50
+            : isHighlighted
+                ? Colors.orange.shade50
+                : Colors.transparent;
 
     return TableRow(
       decoration: BoxDecoration(
@@ -1544,7 +1675,8 @@ class _MealCounterPageState extends State<MessDashboardPage> {
             label,
             style: TextStyle(
               fontWeight: isHighlighted || isTotal || isDue
-                  ? FontWeight.bold : FontWeight.normal,
+                  ? FontWeight.bold
+                  : FontWeight.normal,
               color: textColor,
             ),
           ),
@@ -1555,7 +1687,8 @@ class _MealCounterPageState extends State<MessDashboardPage> {
             value,
             textAlign: TextAlign.end,
             style: TextStyle(
-              fontWeight: isTotal || isDue ? FontWeight.bold : FontWeight.normal,
+              fontWeight:
+                  isTotal || isDue ? FontWeight.bold : FontWeight.normal,
               color: textColor,
             ),
           ),
@@ -1661,8 +1794,18 @@ class _MealCounterPageState extends State<MessDashboardPage> {
 
   String _getMonthName(int month) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
     return months[month - 1];
   }
@@ -1679,6 +1822,7 @@ class _MealCounterPageState extends State<MessDashboardPage> {
       }
     });
   }
+
 }
 
 class DashboardItem {
@@ -1712,7 +1856,6 @@ class HexagonClipper extends CustomClipper<Path> {
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
-
 
 class BalanceFlipCard extends StatefulWidget {
   @override
@@ -1748,7 +1891,9 @@ class _BalanceFlipCardState extends State<BalanceFlipCard> {
             },
           );
         },
-        child: _showPersonalBalance ? _buildPersonalBalanceCard() : _buildMessStatsCard(),
+        child: _showPersonalBalance
+            ? _buildPersonalBalanceCard()
+            : _buildMessStatsCard(),
       ),
     );
   }
