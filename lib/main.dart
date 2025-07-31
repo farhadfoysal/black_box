@@ -19,7 +19,7 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await initializeDateFormatting();
+  await initializeDateFormatting('en');
   await initializeDateFormatting('bn');
 
   await SystemChrome.setPreferredOrientations([

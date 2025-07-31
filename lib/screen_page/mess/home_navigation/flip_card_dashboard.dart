@@ -173,7 +173,7 @@ class _FlipCardDashboardState extends State<FlipCardDashboard> {
             ),
             const SizedBox(height: 20),
             SizedBox(
-              height: 220,
+              height: 210,
               child: GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),

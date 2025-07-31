@@ -59,7 +59,8 @@ class _MealCounterPageState extends State<MessDashboardPage> {
           children: [
 
             // Balance Summary Card
-            _buildBalanceSummaryCard(),
+            // _buildBalanceSummaryCard(),
+            BalanceFlipCard(),
 
             // Today's Meal Section
             _buildTodaysMealSection(formattedDate, banglaDate),
@@ -1601,4 +1602,404 @@ class HexagonClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+
+class BalanceFlipCard extends StatefulWidget {
+  @override
+  _BalanceFlipCardState createState() => _BalanceFlipCardState();
+}
+
+class _BalanceFlipCardState extends State<BalanceFlipCard> {
+  bool _showPersonalBalance = true;
+  final Color _primaryColor = Color(0xFF00C6AB);
+  final Color _secondaryColor = Color(0xFF0082A8);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _showPersonalBalance = !_showPersonalBalance;
+        });
+      },
+      child: AnimatedSwitcher(
+        duration: Duration(milliseconds: 500),
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          final rotateAnim = Tween(begin: pi, end: 0.0).animate(animation);
+          return AnimatedBuilder(
+            animation: rotateAnim,
+            child: child,
+            builder: (context, widget) {
+              return Transform(
+                transform: Matrix4.rotationY(rotateAnim.value),
+                alignment: Alignment.center,
+                child: widget,
+              );
+            },
+          );
+        },
+        child: _showPersonalBalance ? _buildPersonalBalanceCard() : _buildMessStatsCard(),
+      ),
+    );
+  }
+
+  Widget _buildPersonalBalanceCard() {
+    return Container(
+      key: ValueKey<bool>(true),
+      margin: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [_primaryColor, _secondaryColor],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2.0),
+        child: Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                // Balance Summary
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.teal.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('আমার ব্যালেন্স',
+                              style: TextStyle(
+                                  fontSize: 16, color: Colors.teal.shade800)),
+                          Text('মোট মিল',
+                              style: TextStyle(
+                                  fontSize: 16, color: Colors.teal.shade800)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('৳ ২০.০০',
+                              style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.teal.shade900)),
+                          Text('২.০০',
+                              style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.teal.shade900)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Transaction Summary
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildTransactionTile(
+                      icon: Icons.arrow_downward,
+                      title: 'আমানত',
+                      amount: '৳ ১৫০.০০',
+                      color: Colors.green,
+                    ),
+                    Container(
+                      height: 40,
+                      width: 1,
+                      color: Colors.grey.shade300,
+                    ),
+                    _buildTransactionTile(
+                      icon: Icons.arrow_upward,
+                      title: 'খরচ',
+                      amount: '৳ ১৩০.০০',
+                      color: Colors.red,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      // child: Padding(
+      //   padding: const EdgeInsets.all(20.0),
+      //   child: Column(
+      //     children: [
+      //       Row(
+      //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      //         children: [
+      //           Text(
+      //             'আমার ব্যালেন্স',
+      //             style: TextStyle(
+      //               fontSize: 16,
+      //               color: Colors.white.withOpacity(0.9),
+      //             ),
+      //           ),
+      //           Text(
+      //             'মোট মিল',
+      //             style: TextStyle(
+      //               fontSize: 16,
+      //               color: Colors.white.withOpacity(0.9),
+      //             ),
+      //           ),
+      //         ],
+      //       ),
+      //       SizedBox(height: 8),
+      //       Row(
+      //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      //         children: [
+      //           Text(
+      //             '৳ ২০.০০',
+      //             style: TextStyle(
+      //               fontSize: 28,
+      //               fontWeight: FontWeight.bold,
+      //               color: Colors.white,
+      //             ),
+      //           ),
+      //           Text(
+      //             '২.০০',
+      //             style: TextStyle(
+      //               fontSize: 28,
+      //               fontWeight: FontWeight.bold,
+      //               color: Colors.white,
+      //             ),
+      //           ),
+      //         ],
+      //       ),
+      //       SizedBox(height: 20),
+      //       Divider(color: Colors.white.withOpacity(0.3), height: 1),
+      //       SizedBox(height: 20),
+      //       Row(
+      //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      //         children: [
+      //           _buildStatItem(
+      //             icon: Icons.arrow_downward,
+      //             label: 'আমার আমানত',
+      //             amount: '৳ ১৫০.০০',
+      //             color: Colors.white,
+      //           ),
+      //           _buildStatItem(
+      //             icon: Icons.arrow_upward,
+      //             label: 'আমার খরচ',
+      //             amount: '৳ ১৩০.০০',
+      //             color: Colors.white,
+      //           ),
+      //         ],
+      //       ),
+      //       SizedBox(height: 10),
+      //       Align(
+      //         alignment: Alignment.centerRight,
+      //         child: Text(
+      //           'ট্যাপ করুন মেস স্ট্যাট দেখতে',
+      //           style: TextStyle(
+      //             fontSize: 10,
+      //             color: Colors.white.withOpacity(0.7),
+      //           ),
+      //         ),
+      //       ),
+      //     ],
+      //   ),
+      // ),
+    );
+  }
+
+  Widget _buildTransactionTile({
+    required IconData icon,
+    required String title,
+    required String amount,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 28),
+        const SizedBox(height: 4),
+        Text(title, style: TextStyle(color: Colors.grey.shade600)),
+        const SizedBox(height: 4),
+        Text(amount,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color,
+              fontSize: 16,
+            )),
+      ],
+    );
+  }
+
+  Widget _buildMessStatsCard() {
+    return Container(
+      key: ValueKey<bool>(false),
+      margin: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'মেস ব্যালেন্স',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+                Text(
+                  'মোট সদস্য',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '৳ ৫,২০০.০০',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  '৭ জন',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            Divider(color: Colors.white.withOpacity(0.3), height: 1),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildStatItem(
+                  icon: Icons.restaurant,
+                  label: 'মাসিক মিল',
+                  amount: '১৮০ টি',
+                  color: Colors.white,
+                ),
+                _buildStatItem(
+                  icon: Icons.shopping_basket,
+                  label: 'মাসিক বাজার',
+                  amount: '৳ ১২,৫০০',
+                  color: Colors.white,
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildStatItem(
+                  icon: Icons.arrow_downward,
+                  label: 'মোট আমানত',
+                  amount: '৳ ১৫,০০০',
+                  color: Colors.white,
+                ),
+                _buildStatItem(
+                  icon: Icons.arrow_upward,
+                  label: 'মোট খরচ',
+                  amount: '৳ ৯,৮০০',
+                  color: Colors.white,
+                ),
+              ],
+            ),
+            SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'ট্যাপ করুন ব্যক্তিগত ব্যালেন্স দেখতে',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.white.withOpacity(0.7),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem({
+    required IconData icon,
+    required String label,
+    required String amount,
+    required Color color,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 16, color: color),
+            SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: color.withOpacity(0.9),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 4),
+        Text(
+          amount,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
 }
