@@ -1,9 +1,13 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:marquee/marquee.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:shimmer/shimmer.dart';
 
+import '../../../modules/widget/mess_drawer.dart';
 import '../home_navigation/flip_card_dashboard.dart';
 
 
@@ -53,6 +57,111 @@ class _MealCounterPageState extends State<MessDashboardPage> {
     final banglaDate = DateFormat('EEEE, d MMMM', 'bn').format(now);
 
     return Scaffold(
+      appBar: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+        ),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: Colors.indigo.shade800),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Container(
+          height: 40,
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.indigo.shade50,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.indigo.shade100,
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.indigo.shade100,
+                ),
+                child: Icon(Icons.code_rounded,
+                    size: 16,
+                    color: Colors.indigo.shade800),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Shimmer.fromColors(
+                  baseColor: Colors.indigo.shade800,
+                  highlightColor: Colors.indigo.shade400,
+                  child: Marquee(
+                    text: "MessHome Admin - Developed By Farhad Foysal",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.indigo.shade800,
+                    ),
+                    scrollAxis: Axis.horizontal,
+                    blankSpace: 40.0,
+                    velocity: 60.0,
+                    pauseAfterRound: Duration(seconds: 2),
+                    startPadding: 20.0,
+                    accelerationDuration: Duration(seconds: 1),
+                    decelerationDuration: Duration(milliseconds: 500),
+                    fadingEdgeStartFraction: 0.1,
+                    fadingEdgeEndFraction: 0.1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          Builder(
+            builder: (context) => Container(
+              margin: EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.indigo.shade100,
+                  width: 1.5,
+                ),
+              ),
+              child: IconButton(
+                icon: Icon(Icons.menu_rounded,
+                    color: Colors.indigo.shade800),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              ),
+            ),
+          ),
+        ],
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.white.withOpacity(0.96),
+                Colors.white.withOpacity(0.96),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 10,
+                spreadRadius: 0,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+        ),
+      ),
+      drawer: MessDrawer(),
       backgroundColor: Colors.grey[50],
       body: SingleChildScrollView(
         child: Column(

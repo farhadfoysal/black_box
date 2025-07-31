@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:marquee/marquee.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../../model/mess/bazar_list.dart';
 import '../../../../model/mess/mess_main.dart';
@@ -51,11 +53,54 @@ class _BazarExpenseListPageState extends State<BazarExpenseListPage> {
     return Scaffold(
       backgroundColor: _backgroundColor,
       appBar: AppBar(
-        title: Text(
-          'Bazar Expenses',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+        title: Container(
+          height: 40,
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.indigo.shade50,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.indigo.shade100,
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.indigo.shade100,
+                ),
+                child: Icon(Icons.code_rounded,
+                    size: 16,
+                    color: Colors.indigo.shade800),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Shimmer.fromColors(
+                  baseColor: Colors.indigo.shade800,
+                  highlightColor: Colors.indigo.shade400,
+                  child: Marquee(
+                    text: "Bazar List",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.indigo.shade800,
+                    ),
+                    scrollAxis: Axis.horizontal,
+                    blankSpace: 40.0,
+                    velocity: 60.0,
+                    pauseAfterRound: Duration(seconds: 2),
+                    startPadding: 20.0,
+                    accelerationDuration: Duration(seconds: 1),
+                    decelerationDuration: Duration(milliseconds: 500),
+                    fadingEdgeStartFraction: 0.1,
+                    fadingEdgeEndFraction: 0.1,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         centerTitle: true,

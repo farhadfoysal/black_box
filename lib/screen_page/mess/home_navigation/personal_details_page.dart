@@ -1,4 +1,10 @@
+import 'package:black_box/screen_page/mess/home_navigation/profile_flip_card.dart';
 import 'package:flutter/material.dart';
+import 'package:marquee/marquee.dart';
+import 'package:shimmer/shimmer.dart';
+
+import '../../../model/mess/mess_main.dart';
+import '../../../model/mess/mess_user.dart';
 
 class PersonalDetailsPage extends StatefulWidget {
   @override
@@ -13,11 +19,54 @@ class PersonalDetailsPageState extends State<PersonalDetailsPage> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(
-          'আমার ওয়ালেট',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+        title: Container(
+          height: 40,
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: Colors.indigo.shade50,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.indigo.shade100,
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.indigo.shade100,
+                ),
+                child: Icon(Icons.code_rounded,
+                    size: 16,
+                    color: Colors.indigo.shade800),
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Shimmer.fromColors(
+                  baseColor: Colors.indigo.shade800,
+                  highlightColor: Colors.indigo.shade400,
+                  child: Marquee(
+                    text: "আমার ওয়ালেট",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.indigo.shade800,
+                    ),
+                    scrollAxis: Axis.horizontal,
+                    blankSpace: 40.0,
+                    velocity: 60.0,
+                    pauseAfterRound: Duration(seconds: 2),
+                    startPadding: 20.0,
+                    accelerationDuration: Duration(seconds: 1),
+                    decelerationDuration: Duration(milliseconds: 500),
+                    fadingEdgeStartFraction: 0.1,
+                    fadingEdgeEndFraction: 0.1,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         leading: IconButton(
@@ -45,6 +94,21 @@ class PersonalDetailsPageState extends State<PersonalDetailsPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            ProfileFlipCard(
+              user: MessUser(
+                userId: "John Doe",
+                phone: "+8801712345678",
+                email: "john.doe@example.com",
+                uniqueId: "USER12345",
+              ),
+              messInfo: MessMain(
+                messName: "Delicious Food Mess",
+                messId: "MESS001",
+                messAddress: "123 Food Street",
+              ),
+              currentManagerName: "Jane Smith",
+              currentManagerPhone: "+8801812345678",
+            ),
             WalletSummary(),
             SizedBox(height: 16),
             TransactionHistory(),
