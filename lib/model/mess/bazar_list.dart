@@ -1,3 +1,5 @@
+import '../../mess/data/model/model_extensions.dart';
+
 class BazarList {
   int? _id;
   String _listId;
@@ -8,6 +10,7 @@ class BazarList {
   String _amount;
   DateTime _dateTime;
   String _adminNotify;
+  String? _syncStatus;
 
   BazarList({
     int? id,
@@ -19,6 +22,7 @@ class BazarList {
     required String amount,
     required DateTime dateTime,
     required String adminNotify,
+    String? syncStatus,
   })  : _id = id,
         _listId = listId,
         _uniqueId = uniqueId,
@@ -27,7 +31,8 @@ class BazarList {
         _listDetails = listDetails,
         _amount = amount,
         _dateTime = dateTime,
-        _adminNotify = adminNotify;
+        _adminNotify = adminNotify,
+        _syncStatus = syncStatus;
 
   // Getters
   int? get id => _id;
@@ -39,6 +44,9 @@ class BazarList {
   String get amount => _amount;
   DateTime get dateTime => _dateTime;
   String get adminNotify => _adminNotify;
+
+  String? get syncStatus => _syncStatus;
+  set syncStatus(String? value) => _syncStatus = value;
 
   // Setters
   set id(int? id) => _id = id;
@@ -62,6 +70,7 @@ class BazarList {
       'amount': _amount,
       'date_time': _dateTime.toIso8601String(),
       'admin_notify': _adminNotify,
+      'sync_status': _syncStatus,
     };
   }
 
@@ -76,6 +85,7 @@ class BazarList {
       amount: map['amount'] ?? '0',
       dateTime: DateTime.parse(map['date_time']),
       adminNotify: map['admin_notify'] ?? '0',
+      syncStatus: map['sync_status'] ?? BazarListSync.synced,
     );
   }
 
@@ -90,6 +100,7 @@ class BazarList {
       'amount': _amount,
       'date_time': _dateTime.toIso8601String(),
       'admin_notify': _adminNotify,
+      'sync_status': _syncStatus,
     };
   }
 
@@ -104,6 +115,7 @@ class BazarList {
       amount: json['amount'] ?? '0',
       dateTime: DateTime.parse(json['date_time']),
       adminNotify: json['admin_notify'] ?? '0',
+      syncStatus: json['sync_status'] ?? BazarListSync.synced,
     );
   }
 }

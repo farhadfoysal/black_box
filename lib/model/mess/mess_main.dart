@@ -1,3 +1,5 @@
+import '../../mess/data/model/model_extensions.dart';
+
 class MessMain {
   int? _id;
   String? _mId;
@@ -13,6 +15,7 @@ class MessMain {
   String? _uPerm; // 0,1 - d: 0
   String? _qr;
   String? _currentMonth;
+  String? _syncStatus;
 
   MessMain({
     int? id,
@@ -29,6 +32,7 @@ class MessMain {
     String? uPerm,
     String? qr,
     String? currentMonth,
+    String? syncStatus,
   })  : _id = id,
         _mId = mId,
         _messId = messId,
@@ -42,7 +46,8 @@ class MessMain {
         _sumOfAllTrx = sumOfAllTrx,
         _uPerm = uPerm,
         _qr = qr,
-        _currentMonth = currentMonth;
+        _currentMonth = currentMonth,
+        _syncStatus = syncStatus;
 
   // Getters
   int? get id => _id;
@@ -59,6 +64,10 @@ class MessMain {
   String? get uPerm => _uPerm;
   String? get qr => _qr;
   String? get currentMonth => _currentMonth;
+
+
+  String? get syncStatus => _syncStatus;
+  set syncStatus(String? value) => _syncStatus = value;
 
   // Setters
   set id(int? id) => _id = id;
@@ -92,6 +101,7 @@ class MessMain {
       'u_perm': _uPerm,
       'qr': _qr,
       'currentMonth': _currentMonth,
+      'sync_status': _syncStatus,
     };
   }
 
@@ -111,6 +121,7 @@ class MessMain {
       uPerm: map['u_perm'] ?? '0',
       qr: map['qr'] ?? '',
       currentMonth: map['currentMonth'] ?? '',
+      syncStatus: map['sync_status'] ?? MessMainSync.synced,
     );
   }
 
@@ -130,6 +141,7 @@ class MessMain {
       'u_perm': _uPerm,
       'qr': _qr,
       'currentMonth': _currentMonth,
+      'sync_status': _syncStatus,
     };
   }
 
@@ -149,6 +161,7 @@ class MessMain {
       uPerm: json['u_perm'] ?? '0',
       qr: json['qr'] ?? '',
       currentMonth: json['currentMonth'] ?? '',
+      syncStatus: json['sync_status'] ?? MessMainSync.synced,
     );
   }
 }

@@ -1,3 +1,5 @@
+import '../../mess/data/model/model_extensions.dart';
+
 class MessUser {
   int? _id;
   String? _uniqueId;
@@ -12,6 +14,7 @@ class MessUser {
   DateTime? _bazarEnd;
   String? _qr;
   String? _img;
+  String? _syncStatus;
 
   MessUser({
     int? id,
@@ -26,7 +29,8 @@ class MessUser {
     DateTime? bazarStart,
     DateTime? bazarEnd,
     String? qr = '',
-    String img = '',
+    String? img = '',
+    String? syncStatus,
   })  : _id = id,
         _uniqueId = uniqueId,
         _userId = userId,
@@ -39,7 +43,8 @@ class MessUser {
         _bazarStart = bazarStart,
         _bazarEnd = bazarEnd,
         _qr = qr,
-        _img = img;
+        _img = img,
+        _syncStatus = syncStatus;
 
   // Getters
   int? get id => _id;
@@ -55,6 +60,9 @@ class MessUser {
   DateTime? get bazarEnd => _bazarEnd;
   String? get qr => _qr;
   String? get img => _img;
+
+  String? get syncStatus => _syncStatus;
+  set syncStatus(String? value) => _syncStatus = value;
 
   // Setters
   set id(int? id) => _id = id;
@@ -86,6 +94,8 @@ class MessUser {
       'bazar_end': _bazarEnd?.toIso8601String(),
       'qr': _qr,
       'img': _img,
+      'sync_status': _syncStatus,
+
     };
   }
 
@@ -104,6 +114,7 @@ class MessUser {
       bazarEnd: map['bazar_end'] != null ? DateTime.parse(map['bazar_end']) : DateTime.now(), // Provide default if null
       qr: map['qr'] ?? '',
       img: map['img'] ?? '',
+      syncStatus: map['sync_status'] ?? MessUserSync.synced,
     );
   }
 
@@ -122,6 +133,7 @@ class MessUser {
       'bazar_end': _bazarEnd?.toIso8601String(),
       'qr': _qr,
       'img': _img,
+      'sync_status': _syncStatus,
     };
   }
 
@@ -140,6 +152,7 @@ class MessUser {
       bazarEnd: DateTime.parse(json['bazar_end']),
       qr: json['qr'] ?? '',
       img: json['img'] ?? '',
+      syncStatus: json['sync_status'] ?? MessUserSync.synced,
     );
   }
 }

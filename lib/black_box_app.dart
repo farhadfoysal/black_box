@@ -1,4 +1,5 @@
 import 'package:black_box/cores/network/connection_manager.dart';
+import 'package:black_box/mess/data/providers/database_provider.dart';
 import 'package:black_box/provider/connectivity_provider.dart';
 import 'package:black_box/provider/user/user_provider.dart';
 import 'package:black_box/screen_page/splash/splash.dart';
@@ -9,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:provider/provider.dart';
 
+import 'localization/localization_service.dart';
 import 'meter/providers/home_provider.dart';
 import 'meter/providers/login_provider.dart';
 
@@ -27,13 +29,16 @@ class BlackBoxApp extends StatelessWidget{
           ChangeNotifierProvider(create: (_) => LoginProvider()),
           ChangeNotifierProvider(create: (_) => HomeProvider()),
           ChangeNotifierProvider(create: (_) => ConnectionManager()),
-          ChangeNotifierProvider(create: (_) => ExamService()),
+          ChangeNotifierProvider(create: (_) => DatabaseProvider()),
         ],
         child: Obx(
               () => GetMaterialApp(
             title: 'EDU BlackBox',
             debugShowCheckedModeBanner: false,
             theme: themeController.themeData.value, // Observe theme changes
+                translations: LocalizationService(),
+                locale: LocalizationService.locale,
+                fallbackLocale: LocalizationService.fallbackLocale,
             home: Splash(),
           ),
         ),

@@ -1,3 +1,5 @@
+import '../../mess/data/model/model_extensions.dart';
+
 class MyMeals {
   int? _id;
   String _uniqueId;
@@ -10,6 +12,7 @@ class MyMeals {
   String _mealUpdate;
   String _sumMeal;
   String _mealReset;
+  String? _syncStatus;
 
   MyMeals({
     int? id,
@@ -23,6 +26,7 @@ class MyMeals {
     required String mealUpdate,
     required String sumMeal,
     required String mealReset,
+    String? syncStatus,
   })  : _id = id,
         _uniqueId = uniqueId,
         _messId = messId,
@@ -33,7 +37,8 @@ class MyMeals {
         _dinner = dinner,
         _mealUpdate = mealUpdate,
         _sumMeal = sumMeal,
-        _mealReset = mealReset;
+        _mealReset = mealReset,
+        _syncStatus = syncStatus;
 
   // Getters
   int? get id => _id;
@@ -47,6 +52,9 @@ class MyMeals {
   String get mealUpdate => _mealUpdate;
   String get sumMeal => _sumMeal;
   String get mealReset => _mealReset;
+
+  String? get syncStatus => _syncStatus;
+  set syncStatus(String? value) => _syncStatus = value;
 
   // Setters
   set id(int? id) => _id = id;
@@ -74,6 +82,7 @@ class MyMeals {
       'meal_update': _mealUpdate,
       'sum_meal': _sumMeal,
       'meal_reset': _mealReset,
+      'sync_status': _syncStatus,
     };
   }
 
@@ -90,6 +99,7 @@ class MyMeals {
       mealUpdate: map['meal_update'] ?? '1',
       sumMeal: map['sum_meal'] ?? '',
       mealReset: map['meal_reset'] ?? '0',
+      syncStatus: map['sync_status'] ?? MyMealsSync.synced,
     );
   }
 
@@ -106,6 +116,7 @@ class MyMeals {
       'meal_update': _mealUpdate,
       'sum_meal': _sumMeal,
       'meal_reset': _mealReset,
+      'sync_status': _syncStatus,
     };
   }
 
@@ -122,6 +133,7 @@ class MyMeals {
       mealUpdate: json['meal_update'] ?? '1',
       sumMeal: json['sum_meal'] ?? '',
       mealReset: json['meal_reset'] ?? '0',
+      syncStatus: json['sync_status'] ?? MyMealsSync.synced,
     );
   }
 }

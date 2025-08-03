@@ -1,3 +1,5 @@
+import '../../mess/data/model/model_extensions.dart';
+
 class AccountPrint {
   int? _id;
   String _uniqueId;
@@ -9,6 +11,7 @@ class AccountPrint {
   String _myMonthMeal;
   String _payOrReceive;
   String _trxClearId;
+  String? _syncStatus;
 
   AccountPrint({
     int? id,
@@ -21,6 +24,7 @@ class AccountPrint {
     required String myMonthMeal,
     required String payOrReceive,
     required String trxClearId,
+    String? syncStatus,
   })  : _id = id,
         _uniqueId = uniqueId,
         _userName = userName,
@@ -30,7 +34,8 @@ class AccountPrint {
         _mealExpense = mealExpense,
         _myMonthMeal = myMonthMeal,
         _payOrReceive = payOrReceive,
-        _trxClearId = trxClearId;
+        _trxClearId = trxClearId,
+        _syncStatus = syncStatus;
 
   // Getters
   int? get id => _id;
@@ -43,6 +48,9 @@ class AccountPrint {
   String get myMonthMeal => _myMonthMeal;
   String get payOrReceive => _payOrReceive;
   String get trxClearId => _trxClearId;
+
+  String? get syncStatus => _syncStatus;
+  set syncStatus(String? value) => _syncStatus = value;
 
   // Setters
   set id(int? id) => _id = id;
@@ -68,6 +76,7 @@ class AccountPrint {
       'my_month_meal': _myMonthMeal,
       'pay_or_recieve': _payOrReceive,
       'trx_clear_id': _trxClearId,
+      'sync_status': _syncStatus,
     };
   }
 
@@ -83,6 +92,7 @@ class AccountPrint {
       myMonthMeal: map['my_month_meal'] ?? '',
       payOrReceive: map['pay_or_recieve'] ?? '',
       trxClearId: map['trx_clear_id'] ?? '0',
+      syncStatus: map['sync_status'] ?? AccountPrintSync.synced,
     );
   }
 
@@ -98,6 +108,7 @@ class AccountPrint {
       'my_month_meal': _myMonthMeal,
       'pay_or_recieve': _payOrReceive,
       'trx_clear_id': _trxClearId,
+      'sync_status': _syncStatus,
     };
   }
 
@@ -113,6 +124,7 @@ class AccountPrint {
       myMonthMeal: json['my_month_meal'] ?? '',
       payOrReceive: json['pay_or_recieve'] ?? '',
       trxClearId: json['trx_clear_id'] ?? '0',
+      syncStatus: json['sync_status'] ?? AccountPrintSync.synced,
     );
   }
 }
