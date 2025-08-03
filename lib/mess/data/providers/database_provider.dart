@@ -25,28 +25,38 @@ import '../../services/online/firebase_mess_payment_service.dart';
 import '../../services/online/firebase_mess_print_service.dart';
 import '../../services/online/firebase_mess_user_service.dart';
 
-
 // ... similarly import other services
 
 class DatabaseProvider with ChangeNotifier {
   // Firebase services
-  final FirebaseMessMainService _firebaseMessMainService = FirebaseMessMainService();
-  final FirebaseMessUserService _firebaseMessUserService = FirebaseMessUserService();
-  final FirebaseBazarListService _firebaseBazarListService = FirebaseBazarListService();
-  final FirebaseMyMealsService _firebaseMyMealsService = FirebaseMyMealsService();
-  final FirebaseAccountPrintService _firebaseAccountPrintService = FirebaseAccountPrintService();
-  final FirebaseMessFeeService _firebaseMessFeesService = FirebaseMessFeeService();
-  final FirebaseOthersFeeService _firebaseOthersFeeService = FirebaseOthersFeeService();
-  final FirebasePaymentService _firebasePaymentService = FirebasePaymentService();
+  final FirebaseMessMainService _firebaseMessMainService =
+      FirebaseMessMainService();
+  final FirebaseMessUserService _firebaseMessUserService =
+      FirebaseMessUserService();
+  final FirebaseBazarListService _firebaseBazarListService =
+      FirebaseBazarListService();
+  final FirebaseMyMealsService _firebaseMyMealsService =
+      FirebaseMyMealsService();
+  final FirebaseAccountPrintService _firebaseAccountPrintService =
+      FirebaseAccountPrintService();
+  final FirebaseMessFeeService _firebaseMessFeesService =
+      FirebaseMessFeeService();
+  final FirebaseOthersFeeService _firebaseOthersFeeService =
+      FirebaseOthersFeeService();
+  final FirebasePaymentService _firebasePaymentService =
+      FirebasePaymentService();
 
   // SQLite services
   final SQLiteMessMainService _sqliteMessMainService = SQLiteMessMainService();
   final SQLiteMessUserService _sqliteMessUserService = SQLiteMessUserService();
-  final SQLiteBazarListService _sqliteBazarListService = SQLiteBazarListService();
+  final SQLiteBazarListService _sqliteBazarListService =
+      SQLiteBazarListService();
   final SqliteMessMealService _sqliteMyMealsService = SqliteMessMealService();
-  final SQLiteAccountPrintService _sqliteAccountPrintService = SQLiteAccountPrintService();
+  final SQLiteAccountPrintService _sqliteAccountPrintService =
+      SQLiteAccountPrintService();
   final SQLiteMessFeesService _sqliteMessFeesService = SQLiteMessFeesService();
-  final SQLiteOthersFeeService _sqliteOthersFeeService = SQLiteOthersFeeService();
+  final SQLiteOthersFeeService _sqliteOthersFeeService =
+      SQLiteOthersFeeService();
   final SQLitePaymentService _sqlitePaymentService = SQLitePaymentService();
 
   // Current selected mess (example usage)
@@ -62,10 +72,9 @@ class DatabaseProvider with ChangeNotifier {
       _firebaseMessMainService.create(mess);
   Future<void> updateMessMain(MessMain mess) =>
       _firebaseMessMainService.update(mess.messId!, mess);
-  Future<void> deleteMessMain(String id) =>
-      _firebaseMessMainService.delete(id);
+  Future<void> deleteMessMain(String id) => _firebaseMessMainService.delete(id);
   Future<MessMain?> getMessMain(String id) =>
-      _sqliteMessMainService.get(id);  // Prefer local read
+      _sqliteMessMainService.get(id); // Prefer local read
   Future<List<MessMain>> getAllMessMains() =>
       _sqliteMessMainService.getAll(); // Prefer local read
   Stream<MessMain?> watchMessMain(String id) =>
@@ -78,16 +87,13 @@ class DatabaseProvider with ChangeNotifier {
       _firebaseMessUserService.create(user);
   Future<void> updateMessUser(MessUser user) =>
       _firebaseMessUserService.update(user.uniqueId!, user);
-  Future<void> deleteMessUser(String id) =>
-      _firebaseMessUserService.delete(id);
-  Future<MessUser?> getMessUser(String id) =>
-      _sqliteMessUserService.get(id);
-  Future<List<MessUser>> getAllMessUsers() =>
-      _sqliteMessUserService.getAll();
+  Future<void> deleteMessUser(String id) => _firebaseMessUserService.delete(id);
+  Future<MessUser?> getMessUser(String id) => _sqliteMessUserService.get(id);
+  Future<List<MessUser>> getAllMessUsers() => _sqliteMessUserService.getAll();
   Future<List<MessUser>> getMessUsersByMess(String messId) =>
       _sqliteMessUserService.getAll().then(
             (users) => users.where((u) => u.messId == messId).toList(),
-      );
+          );
   Stream<MessUser?> watchMessUser(String id) =>
       _sqliteMessUserService.watch(id);
   Stream<List<MessUser>> watchAllMessUsers() =>
@@ -102,14 +108,13 @@ class DatabaseProvider with ChangeNotifier {
       _firebaseBazarListService.update(bazarList.listId!, bazarList);
   Future<void> deleteBazarList(String id) =>
       _firebaseBazarListService.delete(id);
-  Future<BazarList?> getBazarList(String id) =>
-      _sqliteBazarListService.get(id);
+  Future<BazarList?> getBazarList(String id) => _sqliteBazarListService.get(id);
   Future<List<BazarList>> getAllBazarLists() =>
       _sqliteBazarListService.getAll();
   Future<List<BazarList>> getBazarListsByMess(String messId) =>
       _sqliteBazarListService.getAll().then(
             (lists) => lists.where((l) => l.messId == messId).toList(),
-      );
+          );
   Stream<BazarList?> watchBazarList(String id) =>
       _sqliteBazarListService.watch(id);
   Stream<List<BazarList>> watchAllBazarLists() =>
@@ -122,20 +127,15 @@ class DatabaseProvider with ChangeNotifier {
       _firebaseMyMealsService.create(meal);
   Future<void> updateMyMeal(MyMeals meal) =>
       _firebaseMyMealsService.update(meal.id!.toString(), meal);
-  Future<void> deleteMyMeal(String id) =>
-      _firebaseMyMealsService.delete(id);
-  Future<MyMeals?> getMyMeal(String id) =>
-      _sqliteMyMealsService.get(id);
-  Future<List<MyMeals>> getAllMyMeals() =>
-      _sqliteMyMealsService.getAll();
+  Future<void> deleteMyMeal(String id) => _firebaseMyMealsService.delete(id);
+  Future<MyMeals?> getMyMeal(String id) => _sqliteMyMealsService.get(id);
+  Future<List<MyMeals>> getAllMyMeals() => _sqliteMyMealsService.getAll();
   Future<List<MyMeals>> getMyMealsByMess(String messId) =>
       _sqliteMyMealsService.getAll().then(
             (meals) => meals.where((m) => m.messId == messId).toList(),
-      );
-  Stream<MyMeals?> watchMyMeal(String id) =>
-      _sqliteMyMealsService.watch(id);
-  Stream<List<MyMeals>> watchAllMyMeals() =>
-      _sqliteMyMealsService.watchAll();
+          );
+  Stream<MyMeals?> watchMyMeal(String id) => _sqliteMyMealsService.watch(id);
+  Stream<List<MyMeals>> watchAllMyMeals() => _sqliteMyMealsService.watchAll();
   Stream<List<MyMeals>> watchMyMealsByMess(String messId) =>
       _sqliteMyMealsService.watchByMess(messId);
 
@@ -143,7 +143,8 @@ class DatabaseProvider with ChangeNotifier {
   Future<String> createAccountPrint(AccountPrint accountPrint) =>
       _firebaseAccountPrintService.create(accountPrint);
   Future<void> updateAccountPrint(AccountPrint accountPrint) =>
-      _firebaseAccountPrintService.update(accountPrint.id!.toString(), accountPrint);
+      _firebaseAccountPrintService.update(
+          accountPrint.id!.toString(), accountPrint);
   Future<void> deleteAccountPrint(String id) =>
       _firebaseAccountPrintService.delete(id);
   Future<AccountPrint?> getAccountPrint(String id) =>
@@ -153,7 +154,7 @@ class DatabaseProvider with ChangeNotifier {
   Future<List<AccountPrint>> getAccountPrintsByUser(String uniqueId) =>
       _sqliteAccountPrintService.getAll().then(
             (prints) => prints.where((p) => p.uniqueId == uniqueId).toList(),
-      );
+          );
   Stream<AccountPrint?> watchAccountPrint(String id) =>
       _sqliteAccountPrintService.watch(id);
   Stream<List<AccountPrint>> watchAllAccountPrints() =>
@@ -166,18 +167,14 @@ class DatabaseProvider with ChangeNotifier {
       _firebaseMessFeesService.create(messFees);
   Future<void> updateMessFees(MessFees messFees) =>
       _firebaseMessFeesService.update(messFees.id!.toString(), messFees);
-  Future<void> deleteMessFees(String id) =>
-      _firebaseMessFeesService.delete(id);
-  Future<MessFees?> getMessFee(String id) =>
-      _sqliteMessFeesService.get(id);
-  Future<List<MessFees>> getAllMessFees() =>
-      _sqliteMessFeesService.getAll();
+  Future<void> deleteMessFees(String id) => _firebaseMessFeesService.delete(id);
+  Future<MessFees?> getMessFee(String id) => _sqliteMessFeesService.get(id);
+  Future<List<MessFees>> getAllMessFees() => _sqliteMessFeesService.getAll();
   Future<List<MessFees>> getMessFeesByMess(String messId) =>
       _sqliteMessFeesService.getAll().then(
             (fees) => fees.where((f) => f.messId == messId).toList(),
-      );
-  Stream<MessFees?> watchMessFee(String id) =>
-      _sqliteMessFeesService.watch(id);
+          );
+  Stream<MessFees?> watchMessFee(String id) => _sqliteMessFeesService.watch(id);
   Stream<List<MessFees>> watchAllMessFees() =>
       _sqliteMessFeesService.watchAll();
   Stream<List<MessFees>> watchMessFeesByMess(String messId) =>
@@ -190,14 +187,13 @@ class DatabaseProvider with ChangeNotifier {
       _firebaseOthersFeeService.update(othersFee.id!.toString(), othersFee);
   Future<void> deleteOthersFee(String id) =>
       _firebaseOthersFeeService.delete(id);
-  Future<OthersFee?> getOthersFee(String id) =>
-      _sqliteOthersFeeService.get(id);
+  Future<OthersFee?> getOthersFee(String id) => _sqliteOthersFeeService.get(id);
   Future<List<OthersFee>> getAllOthersFees() =>
       _sqliteOthersFeeService.getAll();
   Future<List<OthersFee>> getOthersFeesByMess(String messId) =>
       _sqliteOthersFeeService.getAll().then(
             (fees) => fees.where((f) => f.messId == messId).toList(),
-      );
+          );
   Stream<OthersFee?> watchOthersFee(String id) =>
       _sqliteOthersFeeService.watch(id);
   Stream<List<OthersFee>> watchAllOthersFees() =>
@@ -210,20 +206,45 @@ class DatabaseProvider with ChangeNotifier {
       _firebasePaymentService.create(payment);
   Future<void> updatePayment(Payment payment) =>
       _firebasePaymentService.update(payment.id!.toString(), payment);
-  Future<void> deletePayment(String id) =>
-      _firebasePaymentService.delete(id);
-  Future<Payment?> getPayment(String id) =>
-      _sqlitePaymentService.get(id);
-  Future<List<Payment>> getAllPayments() =>
-      _sqlitePaymentService.getAll();
+  Future<void> deletePayment(String id) => _firebasePaymentService.delete(id);
+  Future<Payment?> getPayment(String id) => _sqlitePaymentService.get(id);
+  Future<List<Payment>> getAllPayments() => _sqlitePaymentService.getAll();
   Future<List<Payment>> getPaymentsByUser(String uniqueId) =>
       _sqlitePaymentService.getAll().then(
-            (payments) => payments.where((p) => p.uniqueId == uniqueId).toList(),
-      );
-  Stream<Payment?> watchPayment(String id) =>
-      _sqlitePaymentService.watch(id);
-  Stream<List<Payment>> watchAllPayments() =>
-      _sqlitePaymentService.watchAll();
+            (payments) =>
+                payments.where((p) => p.uniqueId == uniqueId).toList(),
+          );
+  Stream<Payment?> watchPayment(String id) => _sqlitePaymentService.watch(id);
+  Stream<List<Payment>> watchAllPayments() => _sqlitePaymentService.watchAll();
   Stream<List<Payment>> watchPaymentsByUser(String uniqueId) =>
       _sqlitePaymentService.watchByUser(uniqueId);
+
+  // Future<String> createReport(ReportRecord item) => _firebaseReport.create(item);
+  // Future<void> updateReport(ReportRecord item) => _firebaseReport.update(item.id!, item);
+  // Future<void> deleteReport(String id) => _firebaseReport.delete(id);
+  // Future<ReportRecord?> getReport(String id) => _firebaseReport.get(id);
+  // Future<List<ReportRecord>> getAllReports() => _firebaseReport.getAll();
+  // Stream<ReportRecord?> watchReport(String id) => _firebaseReport.watch(id);
+  // Stream<List<ReportRecord>> watchAllReports() => _firebaseReport.watchAll();
+  // Stream<List<ReportRecord>> watchReportsFromLocal(String messId) => _sqliteReport.watchByMess(messId);
+
+  // ------------------- Global Sync (Push + Pull) -------------------
+  Future<void> syncAllData() async {
+    await Future.wait([
+      _sqliteMessMainService.pushPendingOperations(),
+      _sqliteMessUserService.pushPendingOperations(),
+      _sqliteBazarListService.pushPendingOperations(),
+      _sqliteMessMainService.pushPendingOperations(),
+      _sqlitePaymentService.pushPendingOperations(),
+      _sqliteMessFeesService.pushPendingOperations(),
+      _sqliteMyMealsService.pushPendingOperations(),
+      _sqliteMessMainService.pullLatestData(),
+      _sqliteMessUserService.pullLatestData(),
+      _sqliteBazarListService.pullLatestData(),
+      _sqlitePaymentService.pullLatestData(),
+      _sqliteMessFeesService.pullLatestData(),
+      _sqliteMyMealsService.pullLatestData(),
+    ]);
+    notifyListeners();
+  }
 }
