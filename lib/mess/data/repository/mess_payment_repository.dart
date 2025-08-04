@@ -123,4 +123,41 @@ class PaymentRepository {
     );
   }
 
+  Future<void> syncPendingOperations() async {
+    final List<Map<String, dynamic>> pendingItems = await _db.query(
+      'payment',
+      where: 'sync_status != ?',
+      whereArgs: [PaymentSync.synced],
+    );
+
+    for (final item in pendingItems) {
+      final model = Payment.fromMap(item);
+      final uniqueId = model.uniqueId ?? model.id.toString();
+
+      try {
+        if (model.syncStatus == PaymentSync.pendingCreate) {
+          await _fbRef.child(uniqueId).set(model.toJson());
+        } else if (model.syncStatus == PaymentSync.pendingUpdate) {
+          await _fbRef.child(uniqueId).update(model.toJson());
+        } else if (model.syncStatus == PaymentSync.pendingDelete) {
+          await _fbRef.child(uniqueId).remove();
+          await deleteByUniqueId(uniqueId);
+          continue;
+        }
+
+        await _db.update(
+          'payment',
+          {
+            'sync_status': PaymentSync.synced,
+            'last_updated': DateTime.now().toIso8601String(),
+          },
+          where: 'unique_id = ?',
+          whereArgs: [uniqueId],
+        );
+      } catch (e) {
+        print('Sync failed for item $uniqueId: $e');
+      }
+    }
+  }
+
 }

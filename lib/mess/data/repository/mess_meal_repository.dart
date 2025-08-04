@@ -105,4 +105,42 @@ class MyMealsRepository {
     );
   }
 
+  Future<void> syncPendingOperations() async {
+    final List<Map<String, dynamic>> pendingItems = await _db.query(
+      'my_meals',
+      where: 'sync_status != ?',
+      whereArgs: [MyMealsSync.synced],
+    );
+
+    for (final item in pendingItems) {
+      final mm = MyMeals.fromMap(item);
+      final uniqueId = mm.uniqueId ?? mm.id.toString();
+
+      try {
+        if (mm.syncStatus == MyMealsSync.pendingCreate) {
+          await _fbRef.child(uniqueId).set(mm.toJson());
+        } else if (mm.syncStatus == MyMealsSync.pendingUpdate) {
+          await _fbRef.child(uniqueId).update(mm.toJson());
+        } else if (mm.syncStatus == MyMealsSync.pendingDelete) {
+          await _fbRef.child(uniqueId).remove();
+          await deleteByUniqueId(uniqueId);
+          continue;
+        }
+
+        await _db.update(
+          'my_meals',
+          {
+            'sync_status': MyMealsSync.synced,
+            'last_updated': DateTime.now().toIso8601String(),
+          },
+          where: 'unique_id = ?',
+          whereArgs: [uniqueId],
+        );
+      } catch (e) {
+        print('Sync failed for item $uniqueId: $e');
+      }
+    }
+  }
+
+
 }

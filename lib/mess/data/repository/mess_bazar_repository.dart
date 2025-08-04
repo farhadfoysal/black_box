@@ -106,4 +106,67 @@ class BazarListRepository {
     );
   }
 
+  Future<void> syncPendingOperations() async {
+    final List<Map<String, dynamic>> pendingItems = await _db.query(
+      'bazar_list',
+      where: 'sync_status != ?',
+      whereArgs: [BazarListSync.synced],
+    );
+
+    for (final item in pendingItems) {
+      final model = BazarList.fromMap(item);
+      final uniqueId = model.uniqueId ?? model.id.toString();
+
+      try {
+        if (model.syncStatus == BazarListSync.pendingCreate) {
+          await _fbRef.child(uniqueId).set(model.toJson());
+        } else if (model.syncStatus == BazarListSync.pendingUpdate) {
+          await _fbRef.child(uniqueId).update(model.toJson());
+        } else if (model.syncStatus == BazarListSync.pendingDelete) {
+          await _fbRef.child(uniqueId).remove();
+          await deleteByUniqueId(uniqueId);
+          continue;
+        }
+
+        await _db.update(
+          'bazar_list',
+          {
+            'sync_status': BazarListSync.synced,
+            'last_updated': DateTime.now().toIso8601String(),
+          },
+          where: 'unique_id = ?',
+          whereArgs: [uniqueId],
+        );
+      } catch (e) {
+        print('Sync failed for item $uniqueId: $e');
+      }
+    }
+  }
+
+
+// Future<void> syncPendingOperations() async {
+  //   final pendingRecords = await _db.query(
+  //     'bazar_list',
+  //     where: 'sync_status != ?',
+  //     whereArgs: [BazarListSync.synced],
+  //   );
+  //
+  //   for (var record in pendingRecords) {
+  //     final bl = BazarList.fromMap(record);
+  //     final fbKey = bl.uniqueId ?? bl.id.toString();
+  //
+  //     switch (bl.syncStatus) {
+  //       case BazarListSync.pendingCreate:
+  //       case BazarListSync.pendingUpdate:
+  //         await _fbRef.child(fbKey).set(bl.toJson());
+  //         break;
+  //       case BazarListSync.pendingDelete:
+  //         await _fbRef.child(fbKey).remove();
+  //         break;
+  //     }
+  //
+  //     await updateSyncStatus(fbKey, BazarListSync.synced);
+  //   }
+  // }
+
 }

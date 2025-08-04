@@ -115,6 +115,42 @@ class MessMainRepository {
     );
   }
 
+  Future<void> syncPendingOperations() async {
+    final List<Map<String, dynamic>> pendingItems = await _db.query(
+      'mess_main',
+      where: 'sync_status != ?',
+      whereArgs: [MessMainSync.synced],
+    );
+
+    for (final item in pendingItems) {
+      final mm = MessMain.fromMap(item);
+      final uniqueId = mm.messId ?? mm.id.toString();
+
+      try {
+        if (mm.syncStatus == MessMainSync.pendingCreate) {
+          await _fbRef.child(uniqueId).set(mm.toJson());
+        } else if (mm.syncStatus == MessMainSync.pendingUpdate) {
+          await _fbRef.child(uniqueId).update(mm.toJson());
+        } else if (mm.syncStatus == MessMainSync.pendingDelete) {
+          await _fbRef.child(uniqueId).remove();
+          await deleteByUniqueId(uniqueId);
+          continue;
+        }
+
+        await _db.update(
+          'mess_main',
+          {
+            'sync_status': MessMainSync.synced,
+            'last_updated': DateTime.now().toIso8601String(),
+          },
+          where: 'unique_id = ?',
+          whereArgs: [uniqueId],
+        );
+      } catch (e) {
+        print('Sync failed for item $uniqueId: $e');
+      }
+    }
+  }
 
 }
 

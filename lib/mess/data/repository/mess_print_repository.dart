@@ -106,4 +106,80 @@ class AccountPrintRepository {
     );
   }
 
+  Future<void> syncPendingOperations() async {
+    final List<Map<String, dynamic>> pendingItems = await _db.query(
+      'account_print',
+      where: 'sync_status != ?',
+      whereArgs: [AccountPrintSync.synced],
+    );
+
+    for (final item in pendingItems) {
+      final ap = AccountPrint.fromMap(item);
+      final uniqueId = ap.uniqueId ?? ap.id.toString();
+
+      try {
+        if (ap.syncStatus == AccountPrintSync.pendingCreate) {
+          await _fbRef.child(uniqueId).set(ap.toJson());
+        } else if (ap.syncStatus == AccountPrintSync.pendingUpdate) {
+          await _fbRef.child(uniqueId).update(ap.toJson());
+        } else if (ap.syncStatus == AccountPrintSync.pendingDelete) {
+          await _fbRef.child(uniqueId).remove();
+          await deleteByUniqueId(uniqueId);
+          continue; // Skip setting syncStatus to synced
+        }
+
+        // If sync successful, mark as synced
+        await _db.update(
+          'account_print',
+          {
+            'sync_status': AccountPrintSync.synced,
+            'last_updated': DateTime.now().toIso8601String(),
+          },
+          where: 'unique_id = ?',
+          whereArgs: [uniqueId],
+        );
+      } catch (e) {
+        print('Sync failed for item $uniqueId: $e');
+        // Optionally: log error or retry later
+      }
+    }
+  }
+
+  // Future<void> syncPendingOperations() async {
+  //   final List<Map<String, dynamic>> pendingItems = await _db.query(
+  //     'account_print',
+  //     where: 'sync_status != ?',
+  //     whereArgs: [AccountPrintSync.synced],
+  //   );
+  //
+  //   for (final item in pendingItems) {
+  //     final ap = AccountPrint.fromMap(item);
+  //     final uniqueId = ap.uniqueId ?? ap.id.toString();
+  //
+  //     try {
+  //       if (ap.syncStatus == AccountPrintSync.pendingCreate) {
+  //         await _fbRef.child(uniqueId).set(ap.toJson());
+  //       } else if (ap.syncStatus == AccountPrintSync.pendingUpdate) {
+  //         await _fbRef.child(uniqueId).update(ap.toJson());
+  //       } else if (ap.syncStatus == AccountPrintSync.pendingDelete) {
+  //         await _fbRef.child(uniqueId).remove();
+  //         await deleteByUniqueId(uniqueId);
+  //         continue;
+  //       }
+  //
+  //       await _db.update(
+  //         'account_print',
+  //         {
+  //           'sync_status': AccountPrintSync.synced,
+  //           'last_updated': DateTime.now().toIso8601String(),
+  //         },
+  //         where: 'unique_id = ?',
+  //         whereArgs: [uniqueId],
+  //       );
+  //     } catch (e) {
+  //       print('Sync failed for item $uniqueId: $e');
+  //     }
+  //   }
+  // }
+
 }

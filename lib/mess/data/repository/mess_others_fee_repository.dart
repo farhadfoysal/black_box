@@ -124,4 +124,41 @@ class OthersFeeRepository {
     );
   }
 
+  Future<void> syncPendingOperations() async {
+    final List<Map<String, dynamic>> pendingItems = await _db.query(
+      'others_fee',
+      where: 'sync_status != ?',
+      whereArgs: [OthersFeeSync.synced],
+    );
+
+    for (final item in pendingItems) {
+      final model = OthersFee.fromMap(item);
+      final uniqueId = model.uniqueId ?? model.id.toString();
+
+      try {
+        if (model.syncStatus == OthersFeeSync.pendingCreate) {
+          await _fbRef.child(uniqueId).set(model.toJson());
+        } else if (model.syncStatus == OthersFeeSync.pendingUpdate) {
+          await _fbRef.child(uniqueId).update(model.toJson());
+        } else if (model.syncStatus == OthersFeeSync.pendingDelete) {
+          await _fbRef.child(uniqueId).remove();
+          await deleteByUniqueId(uniqueId);
+          continue;
+        }
+
+        await _db.update(
+          'others_fee',
+          {
+            'sync_status': OthersFeeSync.synced,
+            'last_updated': DateTime.now().toIso8601String(),
+          },
+          where: 'unique_id = ?',
+          whereArgs: [uniqueId],
+        );
+      } catch (e) {
+        print('Sync failed for item $uniqueId: $e');
+      }
+    }
+  }
+
 }

@@ -106,4 +106,41 @@ class MessFeesRepository {
     );
   }
 
+  Future<void> syncPendingOperations() async {
+    final List<Map<String, dynamic>> pendingItems = await _db.query(
+      'mess_fees',
+      where: 'sync_status != ?',
+      whereArgs: [MessFeesSync.synced],
+    );
+
+    for (final item in pendingItems) {
+      final model = MessFees.fromMap(item);
+      final uniqueId = model.messId ?? model.id.toString();
+
+      try {
+        if (model.syncStatus == MessFeesSync.pendingCreate) {
+          await _fbRef.child(uniqueId).set(model.toJson());
+        } else if (model.syncStatus == MessFeesSync.pendingUpdate) {
+          await _fbRef.child(uniqueId).update(model.toJson());
+        } else if (model.syncStatus == MessFeesSync.pendingDelete) {
+          await _fbRef.child(uniqueId).remove();
+          await deleteByUniqueId(uniqueId);
+          continue;
+        }
+
+        await _db.update(
+          'mess_fees',
+          {
+            'sync_status': MessFeesSync.synced,
+            'last_updated': DateTime.now().toIso8601String(),
+          },
+          where: 'unique_id = ?',
+          whereArgs: [uniqueId],
+        );
+      } catch (e) {
+        print('Sync failed for item $uniqueId: $e');
+      }
+    }
+  }
+
 }
