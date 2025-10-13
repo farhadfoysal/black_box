@@ -191,6 +191,7 @@ class MessHomeAdminState extends State<MessHomeAdmin> {
         },
         children: [
           MessDashboardPage(),
+          // MealCounterPage(),
           BazarListPage(),
           PaymentListPage(),
           MessFeePage(),

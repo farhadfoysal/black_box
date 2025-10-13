@@ -61,6 +61,17 @@ class SQLiteOthersFeeService implements BaseDatabaseService<OthersFee> {
     return null;
   }
 
+  Future<OthersFee?> getById(String id) async {
+    final db = await _dbHelper.database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'others_fee',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (maps.isNotEmpty) return OthersFee.fromMap(maps.first);
+    return null;
+  }
+
   @override
   Future<List<OthersFee>> getAll() async {
     final db = await _dbHelper.database;
@@ -85,7 +96,7 @@ class SQLiteOthersFeeService implements BaseDatabaseService<OthersFee> {
         where: 'sync_status != ?',
         whereArgs: [MessMainSync.synced]);
 
-    // This would be handled by the repository
+    // This would be handled by the repositories
     return Future.value();
   }
 
@@ -116,6 +127,21 @@ class SQLiteOthersFeeService implements BaseDatabaseService<OthersFee> {
         whereArgs: [uniqueId],
       );
       return List.generate(maps.length, (i) => OthersFee.fromMap(maps[i]));
+    });
+  }
+
+  /// -----------------------
+  /// ✅ UPDATE SYNC STATUS
+  /// -----------------------
+  Future<void> updateSyncStatus(String uniqueId, String newStatus) async {
+    await _lock.synchronized(() async {
+      final db = await _dbHelper.database;
+      await db.update(
+        'others_fee',
+        {'sync_status': newStatus},
+        where: 'unique_id = ?',
+        whereArgs: [uniqueId],
+      );
     });
   }
 

@@ -28,6 +28,11 @@ class FirebaseOthersFeeService implements BaseDatabaseService<OthersFee> {
     return snapshot.exists ? OthersFee.fromJson(snapshot.value as Map<String, dynamic>) : null;
   }
 
+  Future<OthersFee?> getById(String id) async {
+    final snapshot = await _dbRef.child(id).get();
+    return snapshot.exists ? OthersFee.fromJson(snapshot.value as Map<String, dynamic>) : null;
+  }
+
   @override
   Future<List<OthersFee>> getAll() async {
     final snapshot = await _dbRef.get();

@@ -85,7 +85,7 @@ class SQLiteMessFeesService implements BaseDatabaseService<MessFees> {
         where: 'sync_status != ?',
         whereArgs: [MessMainSync.synced]);
 
-    // This would be handled by the repository
+    // This would be handled by the repositories
     return Future.value();
   }
 
@@ -120,4 +120,20 @@ class SQLiteMessFeesService implements BaseDatabaseService<MessFees> {
       return List.generate(maps.length, (i) => MessFees.fromMap(maps[i]));
     });
   }
+
+  /// -----------------------
+  /// ✅ UPDATE SYNC STATUS
+  /// -----------------------
+  Future<void> updateSyncStatus(String uniqueId, String newStatus) async {
+    await _lock.synchronized(() async {
+      final db = await _dbHelper.database;
+      await db.update(
+        'mess_fee',
+        {'sync_status': newStatus},
+        where: 'unique_id = ?',
+        whereArgs: [uniqueId],
+      );
+    });
+  }
+
 }

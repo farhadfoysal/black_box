@@ -85,7 +85,7 @@ class SQLiteBazarListService implements BaseDatabaseService<BazarList> {
         where: 'sync_status != ?',
         whereArgs: [MessMainSync.synced]);
 
-    // This would be handled by the repository
+    // This would be handled by the repositories
     return Future.value();
   }
 
@@ -120,4 +120,20 @@ class SQLiteBazarListService implements BaseDatabaseService<BazarList> {
       return List.generate(maps.length, (i) => BazarList.fromMap(maps[i]));
     });
   }
+
+  /// -----------------------
+  /// ✅ UPDATE SYNC STATUS
+  /// -----------------------
+  Future<void> updateSyncStatus(String uniqueId, String newStatus) async {
+    await _lock.synchronized(() async {
+      final db = await _dbHelper.database;
+      await db.update(
+        'bazar_list',
+        {'sync_status': newStatus},
+        where: 'unique_id = ?',
+        whereArgs: [uniqueId],
+      );
+    });
+  }
+
 }

@@ -46,7 +46,7 @@ class _BazarExpenseListPageState extends State<BazarExpenseListPage> {
     // Calculate monthly totals
     final Map<String, double> monthlyTotals = {};
     for (var bazar in widget.bazarLists) {
-      final monthKey = _monthFormat.format(bazar.dateTime);
+      final monthKey = _monthFormat.format(bazar.dateTime as DateTime);
       monthlyTotals[monthKey] = (monthlyTotals[monthKey] ?? 0) + double.parse(bazar.amount);
     }
 
@@ -335,7 +335,7 @@ class _BazarExpenseListPageState extends State<BazarExpenseListPage> {
         ),
       ),
       subtitle: Text(
-        _dateFormat.format(bazar.dateTime),
+        _dateFormat.format(bazar.dateTime as DateTime),
         style: TextStyle(
           color: _textColor.withOpacity(0.6),
         ),
@@ -371,7 +371,7 @@ class _BazarExpenseListPageState extends State<BazarExpenseListPage> {
     final TextEditingController detailsController = TextEditingController(
       text: isEdit ? bazar.listDetails : '',
     );
-    DateTime selectedDate = isEdit ? bazar.dateTime : DateTime.now();
+    DateTime selectedDate = isEdit ? bazar.dateTime as DateTime : DateTime.now();
 
     showModalBottomSheet(
       context: context,

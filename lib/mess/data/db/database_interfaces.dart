@@ -4,6 +4,7 @@ abstract class BaseDatabaseService<T> {
   Future<void> update(String id, T item);
   Future<void> delete(String id);
   Future<T?> get(String id);
+  // Future<T?> getById(String id);
   Future<List<T>> getAll();
 
   // Real-time Streams
@@ -17,6 +18,8 @@ abstract class BaseDatabaseService<T> {
   // Sync methods
   Future<void> pushPendingOperations();
   Future<void> pullLatestData();
+
+
 }
 
 abstract class Syncable {

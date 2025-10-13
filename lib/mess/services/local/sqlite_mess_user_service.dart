@@ -127,4 +127,19 @@ class SQLiteMessUserService implements BaseDatabaseService<MessUser> {
       return List.generate(maps.length, (i) => MessUser.fromMap(maps[i]));
     });
   }
+
+  /// -----------------------
+  /// ✅ UPDATE SYNC STATUS
+  /// -----------------------
+  Future<void> updateSyncStatus(String uniqueId, String newStatus) async {
+    await _lock.synchronized(() async {
+      final db = await _dbHelper.database;
+      await db.update(
+        'mess_user',
+        {'sync_status': newStatus},
+        where: 'unique_id = ?',
+        whereArgs: [uniqueId],
+      );
+    });
+  }
 }

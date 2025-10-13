@@ -7,7 +7,7 @@ class OthersFee {
   String _feeType;
   String _amount;
   String _adminId;
-  DateTime _date;
+  String _date;
   String _status;
   String? _syncStatus;
 
@@ -18,7 +18,7 @@ class OthersFee {
     String feeType = '',
     String amount = '0',
     String adminId = '',
-    required DateTime date,
+    required String date,
     String status = '1',
     String? syncStatus,
   })  : _id = id,
@@ -38,7 +38,7 @@ class OthersFee {
   String get feeType => _feeType;
   String get amount => _amount;
   String get adminId => _adminId;
-  DateTime get date => _date;
+  String get date => _date;
   String get status => _status;
 
   String? get syncStatus => _syncStatus;
@@ -51,7 +51,7 @@ class OthersFee {
   set feeType(String feeType) => _feeType = feeType;
   set amount(String amount) => _amount = amount;
   set adminId(String adminId) => _adminId = adminId;
-  set date(DateTime date) => _date = date;
+  set date(String date) => _date = date;
   set status(String status) => _status = status;
 
   Map<String, dynamic> toMap() {
@@ -62,7 +62,7 @@ class OthersFee {
       'fee_type': _feeType,
       'amount': _amount,
       'admin_id': _adminId,
-      'date': _date.toIso8601String(),
+      'date': _date,
       'status': _status,
       'sync_status': _syncStatus,
     };
@@ -76,7 +76,7 @@ class OthersFee {
       feeType: map['fee_type'] ?? '',
       amount: map['amount'] ?? '0',
       adminId: map['admin_id'] ?? '',
-      date: DateTime.parse(map['date']),
+      date: (map['date']),
       status: map['status'] ?? '1',
       syncStatus: map['sync_status'] ?? OthersFeeSync.synced,
     );
@@ -90,7 +90,7 @@ class OthersFee {
       'fee_type': _feeType,
       'amount': _amount,
       'admin_id': _adminId,
-      'date': _date.toIso8601String(),
+      'date': _date,
       'status': _status,
       'sync_status': _syncStatus,
     };
@@ -104,7 +104,7 @@ class OthersFee {
       feeType: json['fee_type'] ?? '',
       amount: json['amount'] ?? '0',
       adminId: json['admin_id'] ?? '',
-      date: DateTime.parse(json['date']),
+      date: (json['date']),
       status: json['status'] ?? '1',
       syncStatus: json['sync_status'] ?? OthersFeeSync.synced,
     );

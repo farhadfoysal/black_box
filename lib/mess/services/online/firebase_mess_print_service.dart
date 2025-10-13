@@ -28,6 +28,11 @@ class FirebaseAccountPrintService implements BaseDatabaseService<AccountPrint> {
     return snapshot.exists ? AccountPrint.fromJson(snapshot.value as Map<String, dynamic>) : null;
   }
 
+  Future<AccountPrint?> getById(String id) async {
+    final snapshot = await _dbRef.child(id).get();
+    return snapshot.exists ? AccountPrint.fromJson(snapshot.value as Map<String, dynamic>) : null;
+  }
+
   @override
   Future<List<AccountPrint>> getAll() async {
     final snapshot = await _dbRef.get();
@@ -97,4 +102,7 @@ class FirebaseAccountPrintService implements BaseDatabaseService<AccountPrint> {
       return [];
     });
   }
+
+
+
 }

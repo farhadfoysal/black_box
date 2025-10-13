@@ -30,6 +30,7 @@ class BlackBoxApp extends StatelessWidget{
           ChangeNotifierProvider(create: (_) => HomeProvider()),
           ChangeNotifierProvider(create: (_) => ConnectionManager()),
           ChangeNotifierProvider(create: (_) => DatabaseProvider()),
+          ChangeNotifierProvider(create: (_) => ExamService()),
         ],
         child: Obx(
               () => GetMaterialApp(

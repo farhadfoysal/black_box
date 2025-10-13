@@ -28,6 +28,11 @@ class FirebaseMessFeeService implements BaseDatabaseService<MessFees> {
     return snapshot.exists ? MessFees.fromJson(snapshot.value as Map<String, dynamic>) : null;
   }
 
+  Future<MessFees?> getById(String id) async {
+    final snapshot = await _dbRef.child(id).get();
+    return snapshot.exists ? MessFees.fromJson(snapshot.value as Map<String, dynamic>) : null;
+  }
+
   @override
   Future<List<MessFees>> getAll() async {
     final snapshot = await _dbRef.get();

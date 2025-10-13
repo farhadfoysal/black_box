@@ -10,7 +10,8 @@ class MessMain {
   String? _messAdminId;
   String? _mealUpdateStatus; // 1, 2, 3, 4 - d: 1
   String? _adminPhone;
-  DateTime? _startDate;
+  // DateTime? _startDate;
+  String? _startDate;
   String? _sumOfAllTrx; //
   String? _uPerm; // 0,1 - d: 0
   String? _qr;
@@ -27,7 +28,8 @@ class MessMain {
     String? messAdminId,
     String? mealUpdateStatus,
     String? adminPhone,
-    DateTime? startDate,
+    String? startDate,
+    // DateTime? startDate,
     String? sumOfAllTrx,
     String? uPerm,
     String? qr,
@@ -59,7 +61,8 @@ class MessMain {
   String? get messAdminId => _messAdminId;
   String? get mealUpdateStatus => _mealUpdateStatus;
   String? get adminPhone => _adminPhone;
-  DateTime? get startDate => _startDate;
+  String? get startDate => _startDate;
+  // DateTime? get startDate => _startDate;
   String? get sumOfAllTrx => _sumOfAllTrx;
   String? get uPerm => _uPerm;
   String? get qr => _qr;
@@ -79,7 +82,8 @@ class MessMain {
   set messAdminId(String? messAdminId) => _messAdminId = messAdminId;
   set mealUpdateStatus(String? mealUpdateStatus) => _mealUpdateStatus = mealUpdateStatus;
   set adminPhone(String? adminPhone) => _adminPhone = adminPhone;
-  set startDate(DateTime? startDate) => _startDate = startDate;
+  set startDate(String? startDate) => _startDate = startDate;
+  // set startDate(DateTime? startDate) => _startDate = startDate;
   set sumOfAllTrx(String? sumOfAllTrx) => _sumOfAllTrx = sumOfAllTrx;
   set uPerm(String? uPerm) => _uPerm = uPerm;
   set qr(String? qr) => _qr = qr;
@@ -96,7 +100,8 @@ class MessMain {
       'mess_admin_id': _messAdminId,
       'meal_update_status': _mealUpdateStatus,
       'admin_phone': _adminPhone,
-      'start_date': _startDate?.toIso8601String(),
+      'start_date': _startDate,
+      // 'start_date': _startDate?.toIso8601String(),
       'sum_of_all_trx': _sumOfAllTrx,
       'u_perm': _uPerm,
       'qr': _qr,
@@ -116,7 +121,8 @@ class MessMain {
       messAdminId: map['mess_admin_id'] ?? '',
       mealUpdateStatus: map['meal_update_status'] ?? '1',
       adminPhone: map['admin_phone'] ?? '',
-      startDate: map['start_date'] != null ? DateTime.tryParse(map['start_date']) : null,
+      startDate: map['start_date'] ?? '',
+      // startDate: map['start_date'] != null ? DateTime.tryParse(map['start_date']) : null,
       sumOfAllTrx: map['sum_of_all_trx'] ?? '0',
       uPerm: map['u_perm'] ?? '0',
       qr: map['qr'] ?? '',
@@ -136,7 +142,8 @@ class MessMain {
       'mess_admin_id': _messAdminId,
       'meal_update_status': _mealUpdateStatus,
       'admin_phone': _adminPhone,
-      'start_date': _startDate?.toIso8601String(),
+      'start_date': _startDate,
+      // 'start_date': _startDate?.toIso8601String(),
       'sum_of_all_trx': _sumOfAllTrx,
       'u_perm': _uPerm,
       'qr': _qr,
@@ -156,7 +163,8 @@ class MessMain {
       messAdminId: json['mess_admin_id'] ?? '',
       mealUpdateStatus: json['meal_update_status'] ?? '1',
       adminPhone: json['admin_phone'] ?? '',
-      startDate: json['start_date'] != null ? DateTime.tryParse(json['start_date']) : null,
+      startDate: json['start_date'] ?? '',
+      // startDate: json['start_date'] != null ? DateTime.tryParse(json['start_date']) : null,
       sumOfAllTrx: json['sum_of_all_trx'] ?? '0',
       uPerm: json['u_perm'] ?? '0',
       qr: json['qr'] ?? '',

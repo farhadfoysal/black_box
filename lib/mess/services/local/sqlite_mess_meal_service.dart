@@ -102,7 +102,7 @@ class SqliteMessMealService implements BaseDatabaseService<MyMeals> {
         where: 'sync_status != ?',
         whereArgs: [MessMainSync.synced]);
 
-    // This would be handled by the repository
+    // This would be handled by the repositories
     return Future.value();
   }
 
@@ -124,4 +124,20 @@ class SqliteMessMealService implements BaseDatabaseService<MyMeals> {
       return List.generate(maps.length, (i) => MyMeals.fromMap(maps[i]));
     });
   }
+
+  /// -----------------------
+  /// ✅ UPDATE SYNC STATUS
+  /// -----------------------
+  Future<void> updateSyncStatus(String uniqueId, String newStatus) async {
+    await _lock.synchronized(() async {
+      final db = await _dbHelper.database;
+      await db.update(
+        'my_meals',
+        {'sync_status': newStatus},
+        where: 'unique_id = ?',
+        whereArgs: [uniqueId],
+      );
+    });
+  }
+
 }

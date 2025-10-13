@@ -114,7 +114,7 @@ class MessMainController extends GetxController {
 //
 // import '../../model/mess/mess_main.dart';
 // import '../data/providers/mess_repository_provider.dart';
-// import '../data/repository/mess_repository.dart';
+// import '../data/repositories/mess_repository.dart';
 //
 // class MessMainController extends GetxController {
 //   late final MessMainRepository _repo;

@@ -16,7 +16,7 @@ class MessRepositoryProvider {
 
   MessRepositoryProvider._();
 
-  // Lazy initialized repository singletons
+  // Lazy initialized repositories singletons
   late final Future<MessMainRepository> messMainRepository = MessMainRepository.init();
   late final Future<MessUserRepository> messUserRepository = MessUserRepository.init();
   late final Future<BazarListRepository> bazarListRepository = BazarListRepository.init();

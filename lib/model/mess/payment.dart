@@ -6,12 +6,12 @@ class Payment {
   String _adminId;
   String _messId;
   String _phone;
-  DateTime _dateM;
+  String _dateM;
   String _trxId;
   String _amount;
   String _clearTrx;
   int _print;
-  DateTime _time;
+  String _time;
   String? _syncStatus;
 
   Payment({
@@ -20,12 +20,12 @@ class Payment {
     required String adminId,
     required String messId,
     String phone = '',
-    required DateTime dateM,
+    required String dateM,
     String trxId = '',
     String amount = '0',
     String clearTrx = '1',
     int printing = 0,
-    DateTime? time,
+    String? time,
     String? syncStatus,
   })  : _id = id,
         _uniqueId = uniqueId,
@@ -37,7 +37,7 @@ class Payment {
         _amount = amount,
         _clearTrx = clearTrx,
         _print = printing,
-        _time = time ?? DateTime.now(),
+        _time = time ?? '',
         _syncStatus = syncStatus;
 
   // Getters
@@ -46,12 +46,12 @@ class Payment {
   String get adminId => _adminId;
   String get messId => _messId;
   String get phone => _phone;
-  DateTime get dateM => _dateM;
+  String get dateM => _dateM;
   String get trxId => _trxId;
   String get amount => _amount;
   String get clearTrx => _clearTrx;
   int get printing => _print;
-  DateTime get time => _time;
+  String get time => _time;
 
   String? get syncStatus => _syncStatus;
   set syncStatus(String? value) => _syncStatus = value;
@@ -62,12 +62,12 @@ class Payment {
   set adminId(String adminId) => _adminId = adminId;
   set messId(String messId) => _messId = messId;
   set phone(String phone) => _phone = phone;
-  set dateM(DateTime dateM) => _dateM = dateM;
+  set dateM(String dateM) => _dateM = dateM;
   set trxId(String trxId) => _trxId = trxId;
   set amount(String amount) => _amount = amount;
   set clearTrx(String clearTrx) => _clearTrx = clearTrx;
   set printing(int print) => _print = print;
-  set time(DateTime time) => _time = time;
+  set time(String time) => _time = time;
 
   Map<String, dynamic> toMap() {
     return {
@@ -76,12 +76,12 @@ class Payment {
       'admin_id': _adminId,
       'mess_id': _messId,
       'phone': _phone,
-      'date_m': _dateM.toIso8601String(),
+      'date_m': _dateM,
       'trx_id': _trxId,
       'amount': _amount,
       'clear_trx': _clearTrx,
       'print': _print,
-      'time': _time.toIso8601String(),
+      'time': _time,
       'sync_status': _syncStatus,
     };
   }
@@ -93,12 +93,12 @@ class Payment {
       adminId: map['admin_id'] ?? '',
       messId: map['mess_id'] ?? '',
       phone: map['phone'] ?? '',
-      dateM: DateTime.parse(map['date_m']),
+      dateM: (map['date_m']),
       trxId: map['trx_id'] ?? '',
       amount: map['amount'] ?? '0',
       clearTrx: map['clear_trx'] ?? '1',
       printing: map['print'] ?? 0,
-      time: DateTime.parse(map['time']),
+      time: (map['time']),
       syncStatus: map['sync_status'] ?? PaymentSync.synced,
     );
   }
@@ -110,12 +110,12 @@ class Payment {
       'admin_id': _adminId,
       'mess_id': _messId,
       'phone': _phone,
-      'date_m': _dateM.toIso8601String(),
+      'date_m': _dateM,
       'trx_id': _trxId,
       'amount': _amount,
       'clear_trx': _clearTrx,
       'print': _print,
-      'time': _time.toIso8601String(),
+      'time': _time,
       'sync_status': _syncStatus,
     };
   }
@@ -127,12 +127,12 @@ class Payment {
       adminId: json['admin_id'] ?? '',
       messId: json['mess_id'] ?? '',
       phone: json['phone'] ?? '',
-      dateM: DateTime.parse(json['date_m']),
+      dateM: (json['date_m']),
       trxId: json['trx_id'] ?? '',
       amount: json['amount'] ?? '0',
       clearTrx: json['clear_trx'] ?? '1',
       printing: json['print'] ?? 0,
-      time: DateTime.parse(json['time']),
+      time: (json['time']),
       syncStatus: json['sync_status'] ?? PaymentSync.synced,
     );
   }

@@ -98,7 +98,7 @@ class SyncService {
 
 
   // Below are example sync handlers per table & operation.
-  // These need your repository methods to push data to Firebase
+  // These need your repositories methods to push data to Firebase
   // and update local SQLite sync status accordingly.
 
   Future<void> _syncMessMain(int opId, String operation, String itemId, Map<String, dynamic> data) async {

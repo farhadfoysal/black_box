@@ -8,7 +8,7 @@ class BazarList {
   String _phone;
   String _listDetails;
   String _amount;
-  DateTime _dateTime;
+  String _dateTime;
   String _adminNotify;
   String? _syncStatus;
 
@@ -20,7 +20,7 @@ class BazarList {
     required String phone,
     required String listDetails,
     required String amount,
-    required DateTime dateTime,
+    required String dateTime,
     required String adminNotify,
     String? syncStatus,
   })  : _id = id,
@@ -42,7 +42,7 @@ class BazarList {
   String get phone => _phone;
   String get listDetails => _listDetails;
   String get amount => _amount;
-  DateTime get dateTime => _dateTime;
+  String get dateTime => _dateTime;
   String get adminNotify => _adminNotify;
 
   String? get syncStatus => _syncStatus;
@@ -56,7 +56,7 @@ class BazarList {
   set phone(String phone) => _phone = phone;
   set listDetails(String listDetails) => _listDetails = listDetails;
   set amount(String amount) => _amount = amount;
-  set dateTime(DateTime dateTime) => _dateTime = dateTime;
+  set dateTime(String dateTime) => _dateTime = dateTime;
   set adminNotify(String adminNotify) => _adminNotify = adminNotify;
 
   Map<String, dynamic> toMap() {
@@ -68,7 +68,7 @@ class BazarList {
       'phone': _phone,
       'list_details': _listDetails,
       'amount': _amount,
-      'date_time': _dateTime.toIso8601String(),
+      'date_time': _dateTime,
       'admin_notify': _adminNotify,
       'sync_status': _syncStatus,
     };
@@ -83,7 +83,7 @@ class BazarList {
       phone: map['phone'] ?? '0',
       listDetails: map['list_details'] ?? '',
       amount: map['amount'] ?? '0',
-      dateTime: DateTime.parse(map['date_time']),
+      dateTime: (map['date_time']),
       adminNotify: map['admin_notify'] ?? '0',
       syncStatus: map['sync_status'] ?? BazarListSync.synced,
     );
@@ -98,7 +98,7 @@ class BazarList {
       'phone': _phone,
       'list_details': _listDetails,
       'amount': _amount,
-      'date_time': _dateTime.toIso8601String(),
+      'date_time': _dateTime,
       'admin_notify': _adminNotify,
       'sync_status': _syncStatus,
     };
@@ -113,7 +113,7 @@ class BazarList {
       phone: json['phone'] ?? '0',
       listDetails: json['list_details'] ?? '',
       amount: json['amount'] ?? '0',
-      dateTime: DateTime.parse(json['date_time']),
+      dateTime: (json['date_time']),
       adminNotify: json['admin_notify'] ?? '0',
       syncStatus: json['sync_status'] ?? BazarListSync.synced,
     );

@@ -125,7 +125,7 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
       phone: '+8801712345678', // John Doe
       listDetails: 'Rice, Oil, Spices, Vegetables',
       amount: '3250.75',
-      dateTime: DateTime(2025, 8, 1),
+      dateTime: DateTime(2025, 8, 1).toString(),
       adminNotify: '1',
     ),
     BazarList(
@@ -135,7 +135,7 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
       phone: '+8801712345678', // John Doe
       listDetails: 'Chicken, Fish, Eggs',
       amount: '2850.00',
-      dateTime: DateTime(2025, 8, 2),
+      dateTime: DateTime(2025, 8, 2).toString(),
       adminNotify: '1',
     ),
     BazarList(
@@ -145,7 +145,7 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
       phone: '+8801812345678', // Jane Smith
       listDetails: 'Fruits, Milk, Bread',
       amount: '1750.50',
-      dateTime: DateTime(2025, 8, 4),
+      dateTime: DateTime(2025, 8, 4).toString(),
       adminNotify: '0',
     ),
     BazarList(
@@ -155,7 +155,7 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
       phone: '+8801812345678', // Jane Smith
       listDetails: 'Beef, Lentils, Onions',
       amount: '3200.00',
-      dateTime: DateTime(2025, 8, 5),
+      dateTime: DateTime(2025, 8, 5).toString(),
       adminNotify: '0',
     ),
     BazarList(
@@ -165,7 +165,7 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
       phone: '+8801912345678', // Robert Johnson
       listDetails: 'Vegetables, Spices, Oil',
       amount: '2450.25',
-      dateTime: DateTime(2025, 8, 7),
+      dateTime: DateTime(2025, 8, 7).toString(),
       adminNotify: '1',
     ),
     BazarList(
@@ -175,7 +175,7 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
       phone: '+8801912345678', // Robert Johnson
       listDetails: 'Fish, Chicken, Eggs',
       amount: '2950.00',
-      dateTime: DateTime(2025, 8, 8),
+      dateTime: DateTime(2025, 8, 8).toString(),
       adminNotify: '1',
     ),
     BazarList(
@@ -185,7 +185,7 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
       phone: '+8801612345678', // Emily Davis
       listDetails: 'Rice, Flour, Sugar',
       amount: '2100.75',
-      dateTime: DateTime(2025, 8, 10),
+      dateTime: DateTime(2025, 8, 10).toString(),
       adminNotify: '0',
     ),
     BazarList(
@@ -195,7 +195,7 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
       phone: '+8801612345678', // Emily Davis
       listDetails: 'Vegetables, Fruits, Milk',
       amount: '1850.50',
-      dateTime: DateTime(2025, 8, 11),
+      dateTime: DateTime(2025, 8, 11).toString(),
       adminNotify: '0',
     ),
     BazarList(
@@ -205,7 +205,7 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
       phone: '+8801712345679', // Sarah Johnson
       listDetails: 'Chicken, Fish, Spices',
       amount: '2750.00',
-      dateTime: DateTime(2025, 8, 13),
+      dateTime: DateTime(2025, 8, 13).toString(),
       adminNotify: '1',
     ),
     BazarList(
@@ -215,7 +215,7 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
       phone: '+8801712345679', // Sarah Johnson
       listDetails: 'Rice, Oil, Vegetables',
       amount: '2250.25',
-      dateTime: DateTime(2025, 8, 14),
+      dateTime: DateTime(2025, 8, 14).toString(),
       adminNotify: '1',
     ),
 
@@ -227,7 +227,7 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
       phone: '+8801812345678', // Jane Smith
       listDetails: 'July Month-End Shopping',
       amount: '4200.00',
-      dateTime: DateTime(2025, 7, 28),
+      dateTime: DateTime(2025, 7, 28).toString(),
       adminNotify: '0',
     ),
     BazarList(
@@ -237,7 +237,7 @@ class BazarListPageState extends State<BazarListPage> with SingleTickerProviderS
       phone: '+8801912345678', // Robert Johnson
       listDetails: 'July Groceries',
       amount: '3800.50',
-      dateTime: DateTime(2025, 7, 21),
+      dateTime: DateTime(2025, 7, 21).toString(),
       adminNotify: '1',
     ),
   ];

@@ -30,6 +30,64 @@ class MessMainRepository {
     return null;
   }
 
+  /// Get the latest MessMain (offline-first)
+  Future<MessMain?> getLatestMessMain({bool fetchOnlineIfEmpty = true}) async {
+    // 1️⃣ Try SQLite first
+    final maps = await _db.query(
+      'mess_main',
+      orderBy: 'last_updated DESC',
+      limit: 1,
+    );
+    if (maps.isNotEmpty) {
+      return MessMain.fromMap(maps.first);
+    }
+
+    // 2️⃣ If SQLite empty & allowed, fetch from Firebase
+    if (fetchOnlineIfEmpty) {
+      final snapshot = await _fbRef.orderByChild('last_updated').limitToLast(1).once();
+      if (snapshot.snapshot.value != null) {
+        final Map<String, dynamic> map =
+        Map<String, dynamic>.from((snapshot.snapshot.value as Map).values.first);
+
+        // Save to SQLite for offline use
+        final mess = MessMain.fromJson(map);
+        await _db.insert(
+          'mess_main',
+          mess.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+
+        return mess;
+      }
+    }
+
+    return null;
+  }
+
+  /// Get the latest MessMain from SQLite (offline-first)
+  Future<MessMain?> getLatestMessMainFromLocal() async {
+    final maps = await _db.query(
+      'mess_main',
+      orderBy: 'last_updated DESC',
+      limit: 1,
+    );
+    if (maps.isNotEmpty) {
+      return MessMain.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  /// Optionally: fetch latest from Firebase if needed
+  Future<MessMain?> getLatestFromFirebase() async {
+    final snapshot = await _fbRef.orderByChild('last_updated').limitToLast(1).once();
+    if (snapshot.snapshot.value != null) {
+      final Map<String, dynamic> map =
+      Map<String, dynamic>.from((snapshot.snapshot.value as Map).values.first);
+      return MessMain.fromJson(map);
+    }
+    return null;
+  }
+
   Future<int> insert(MessMain messMain) async {
     // Insert locally with sync_status = pending_create
     final newObj = messMain.copyWithSyncStatus(MessMainSync.pendingCreate);

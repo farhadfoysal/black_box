@@ -4,8 +4,8 @@ class MyMeals {
   int? _id;
   String _uniqueId;
   String _messId;
-  DateTime _date;
-  DateTime _time;
+  String _date;
+  String _time;
   String _morning;
   String _launce; // Note: Assuming the SQL column name is intentional (spelling: "launce").
   String _dinner;
@@ -18,8 +18,8 @@ class MyMeals {
     int? id,
     required String uniqueId,
     required String messId,
-    required DateTime date,
-    required DateTime time,
+    required String date,
+    required String time,
     String morning = '0',
     String launce = '0',
     String dinner = '0',
@@ -44,8 +44,8 @@ class MyMeals {
   int? get id => _id;
   String get uniqueId => _uniqueId;
   String get messId => _messId;
-  DateTime get date => _date;
-  DateTime get time => _time;
+  String get date => _date;
+  String get time => _time;
   String get morning => _morning;
   String get launce => _launce;
   String get dinner => _dinner;
@@ -60,8 +60,8 @@ class MyMeals {
   set id(int? id) => _id = id;
   set uniqueId(String uniqueId) => _uniqueId = uniqueId;
   set messId(String messId) => _messId = messId;
-  set date(DateTime date) => _date = date;
-  set time(DateTime time) => _time = time;
+  set date(String date) => _date = date;
+  set time(String time) => _time = time;
   set morning(String morning) => _morning = morning;
   set launce(String launce) => _launce = launce;
   set dinner(String dinner) => _dinner = dinner;
@@ -74,8 +74,8 @@ class MyMeals {
       'id': _id,
       'unique_id': _uniqueId,
       'mess_id': _messId,
-      'date': _date.toIso8601String(),
-      'time': _time.toIso8601String(),
+      'date': _date,
+      'time': _time,
       'morning': _morning,
       'launce': _launce,
       'dinner': _dinner,
@@ -91,8 +91,8 @@ class MyMeals {
       id: map['id'],
       uniqueId: map['unique_id'] ?? '',
       messId: map['mess_id'] ?? '',
-      date: DateTime.parse(map['date']),
-      time: DateTime.parse(map['time']),
+      date: (map['date']),
+      time: (map['time']),
       morning: map['morning'] ?? '0',
       launce: map['launce'] ?? '0',
       dinner: map['dinner'] ?? '0',
@@ -108,8 +108,8 @@ class MyMeals {
       'id': _id,
       'unique_id': _uniqueId,
       'mess_id': _messId,
-      'date': _date.toIso8601String(),
-      'time': _time.toIso8601String(),
+      'date': _date,
+      'time': _time,
       'morning': _morning,
       'launce': _launce,
       'dinner': _dinner,
@@ -125,8 +125,8 @@ class MyMeals {
       id: json['id'],
       uniqueId: json['unique_id'] ?? '',
       messId: json['mess_id'] ?? '',
-      date: DateTime.parse(json['date']),
-      time: DateTime.parse(json['time']),
+      date: (json['date']),
+      time: (json['time']),
       morning: json['morning'] ?? '0',
       launce: json['launce'] ?? '0',
       dinner: json['dinner'] ?? '0',

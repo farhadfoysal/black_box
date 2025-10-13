@@ -104,13 +104,13 @@ class SQLiteMessMainService implements BaseDatabaseService<MessMain> {
         where: 'sync_status != ?',
         whereArgs: [MessMainSync.synced]);
 
-    // This would be handled by the repository
+    // This would be handled by the repositories
     return Future.value();
   }
 
   @override
   Future<void> pullLatestData() async {
-    // This would be handled by the repository
+    // This would be handled by the repositories
     return Future.value();
   }
 
@@ -126,4 +126,20 @@ class SQLiteMessMainService implements BaseDatabaseService<MessMain> {
       return List.generate(maps.length, (i) => MessMain.fromMap(maps[i]));
     });
   }
+
+  /// -----------------------
+  /// ✅ UPDATE SYNC STATUS
+  /// -----------------------
+  Future<void> updateSyncStatus(String uniqueId, String newStatus) async {
+    await _lock.synchronized(() async {
+      final db = await _dbHelper.database;
+      await db.update(
+        'mess_main',
+        {'sync_status': newStatus},
+        where: 'unique_id = ?',
+        whereArgs: [uniqueId],
+      );
+    });
+  }
+
 }
