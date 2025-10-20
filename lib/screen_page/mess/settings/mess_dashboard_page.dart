@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:marquee/marquee.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,6 +38,10 @@ class _MealCounterPageState extends State<MessDashboardPage> {
   File? _selectedImage;
   bool isLoading = false;
   String? messUserType;
+
+  double breakfastCount = 0;
+  int lunchCount = 0;
+  int dinnerCount = 0;
 
   @override
   void initState() {
@@ -98,7 +103,7 @@ class _MealCounterPageState extends State<MessDashboardPage> {
     } else {
       print("Mess User map is null");
     }
-
+    // print(muserMap);
     if (messMap != null) {
       MessMain messData = MessMain.fromMap(messMap);
       setState(() {
@@ -273,7 +278,7 @@ class _MealCounterPageState extends State<MessDashboardPage> {
           children: [
             // Balance Summary Card
             // _buildBalanceSummaryCard(),
-            BalanceFlipCard(messUser!, messMain!),
+            BalanceFlipCard(messUser_data!, messMain!),
 
             // Today's Meal Section
             _buildTodaysMealSection(formattedDate, banglaDate),
@@ -423,9 +428,51 @@ class _MealCounterPageState extends State<MessDashboardPage> {
                 ),
                 IconButton(
                   icon: Icon(Icons.edit, color: Colors.pink.shade700),
-                  onPressed: () {},
                   splashRadius: 20,
+                  onPressed: () async {
+                    final result = await _showEditMealDialog(
+                      date: DateTime.now().toIso8601String().split('T').first,
+                      breakfastCount: breakfastCount,
+                      lunchCount: lunchCount.toDouble(),
+                      dinnerCount: dinnerCount.toDouble(),
+                      color: Colors.pink,
+                    );
+
+                    if (result != null) {
+                      setState(() {
+                        print("Selected Date: ${result['date']}");
+                        print("Breakfast: ${result['breakfast']}");
+                        print("Lunch: ${result['lunch']}");
+                        print("Dinner: ${result['dinner']}");
+
+                        // DateTime today = DateTime.now();
+                        // today = DateTime(today.year, today.month, today.day);
+                        //
+                        // if (result['date'] is String) {
+                        //   DateTime resultDate = DateTime.parse(result['date']);
+                        //   resultDate = DateTime(resultDate.year, resultDate.month, resultDate.day);
+                        //
+                        //   if (resultDate == today) {
+                        //     breakfastCount = result['breakfast'];
+                        //     lunchCount = result['lunch'];
+                        //     dinnerCount = result['dinner'];
+                        //   }
+                        // }
+
+                        String todayStr = DateTime.now().toIso8601String().split('T').first; // "2025-10-15"
+
+                        if (result['date'] == todayStr) {
+                          breakfastCount = result['breakfast'];
+                          lunchCount = result['lunch'].toInt();
+                          dinnerCount = result['dinner'].toInt();
+                        }
+
+
+                      });
+                    }
+                  },
                 ),
+
               ],
             ),
           ),
@@ -437,23 +484,26 @@ class _MealCounterPageState extends State<MessDashboardPage> {
                 // Bengali Meal Cards
                 _buildMealCard(
                   mealType: 'সকালের খাবার',
-                  count: 1,
+                  count: breakfastCount,
                   icon: Icons.wb_sunny,
                   color: Colors.orange.shade300,
+                  mealName: 'breakfast',
                 ),
                 const SizedBox(height: 12),
                 _buildMealCard(
                   mealType: 'দুপুরের খাবার',
-                  count: 0,
+                  count: lunchCount.toDouble(),
                   icon: Icons.sunny,
                   color: Colors.amber.shade300,
+                  mealName: 'lunch',
                 ),
                 const SizedBox(height: 12),
                 _buildMealCard(
                   mealType: 'রাতের খাবার',
-                  count: 0,
+                  count: dinnerCount.toDouble(),
                   icon: Icons.nightlight_round,
                   color: Colors.indigo.shade300,
+                  mealName: 'dinner',
                 ),
                 const SizedBox(height: 16),
 
@@ -464,7 +514,7 @@ class _MealCounterPageState extends State<MessDashboardPage> {
                     Expanded(
                       child: _buildCompactMealCard(
                         meal: 'BreakFast',
-                        count: 1,
+                        count: breakfastCount,
                         color: Colors.lightBlueAccent.withOpacity(0.2),
                         textColor: Colors.lightBlueAccent.shade700,
                       ),
@@ -473,7 +523,7 @@ class _MealCounterPageState extends State<MessDashboardPage> {
                     Expanded(
                       child: _buildCompactMealCard(
                         meal: 'Lunch',
-                        count: 0,
+                        count: lunchCount.toDouble(),
                         color: Colors.pinkAccent.withOpacity(0.2),
                         textColor: Colors.pinkAccent.shade700,
                       ),
@@ -482,7 +532,7 @@ class _MealCounterPageState extends State<MessDashboardPage> {
                     Expanded(
                       child: _buildCompactMealCard(
                         meal: 'Dinner',
-                        count: 0,
+                        count: dinnerCount.toDouble(),
                         color: Colors.cyanAccent.withOpacity(0.2),
                         textColor: Colors.cyanAccent.shade700,
                       ),
@@ -496,6 +546,381 @@ class _MealCounterPageState extends State<MessDashboardPage> {
       ),
     );
   }
+
+  Future<Map<String, dynamic>?> _showEditMealDialog({
+    required String date,
+    required double breakfastCount,
+    required double lunchCount,
+    required double dinnerCount,
+    Color color = Colors.teal,
+  }) async {
+    double tempBreakfast = breakfastCount;
+    double tempLunch = lunchCount;
+    double tempDinner = dinnerCount;
+
+    // Normalize selected date to midnight (no hour/min/sec)
+    DateTime selectedDate = DateTime.parse(date);
+    selectedDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+
+    // Generate last 30 days normalized
+    // List<DateTime> last30Days = List.generate(
+    //   30,
+    //       (i) {
+    //     final d = DateTime.now().subtract(Duration(days: i));
+    //     return DateTime(d.year, d.month, d.day);
+    //   },
+    // );
+
+    // Generate next 30 days (from today forward)
+    List<DateTime> next30Days = List.generate(
+      30,
+          (i) {
+        final d = DateTime.now().add(Duration(days: i));
+        return DateTime(d.year, d.month, d.day);
+      },
+    );
+
+    // Generate first 30 days of the current month
+    List<DateTime> first30DaysOfMonth = List.generate(
+      30,
+          (i) => DateTime(DateTime.now().year, DateTime.now().month, i + 1),
+    );
+
+
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return Dialog(
+              insetPadding: const EdgeInsets.all(20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      color.withOpacity(0.08),
+                      Colors.white,
+                      color.withOpacity(0.05)
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 🗓️ Selectable Date Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.calendar_month, color: Colors.teal),
+                        const SizedBox(width: 8),
+                        DropdownButton<DateTime>(
+                          value: selectedDate,
+                          dropdownColor: Colors.white,
+                          underline: const SizedBox(),
+                          icon: const Icon(Icons.arrow_drop_down),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: color,
+                          ),
+                          items: next30Days.map((d) {
+                            final formatted =
+                                "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+                            return DropdownMenuItem<DateTime>(
+                              value: d,
+                              child: Text(formatted),
+                            );
+                          }).toList(),
+                          onChanged: (newDate) {
+                            if (newDate != null) {
+                              setStateDialog(() {
+                                selectedDate = newDate;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 10),
+                    const Divider(thickness: 1.2),
+
+                    // 🥣 Breakfast
+                    _buildMealRow(
+                      title: "Breakfast",
+                      count: tempBreakfast,
+                      step: 0.5,
+                      color: Colors.orangeAccent,
+                      onChanged: (newCount) {
+                        setStateDialog(() => tempBreakfast = newCount);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+
+                    // 🍛 Lunch
+                    _buildMealRow(
+                      title: "Lunch",
+                      count: tempLunch,
+                      step: 1,
+                      color: Colors.green,
+                      onChanged: (newCount) {
+                        setStateDialog(() => tempLunch = newCount);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+
+                    // 🍲 Dinner
+                    _buildMealRow(
+                      title: "Dinner",
+                      count: tempDinner,
+                      step: 1,
+                      color: Colors.blueAccent,
+                      onChanged: (newCount) {
+                        setStateDialog(() => tempDinner = newCount);
+                      },
+                    ),
+                    const SizedBox(height: 20),
+
+                    // 💾 Save Button
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: color,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 12,
+                        ),
+                        elevation: 3,
+                      ),
+                      icon: const Icon(Icons.save, color: Colors.white),
+                      label: const Text(
+                        "Save Changes",
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context, {
+                          'date':
+                          "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}",
+                          'breakfast': tempBreakfast,
+                          'lunch': tempLunch,
+                          'dinner': tempDinner,
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+  // Future<Map<String, double>?> _showEditMealDialog({
+  //   required String date,
+  //   required double breakfastCount,
+  //   required double lunchCount,
+  //   required double dinnerCount,
+  //   Color color = Colors.teal,
+  // }) async {
+  //   double tempBreakfast = breakfastCount;
+  //   double tempLunch = lunchCount;
+  //   double tempDinner = dinnerCount;
+  //
+  //   return showDialog<Map<String, double>>(
+  //     context: context,
+  //     builder: (context) {
+  //       return StatefulBuilder(
+  //         builder: (context, setStateDialog) {
+  //           return Dialog(
+  //             insetPadding: const EdgeInsets.all(20),
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(20),
+  //             ),
+  //             child: Container(
+  //               padding: const EdgeInsets.all(20),
+  //               decoration: BoxDecoration(
+  //                 gradient: LinearGradient(
+  //                   colors: [
+  //                     color.withOpacity(0.08),
+  //                     Colors.white,
+  //                     color.withOpacity(0.05)
+  //                   ],
+  //                   begin: Alignment.topLeft,
+  //                   end: Alignment.bottomRight,
+  //                 ),
+  //                 borderRadius: BorderRadius.circular(20),
+  //                 boxShadow: [
+  //                   BoxShadow(
+  //                       color: color.withOpacity(0.2),
+  //                       blurRadius: 12,
+  //                       offset: const Offset(2, 4))
+  //                 ],
+  //               ),
+  //               child: Column(
+  //                 mainAxisSize: MainAxisSize.min,
+  //                 children: [
+  //                   // Header
+  //                   Text(
+  //                     "Edit Meals for $date",
+  //                     style: TextStyle(
+  //                       fontSize: 22,
+  //                       fontWeight: FontWeight.bold,
+  //                       color: color,
+  //                     ),
+  //                   ),
+  //                   const SizedBox(height: 10),
+  //                   const Divider(thickness: 1.2),
+  //
+  //                   // Reusable Meal Row Widget
+  //                   _buildMealRow(
+  //                     title: "Breakfast",
+  //                     count: tempBreakfast,
+  //                     step: 0.5,
+  //                     color: Colors.orangeAccent,
+  //                     onChanged: (newCount) {
+  //                       setStateDialog(() => tempBreakfast = newCount);
+  //                     },
+  //                   ),
+  //                   const SizedBox(height: 8),
+  //                   _buildMealRow(
+  //                     title: "Lunch",
+  //                     count: tempLunch,
+  //                     step: 1,
+  //                     color: Colors.green,
+  //                     onChanged: (newCount) {
+  //                       setStateDialog(() => tempLunch = newCount);
+  //                     },
+  //                   ),
+  //                   const SizedBox(height: 8),
+  //                   _buildMealRow(
+  //                     title: "Dinner",
+  //                     count: tempDinner,
+  //                     step: 1,
+  //                     color: Colors.blueAccent,
+  //                     onChanged: (newCount) {
+  //                       setStateDialog(() => tempDinner = newCount);
+  //                     },
+  //                   ),
+  //                   const SizedBox(height: 20),
+  //
+  //                   // Save Button
+  //                   ElevatedButton.icon(
+  //                     style: ElevatedButton.styleFrom(
+  //                       backgroundColor: color,
+  //                       shape: RoundedRectangleBorder(
+  //                         borderRadius: BorderRadius.circular(30),
+  //                       ),
+  //                       padding: const EdgeInsets.symmetric(
+  //                         horizontal: 30,
+  //                         vertical: 12,
+  //                       ),
+  //                       elevation: 3,
+  //                     ),
+  //                     icon: const Icon(Icons.save, color: Colors.white),
+  //                     label: const Text(
+  //                       "Save Changes",
+  //                       style: TextStyle(fontSize: 18, color: Colors.white),
+  //                     ),
+  //                     onPressed: () {
+  //                       Navigator.pop(context, {
+  //                         'breakfast': tempBreakfast,
+  //                         'lunch': tempLunch,
+  //                         'dinner': tempDinner,
+  //                       });
+  //                     },
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           );
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
+
+// =============================
+// 🧩 Helper Widget: Meal Counter
+// =============================
+  Widget _buildMealRow({
+    required String title,
+    required double count,
+    required double step,
+    required Color color,
+    required Function(double) onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(2, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.restaurant_menu, color: color, size: 26),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.remove_circle, color: Colors.redAccent),
+                onPressed: () {
+                  if (count > 0) {
+                    onChanged((count - step).clamp(0, 999).toDouble());
+                  }
+                },
+              ),
+              Text(
+                count.toStringAsFixed(1).replaceAll('.0', ''),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.add_circle, color: Colors.teal),
+                onPressed: () {
+                  onChanged((count + step).clamp(0, 999).toDouble());
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
 
   Widget _buildMonthlySummary() {
     return Padding(
@@ -700,62 +1125,311 @@ class _MealCounterPageState extends State<MessDashboardPage> {
 
   Widget _buildMealCard({
     required String mealType,
-    required int count,
+    required double count,
     required IconData icon,
     required Color color,
+    required String mealName,
   }) {
-    return Card(
-      elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                shape: BoxShape.circle,
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () async {
+        double? newCount =
+            await _showAddMealDialog(mealType, mealName, count, color);
+        if (newCount != null) {
+          setState(() {
+            if (mealName == "breakfast") breakfastCount = newCount;
+            if (mealName == "lunch") lunchCount = newCount.toInt();
+            if (mealName == "dinner") dinnerCount = newCount.toInt();
+          });
+        }
+      },
+      child: Card(
+        elevation: 1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color),
               ),
-              child: Icon(icon, color: color),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                mealType,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  mealType,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: count > 0 ? Colors.green.shade50 : Colors.red.shade50,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                count.toString(),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color:
-                      count > 0 ? Colors.green.shade800 : Colors.red.shade800,
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: count > 0 ? Colors.green.shade50 : Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  count.toStringAsFixed(1).replaceAll('.0', ''),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color:
+                        count > 0 ? Colors.green.shade800 : Colors.red.shade800,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
+  Future<double?> _showAddMealDialog(
+      String mealType,
+      String mealName,
+      double currentCount,
+      Color color,
+      ) async {
+    double tempCount = currentCount;
+    double step = mealName.toLowerCase() == "breakfast" ? 0.5 : 1;
+
+    return showDialog<double>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(20),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: StatefulBuilder(
+            builder: (context, setStateDialog) {
+              // 👆 This gives us a local setState function only for the dialog.
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color.withOpacity(0.1), Colors.white],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Example Lottie animation
+                    Lottie.asset(
+                      mealName.toLowerCase() == "breakfast"
+                          ? 'assets/lottie/thinking.json'
+                          : mealName.toLowerCase() == "lunch"
+                          ? 'assets/lottie/thinking.json'
+                          : 'assets/lottie/thinking.json',
+                      height: 120,
+                    ),
+                    Text(
+                      "Add $mealType Count",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: color is MaterialColor ? color.shade700 : color,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.grey.withOpacity(0.2), blurRadius: 10)
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle,
+                                size: 30, color: Colors.redAccent),
+                            onPressed: () {
+                              if (tempCount > 0) {
+                                setStateDialog(() {
+                                  tempCount =
+                                      (tempCount - step).clamp(0, 999).toDouble();
+                                });
+                              }
+                            },
+                          ),
+                          Text(
+                            tempCount.toStringAsFixed(1).replaceAll('.0', ''),
+                            style: const TextStyle(
+                                fontSize: 28, fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle,
+                                size: 30, color: Colors.teal),
+                            onPressed: () {
+                              setStateDialog(() {
+                                tempCount = (tempCount + step).toDouble();
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: color,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 10),
+                      ),
+                      icon: const Icon(Icons.check_circle_outline,
+                          color: Colors.white),
+                      label: const Text(
+                        "Save",
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
+                      onPressed: () => Navigator.pop(context, tempCount),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+
+  // Future<double?> _showAddMealDialog(String mealType, String mealName,
+  //     double currentCount, Color color) async {
+  //   double tempCount = currentCount.toDouble();
+  //   double step = mealName.toLowerCase() == "breakfast" ? 0.5 : 1;
+  //
+  //   return showDialog<double>(
+  //     context: context,
+  //     builder: (context) {
+  //       return Dialog(
+  //         insetPadding: const EdgeInsets.all(20),
+  //         shape:
+  //             RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+  //         child: Container(
+  //           decoration: BoxDecoration(
+  //             gradient: LinearGradient(
+  //               colors: [color.withOpacity(0.1), Colors.white],
+  //               begin: Alignment.topLeft,
+  //               end: Alignment.bottomRight,
+  //             ),
+  //             borderRadius: BorderRadius.circular(20),
+  //           ),
+  //           padding: const EdgeInsets.all(20),
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               Lottie.asset(
+  //                 mealName.toLowerCase() == "breakfast"
+  //                     ? 'assets/lottie/thinking.json'
+  //                     : mealName.toLowerCase() == "lunch"
+  //                         ? 'assets/lottie/thinking.json'
+  //                         : 'assets/lottie/thinking.json',
+  //                 height: 120,
+  //               ),
+  //               Text(
+  //                 "Add $mealType Count",
+  //                 style: TextStyle(
+  //                   fontSize: 20,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: color is MaterialColor ? color.shade700 : color,
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 12),
+  //               Container(
+  //                 padding:
+  //                     const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+  //                 decoration: BoxDecoration(
+  //                   color: Colors.white,
+  //                   borderRadius: BorderRadius.circular(30),
+  //                   boxShadow: [
+  //                     BoxShadow(
+  //                         color: Colors.grey.withOpacity(0.2), blurRadius: 10)
+  //                   ],
+  //                 ),
+  //                 child: Row(
+  //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                   children: [
+  //                     IconButton(
+  //                       icon: const Icon(Icons.remove_circle,
+  //                           size: 30, color: Colors.redAccent),
+  //                       onPressed: () {
+  //                         if (tempCount > 0) {
+  //                           setState(() {
+  //                             // tempCount = (tempCount - step).clamp(0, 999);
+  //                             tempCount =
+  //                                 (tempCount - step).clamp(0, 999).toDouble();
+  //                           });
+  //                         }
+  //                       },
+  //                     ),
+  //                     Text(
+  //                       // tempCount.toStringAsFixed(1).replaceAll('.0', ''),
+  //                       tempCount.toString(),
+  //                       style: const TextStyle(
+  //                           fontSize: 28, fontWeight: FontWeight.bold),
+  //                     ),
+  //                     IconButton(
+  //                       icon: const Icon(Icons.add_circle,
+  //                           size: 30, color: Colors.teal),
+  //                       onPressed: () {
+  //                         setState(() {
+  //                           // tempCount += step;
+  //                           tempCount = (tempCount + step).toDouble();
+  //                         });
+  //                       },
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 20),
+  //               ElevatedButton.icon(
+  //                 style: ElevatedButton.styleFrom(
+  //                   backgroundColor: color,
+  //                   shape: RoundedRectangleBorder(
+  //                       borderRadius: BorderRadius.circular(30)),
+  //                   padding: const EdgeInsets.symmetric(
+  //                       horizontal: 24, vertical: 10),
+  //                 ),
+  //                 icon: const Icon(Icons.check_circle_outline,
+  //                     color: Colors.white),
+  //                 label: const Text(
+  //                   "Save",
+  //                   style: TextStyle(fontSize: 18, color: Colors.white),
+  //                 ),
+  //                 onPressed: () => Navigator.pop(context, tempCount),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
+
   Widget _buildCompactMealCard({
     required String meal,
-    required int count,
+    required double count,
     required Color color,
     required Color textColor,
   }) {
@@ -782,15 +1456,16 @@ class _MealCounterPageState extends State<MessDashboardPage> {
             ),
             const SizedBox(height: 8),
             Container(
-              width: 30,
-              height: 30,
+              width: 60,
+              height: 40,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
               ),
               child: Center(
                 child: Text(
-                  count.toString(),
+                  // count.toString(),
+                  count.toStringAsFixed(1).replaceAll('.0', ''),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1823,8 +2498,6 @@ class _MealCounterPageState extends State<MessDashboardPage> {
       ),
     );
   }
-
-
 }
 
 class DashboardItem {
@@ -1860,8 +2533,8 @@ class HexagonClipper extends CustomClipper<Path> {
 }
 
 class BalanceFlipCard extends StatefulWidget {
-  final MessUser messUser;
-  final MessMain messMain;
+  final MessUser? messUser;
+  final MessMain? messMain;
   BalanceFlipCard(this.messUser, this.messMain);
 
   @override
@@ -1872,6 +2545,13 @@ class _BalanceFlipCardState extends State<BalanceFlipCard> {
   bool _showPersonalBalance = true;
   final Color _primaryColor = Color(0xFF00C6AB);
   final Color _secondaryColor = Color(0xFF0082A8);
+
+  @override
+  void initState() {
+    super.initState();
+
+    initializeData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2261,5 +2941,9 @@ class _BalanceFlipCardState extends State<BalanceFlipCard> {
         ),
       ],
     );
+  }
+
+  void initializeData() {
+    // print(widget.messMain?.messId!);
   }
 }

@@ -1,6 +1,6 @@
 # black_box
 
-A School-college managemet system application
+A School-college managemet system Super application
 
 ## Getting Started
 

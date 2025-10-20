@@ -3,10 +3,15 @@ import 'package:black_box/model/course/course_model.dart';
 import 'package:black_box/model/course/section_model.dart';
 import 'package:black_box/model/course/tools_model.dart';
 import 'package:black_box/screen_page/course/detail_course_screen.dart';
+import 'package:black_box/screen_page/course/screen/course_omr_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../model/course/teacher.dart';
+import '../../model/school/school.dart';
 import '../../model/user/user.dart';
+import 'omr_v1/omr_home_page.dart';
+import 'omr_v2/omr_dashboard.dart';
 
 class CourseManagerScreen extends StatefulWidget {
   final CourseModel course;
@@ -20,6 +25,15 @@ class CourseManagerScreen extends StatefulWidget {
 }
 
 class _CourseManagerScreenState extends State<CourseManagerScreen> {
+  String? userName;
+  String? userPhone;
+  String? userEmail;
+  User? _user, _user_data;
+  String? sid;
+  School? school;
+  Teacher? teacher;
+  bool isLoading = false;
+
   late CourseModel _editedCourse;
   bool _isEditing = false;
   bool _isLoading = false;
@@ -31,6 +45,9 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
   @override
   void initState() {
     super.initState();
+
+    // print("User Type ${widget.user.utype}");
+
     _editedCourse = CourseModel.fromJson(widget.course.toJson());
   }
 
@@ -174,7 +191,7 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
                     label: const Text('Add Tool'),
                   ),
                 ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 10),
 
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -187,40 +204,40 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
                   crossAxisSpacing: 10,
                   children: [
                     _buildMenuItem(Icons.bus_alert_outlined, 'Bus',
-                            () => _navigateToPage(context, 'bus')),
+                        () => _navigateToPage(context, 'bus')),
                     _buildMenuItem(Icons.event_busy, 'Absences',
-                            () => _navigateToPage(context, 'absence')),
+                        () => _navigateToPage(context, 'absence')),
                     _buildMenuItem(Icons.calculate, 'Calculation',
-                            () => _navigateToPage(context, 'calculation')),
+                        () => _navigateToPage(context, 'calculation')),
                     _buildMenuItem(Icons.qr_code_scanner, 'Scanner',
-                            () => _navigateToPage(context, 'scanner')),
+                        () => _navigateToPage(context, 'scanner')),
                     _buildMenuItem(Icons.schedule, 'Timetable',
-                            () => _navigateToPage(context, 'time')),
+                        () => _navigateToPage(context, 'time')),
                     _buildMenuItem(Icons.event_note, 'Schedule',
-                            () => _navigateToPage(context, 'schedules'),
+                        () => _navigateToPage(context, 'schedules'),
                         hasNotification: true, notificationCount: 3),
                     _buildMenuItem(Icons.note, 'Notes',
-                            () => _navigateToPage(context, 'notes')),
+                        () => _navigateToPage(context, 'notes')),
                     _buildMenuItem(Icons.person_search_outlined, 'Students',
-                            () => _navigateToPage(context, 'students')),
+                        () => _navigateToPage(context, 'students')),
                     _buildMenuItem(Icons.people, 'Teachers',
-                            () => _navigateToPage(context, 'faculty')),
+                        () => _navigateToPage(context, 'faculty')),
                     _buildMenuItem(Icons.school_outlined, 'Exams',
-                            () => _navigateToPage(context, 'exams')),
+                        () => _navigateToPage(context, 'exams')),
                     _buildMenuItem(Icons.punch_clock_outlined, 'Routines',
-                            () => _navigateToPage(context, 'routines')),
+                        () => _navigateToPage(context, 'routines')),
                     _buildMenuItem(Icons.book, 'Subjects',
-                            () => _navigateToPage(context, 'courses')),
+                        () => _navigateToPage(context, 'courses')),
                     _buildMenuItem(Icons.room_outlined, 'Rooms',
-                            () => _navigateToPage(context, 'rooms')),
+                        () => _navigateToPage(context, 'rooms')),
                     _buildMenuItem(Icons.segment_outlined, 'Sessions',
-                            () => _navigateToPage(context, 'sessions')),
+                        () => _navigateToPage(context, 'sessions')),
                     _buildMenuItem(Icons.apartment_outlined, 'Departments',
-                            () => _navigateToPage(context, 'departments')),
+                        () => _navigateToPage(context, 'departments')),
                     _buildMenuItem(Icons.category_outlined, 'Programs',
-                            () => _navigateToPage(context, 'programs')),
+                        () => _navigateToPage(context, 'programs')),
                     _buildMenuItem(Icons.bar_chart, 'Statistics',
-                            () => _navigateToPage(context, 'StatisticsPage')),
+                        () => _navigateToPage(context, 'StatisticsPage')),
                   ],
                 ),
               ),
@@ -341,37 +358,59 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
   void _navigateToPage(BuildContext context, String pageName) {
     if (pageName == 'programs') {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => DetailCourseScreen(course: widget.course)));
+          context,
+          MaterialPageRoute(
+              builder: (context) => DetailCourseScreen(course: widget.course)));
     } else if (pageName == 'students') {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => DetailCourseScreen(course: widget.course)));
+          context,
+          MaterialPageRoute(
+              builder: (context) => DetailCourseScreen(course: widget.course)));
     } else if (pageName == 'departments') {
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => DetailCourseScreen(course: widget.course)));
-    } else if (pageName == 'sessions') {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => DetailCourseScreen(course: widget.course)));
+          context,
+          MaterialPageRoute(
+              builder: (context) => DetailCourseScreen(course: widget.course)));
+    } else if (pageName == 'scanner') {
+      Navigator.push(
+          // context, MaterialPageRoute(builder: (context) => OMRDashboard()));
+          context, MaterialPageRoute(builder: (context) => OMRHomePage()));
+          // context, MaterialPageRoute(builder: (context) => CourseOmrPage()));
     } else if (pageName == 'rooms') {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => DetailCourseScreen(course: widget.course)));
+          context,
+          MaterialPageRoute(
+              builder: (context) => DetailCourseScreen(course: widget.course)));
     } else if (pageName == 'courses') {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => DetailCourseScreen(course: widget.course)));
+          context,
+          MaterialPageRoute(
+              builder: (context) => DetailCourseScreen(course: widget.course)));
     } else if (pageName == 'routines') {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => DetailCourseScreen(course: widget.course)));
+          context,
+          MaterialPageRoute(
+              builder: (context) => DetailCourseScreen(course: widget.course)));
     } else if (pageName == 'faculty') {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => DetailCourseScreen(course: widget.course)));
+          context,
+          MaterialPageRoute(
+              builder: (context) => DetailCourseScreen(course: widget.course)));
     } else if (pageName == 'exams') {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => DetailCourseScreen(course: widget.course)));
+          context,
+          MaterialPageRoute(
+              builder: (context) => DetailCourseScreen(course: widget.course)));
     } else if (pageName == 'bus') {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => DetailCourseScreen(course: widget.course)));
+          context,
+          MaterialPageRoute(
+              builder: (context) => DetailCourseScreen(course: widget.course)));
     } else if (pageName == 'ExamsPage') {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => DetailCourseScreen(course: widget.course)));
+          context,
+          MaterialPageRoute(
+              builder: (context) => DetailCourseScreen(course: widget.course)));
     } else {}
     // Navigator.push(
     //   context,
@@ -543,12 +582,16 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
                 ? DecorationImage(
                     image: NetworkImage(_editedCourse.courseImage!),
                     fit: BoxFit.cover,
+                    onError: (exception, stackTrace) {
+                      // Optional: fallback on error
+                    },
                   )
                 : null,
           ),
           child: _editedCourse.courseImage == null
               ? const Center(
-                  child: Icon(Icons.image, size: 60, color: Colors.grey))
+                  child: Icon(Icons.image, size: 60, color: Colors.grey),
+                )
               : null,
         ),
         if (_isEditing)

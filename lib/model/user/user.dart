@@ -1,6 +1,6 @@
 class User {
   int? _id;
-  int? _utype;
+  int? _utype; // 2 = teacher, 3 = student, 4 = user, 1 = admin
   int? _status;
   String? _uniqueid;
   String? _sync_key;
