@@ -1,3 +1,2304 @@
+// import 'package:flutter/material.dart';
+// import 'package:flutter/services.dart';
+// import 'dart:typed_data';
+// import 'dart:ui' as ui;
+// import 'package:pdf/pdf.dart';
+// import 'package:pdf/widgets.dart' as pw;
+// import 'package:printing/printing.dart';
+//
+// import 'omr_models.dart';
+//
+// class OMRGenerator extends StatefulWidget {
+//   final OMRExamConfig config;
+//
+//   const OMRGenerator({Key? key, required this.config}) : super(key: key);
+//
+//   @override
+//   State<OMRGenerator> createState() => _OMRGeneratorState();
+// }
+//
+// class _OMRGeneratorState extends State<OMRGenerator> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('OMR Sheet Generator'),
+//         actions: [
+//           IconButton(
+//             icon: Icon(Icons.print),
+//             onPressed: _generatePDF,
+//           ),
+//         ],
+//       ),
+//       body: SingleChildScrollView(
+//         child: Center(
+//           child: Container(
+//             width: 800,
+//             padding: EdgeInsets.all(16),
+//             child: OMRSheet(config: widget.config),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Future<void> _generatePDF() async {
+//     final pdf = pw.Document();
+//
+//     pdf.addPage(
+//       pw.Page(
+//         pageFormat: PdfPageFormat.a4,
+//         build: (pw.Context context) {
+//           return _buildPDFContent();
+//         },
+//       ),
+//     );
+//
+//     await Printing.layoutPdf(
+//       onLayout: (PdfPageFormat format) async => pdf.save(),
+//     );
+//   }
+//
+//   pw.Widget _buildPDFContent() {
+//     // PDF generation logic here
+//     return pw.Container(
+//       child: pw.Text('OMR Sheet PDF'),
+//     );
+//   }
+// }
+//
+// class OMRSheet extends StatelessWidget {
+//   final OMRExamConfig config;
+//
+//   const OMRSheet({Key? key, required this.config}) : super(key: key);
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       decoration: BoxDecoration(
+//         border: Border.all(color: Colors.black, width: 2),
+//         color: Colors.white,
+//       ),
+//       child: Column(
+//         children: [
+//           _buildHeader(),
+//           _buildTopSection(),
+//           _buildStudentInfoSection(),
+//           _buildAnswerSection(),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildHeader() {
+//     return Container(
+//       padding: EdgeInsets.symmetric(vertical: 10),
+//       child: Column(
+//         children: [
+//           Row(
+//             mainAxisAlignment: MainAxisAlignment.center,
+//             children: [
+//               Container(
+//                 width: 60,
+//                 height: 60,
+//                 decoration: BoxDecoration(
+//                   shape: BoxShape.circle,
+//                   border: Border.all(color: Colors.black),
+//                 ),
+//                 child: Icon(Icons.school, size: 40),
+//               ),
+//               SizedBox(width: 20),
+//               Column(
+//                 children: [
+//                   Text(
+//                     'বি এ এফ শাহীন কলেজ যশোর',
+//                     style: TextStyle(
+//                       fontSize: 24,
+//                       fontWeight: FontWeight.bold,
+//                     ),
+//                   ),
+//                   Container(
+//                     margin: EdgeInsets.only(top: 5),
+//                     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+//                     decoration: BoxDecoration(
+//                       border: Border.all(color: Colors.black),
+//                     ),
+//                     child: Text(
+//                       'কোড নং',
+//                       style: TextStyle(fontSize: 16),
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ],
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildTopSection() {
+//     return Container(
+//       margin: EdgeInsets.symmetric(horizontal: 10),
+//       child: Column(
+//         children: [
+//           _buildBubbleRow(),
+//           SizedBox(height: 10),
+//           Container(
+//             padding: EdgeInsets.all(10),
+//             decoration: BoxDecoration(
+//               border: Border.all(color: Colors.black),
+//             ),
+//             child: Text(
+//               'অবশ্যই কালো কালির বল পয়েন্ট কলম দিয়ে পূর্ণ ভরাট করতে হবে',
+//               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildBubbleRow() {
+//     return Container(
+//       height: 40,
+//       decoration: BoxDecoration(
+//         border: Border.all(color: Colors.black),
+//       ),
+//       child: Row(
+//         children: List.generate(30, (index) {
+//           bool isFilled = index % 3 == 0;
+//           return Container(
+//             width: 25,
+//             height: 40,
+//             decoration: BoxDecoration(
+//               border: Border(
+//                 right: BorderSide(color: Colors.black, width: 0.5),
+//               ),
+//             ),
+//             child: Center(
+//               child: Container(
+//                 width: 18,
+//                 height: 18,
+//                 decoration: BoxDecoration(
+//                   shape: BoxShape.circle,
+//                   color: isFilled ? Colors.black : Colors.white,
+//                   border: Border.all(color: Colors.black),
+//                 ),
+//               ),
+//             ),
+//           );
+//         }),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildStudentInfoSection() {
+//     return Container(
+//       margin: EdgeInsets.all(10),
+//       decoration: BoxDecoration(
+//         border: Border.all(color: Colors.black),
+//       ),
+//       child: Column(
+//         children: [
+//           _buildInfoHeader(),
+//           _buildInfoGrid(),
+//           _buildBottomInfo(),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildInfoHeader() {
+//     return Container(
+//       padding: EdgeInsets.all(5),
+//       decoration: BoxDecoration(
+//         border: Border(bottom: BorderSide(color: Colors.black)),
+//       ),
+//       child: Row(
+//         children: [
+//           Expanded(
+//             flex: 1,
+//             child: Container(
+//               padding: EdgeInsets.all(5),
+//               child: Text('পরীক্ষা'),
+//             ),
+//           ),
+//           Expanded(
+//             flex: 2,
+//             child: Container(
+//               padding: EdgeInsets.all(5),
+//               decoration: BoxDecoration(
+//                 border: Border(left: BorderSide(color: Colors.black)),
+//               ),
+//               child: Text('রোল নম্বর'),
+//             ),
+//           ),
+//           Expanded(
+//             flex: 2,
+//             child: Container(
+//               padding: EdgeInsets.all(5),
+//               decoration: BoxDecoration(
+//                 border: Border(left: BorderSide(color: Colors.black)),
+//               ),
+//               child: Text('রেজিস্ট্রেশন নম্বর'),
+//             ),
+//           ),
+//           Expanded(
+//             flex: 1,
+//             child: Container(
+//               padding: EdgeInsets.all(5),
+//               decoration: BoxDecoration(
+//                 border: Border(left: BorderSide(color: Colors.black)),
+//               ),
+//               child: Text('বিষয় কোড'),
+//             ),
+//           ),
+//           Expanded(
+//             flex: 1,
+//             child: Container(
+//               padding: EdgeInsets.all(5),
+//               decoration: BoxDecoration(
+//                 border: Border(left: BorderSide(color: Colors.black)),
+//               ),
+//               child: Text('সেট কোড'),
+//             ),
+//           ),
+//           Expanded(
+//             flex: 2,
+//             child: Container(
+//               padding: EdgeInsets.all(5),
+//               decoration: BoxDecoration(
+//                 border: Border(left: BorderSide(color: Colors.black)),
+//               ),
+//               child: Text('পরীক্ষার্থীর স্বাক্ষর'),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildInfoGrid() {
+//     List<String> subjects = [
+//       'প্রথম মেয়াদ',
+//       'দ্বিতীয় মেয়াদ',
+//       'অর্ধ-বার্ষিক',
+//       'বার্ষিক',
+//       'প্রাক-নির্বাচনী',
+//       'নির্বাচনী',
+//       'প্রস্তুতি মূল্যায়ন',
+//       'মডেল টেস্ট',
+//     ];
+//
+//     return Column(
+//       children: subjects.map((subject) {
+//         return Container(
+//           decoration: BoxDecoration(
+//             border: Border(bottom: BorderSide(color: Colors.black, width: 0.5)),
+//           ),
+//           child: Row(
+//             children: [
+//               Container(
+//                 width: 20,
+//                 height: 30,
+//                 decoration: BoxDecoration(
+//                   border: Border(right: BorderSide(color: Colors.black)),
+//                 ),
+//                 child: Center(
+//                   child: Container(
+//                     width: 15,
+//                     height: 15,
+//                     decoration: BoxDecoration(
+//                       shape: BoxShape.circle,
+//                       border: Border.all(color: Colors.black),
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//               Container(
+//                 width: 100,
+//                 padding: EdgeInsets.symmetric(horizontal: 5),
+//                 child: Text(subject, style: TextStyle(fontSize: 12)),
+//               ),
+//               ...List.generate(10, (index) {
+//                 return Container(
+//                   width: 25,
+//                   height: 30,
+//                   decoration: BoxDecoration(
+//                     border: Border(right: BorderSide(color: Colors.black, width: 0.5)),
+//                   ),
+//                   child: Center(
+//                     child: Column(
+//                       mainAxisAlignment: MainAxisAlignment.center,
+//                       children: [
+//                         Text(
+//                           index.toString(),
+//                           style: TextStyle(fontSize: 10),
+//                         ),
+//                         Container(
+//                           width: 15,
+//                           height: 15,
+//                           decoration: BoxDecoration(
+//                             shape: BoxShape.circle,
+//                             border: Border.all(color: Colors.black),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 );
+//               }),
+//               Expanded(
+//                 child: Container(
+//                   height: 30,
+//                   decoration: BoxDecoration(
+//                     border: Border(left: BorderSide(color: Colors.black)),
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         );
+//       }).toList(),
+//     );
+//   }
+//
+//   Widget _buildBottomInfo() {
+//     return Container(
+//       padding: EdgeInsets.all(10),
+//       child: Row(
+//         children: [
+//           Expanded(
+//             child: Row(
+//               children: [
+//                 Text('নাম : '),
+//                 Expanded(child: Container()),
+//               ],
+//             ),
+//           ),
+//           Expanded(
+//             child: Row(
+//               children: [
+//                 Text('শ্রেণী : '),
+//                 Expanded(child: Container()),
+//               ],
+//             ),
+//           ),
+//           Expanded(
+//             child: Row(
+//               children: [
+//                 Text('রোল : '),
+//                 Expanded(child: Container()),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildAnswerSection() {
+//     return Container(
+//       margin: EdgeInsets.all(10),
+//       decoration: BoxDecoration(
+//         border: Border.all(color: Colors.black),
+//       ),
+//       child: Column(
+//         children: [
+//           _buildAnswerHeader(),
+//           _buildAnswerGrid(),
+//           _buildFooter(),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildAnswerHeader() {
+//     return Container(
+//       padding: EdgeInsets.all(10),
+//       decoration: BoxDecoration(
+//         border: Border(bottom: BorderSide(color: Colors.black)),
+//       ),
+//       child: Text(
+//         'বহু নির্বাচনী উত্তরপত্র',
+//         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildAnswerGrid() {
+//     return Container(
+//       padding: EdgeInsets.all(10),
+//       child: Row(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           Expanded(
+//             flex: 2,
+//             child: Column(
+//               children: [
+//                 Text('পরীক্ষকের স্বাক্ষর ও তারিখ'),
+//                 SizedBox(height: 50),
+//                 Text('নির্দেশকের স্বাক্ষর ও তারিখ'),
+//                 SizedBox(height: 50),
+//                 Text('তত্ত্বাবধায়কের স্বাক্ষর ও তারিখ'),
+//                 SizedBox(height: 50),
+//                 Container(
+//                   width: 100,
+//                   height: 100,
+//                   decoration: BoxDecoration(
+//                     shape: BoxShape.circle,
+//                     border: Border.all(color: Colors.black),
+//                   ),
+//                   child: Center(
+//                     child: Text('কলেজের সীলমোহর'),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//           Expanded(
+//             flex: 3,
+//             child: _buildAnswerBubbles(),
+//           ),
+//           Expanded(
+//             flex: 1,
+//             child: _buildRightPanel(),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildAnswerBubbles() {
+//     return Container(
+//       decoration: BoxDecoration(
+//         border: Border.all(color: Colors.black),
+//       ),
+//       child: Column(
+//         children: [
+//           Container(
+//             padding: EdgeInsets.all(5),
+//             decoration: BoxDecoration(
+//               border: Border(bottom: BorderSide(color: Colors.black)),
+//             ),
+//             child: Text(
+//               'অবশ্যই কালো কালির বল পয়েন্ট কলম দিয়ে পূর্ণ ভরাট করতে হবে',
+//               style: TextStyle(fontSize: 12),
+//             ),
+//           ),
+//           Row(
+//             children: [
+//               _buildQuestionColumn(1, 20),
+//               _buildQuestionColumn(21, 40),
+//             ],
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildQuestionColumn(int start, int end) {
+//     return Expanded(
+//       child: Column(
+//         children: [
+//           // Header row
+//           Container(
+//             padding: const EdgeInsets.all(5),
+//             decoration: const BoxDecoration(
+//               border: Border(bottom: BorderSide(color: Colors.black)),
+//             ),
+//             child: const Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//               children: [
+//                 Text('প্রশ্ন\nনম্বর'),
+//                 Text('উত্তর'),
+//               ],
+//             ),
+//           ),
+//
+//           // Question rows
+//           ...List.generate(end - start + 1, (index) {
+//             int questionNumber = start + index;
+//
+//             return Container(
+//               decoration: const BoxDecoration(
+//                 border: Border(bottom: BorderSide(color: Colors.black, width: 0.5)),
+//               ),
+//               padding: const EdgeInsets.symmetric(vertical: 5),
+//               child: Row(
+//                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//                 crossAxisAlignment: CrossAxisAlignment.center,
+//                 children: [
+//                   // Question number
+//                   SizedBox(
+//                     width: 30,
+//                     child: Text(
+//                       questionNumber.toString(),
+//                       textAlign: TextAlign.center,
+//                     ),
+//                   ),
+//
+//                   // Answer bubbles
+//                   Row(
+//                     mainAxisAlignment: MainAxisAlignment.center,
+//                     children: ['ক', 'খ', 'গ', 'ঘ'].map((option) {
+//                       return Container(
+//                         margin: const EdgeInsets.symmetric(horizontal: 5),
+//                         child: Column(
+//                           children: [
+//                             Text(
+//                               option,
+//                               style: const TextStyle(fontSize: 12),
+//                             ),
+//                             Container(
+//                               width: 20,
+//                               height: 20,
+//                               decoration: BoxDecoration(
+//                                 shape: BoxShape.circle,
+//                                 border: Border.all(color: Colors.black),
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       );
+//                     }).toList(),
+//                   ),
+//                 ],
+//               ),
+//             );
+//           }),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildRightPanel() {
+//     return Container(
+//       decoration: BoxDecoration(
+//         border: Border(left: BorderSide(color: Colors.black)),
+//       ),
+//       child: Column(
+//         children: [
+//           Container(
+//             padding: EdgeInsets.all(10),
+//             decoration: BoxDecoration(
+//               border: Border(bottom: BorderSide(color: Colors.black)),
+//             ),
+//             child: Text('প্রাপ্ত নম্বর'),
+//           ),
+//           ...List.generate(16, (index) {
+//             return Container(
+//               height: 30,
+//               decoration: BoxDecoration(
+//                 border: Border(bottom: BorderSide(color: Colors.black, width: 0.5)),
+//               ),
+//               child: Center(
+//                 child: Text((index + 1).toString()),
+//               ),
+//             );
+//           }),
+//           Container(
+//             padding: EdgeInsets.all(10),
+//             child: Column(
+//               children: [
+//                 Text('প্রাপ্ত নম্বর\n(সংখ্যায়)'),
+//                 SizedBox(height: 10),
+//                 Text('প্রাপ্ত নম্বর\n(কথায়)'),
+//                 SizedBox(height: 10),
+//                 Text('সংশোধিত\nপ্রাপ্ত নম্বর'),
+//                 SizedBox(height: 10),
+//                 Text('পূর্ণমান'),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildFooter() {
+//     return Container(
+//       padding: EdgeInsets.all(10),
+//       child: Row(
+//         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//         children: [
+//           Text('কক্ষ নং: '),
+//           Text('বিভাগ: '),
+//           Text('বিষয়: '),
+//           Text('পত্র: '),
+//           Text('শাখা: '),
+//         ],
+//       ),
+//     );
+//   }
+// }
+//
+// // OMR Scanner Widget
+// class OMRScannerr extends StatefulWidget {
+//   final OMRExamConfig config;
+//
+//   const OMRScannerr({Key? key, required this.config}) : super(key: key);
+//
+//   @override
+//   State<OMRScannerr> createState() => _OMRScannerState();
+// }
+//
+// class _OMRScannerState extends State<OMRScannerr> {
+//   Map<int, String> scannedAnswers = {};
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('OMR Scanner'),
+//         actions: [
+//           IconButton(
+//             icon: Icon(Icons.save),
+//             onPressed: _saveResults,
+//           ),
+//         ],
+//       ),
+//       body: SingleChildScrollView(
+//         child: Column(
+//           children: [
+//             _buildScannerHeader(),
+//             _buildAnswerSheet(),
+//             _buildResultSection(),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildScannerHeader() {
+//     return Container(
+//       padding: EdgeInsets.all(16),
+//       child: Card(
+//         child: Padding(
+//           padding: EdgeInsets.all(16),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               Text(
+//                 'Exam: ${widget.config.examName}',
+//                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//               ),
+//               SizedBox(height: 8),
+//               Text('Student ID: ${widget.config.studentId}'),
+//               Text('Mobile: ${widget.config.mobileNumber}'),
+//               Text('Set Number: ${widget.config.setNumber}'),
+//               Text('Date: ${widget.config.examDate.toString().split(' ')[0]}'),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildAnswerSheet() {
+//     return Container(
+//       padding: EdgeInsets.all(16),
+//       child: Card(
+//         child: Padding(
+//           padding: EdgeInsets.all(16),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               Text(
+//                 'Mark Answers',
+//                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//               ),
+//               SizedBox(height: 16),
+//               ...List.generate(
+//                 (widget.config.numberOfQuestions / 2).ceil(),
+//                     (rowIndex) {
+//                   return Row(
+//                     children: [
+//                       Expanded(
+//                         child: _buildQuestionRow(rowIndex * 2 + 1),
+//                       ),
+//                       if (rowIndex * 2 + 2 <= widget.config.numberOfQuestions)
+//                         Expanded(
+//                           child: _buildQuestionRow(rowIndex * 2 + 2),
+//                         ),
+//                     ],
+//                   );
+//                 },
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildQuestionRow(int questionNumber) {
+//     return Container(
+//       padding: EdgeInsets.symmetric(vertical: 8),
+//       child: Row(
+//         children: [
+//           Container(
+//             width: 40,
+//             child: Text(
+//               'Q$questionNumber:',
+//               style: TextStyle(fontWeight: FontWeight.bold),
+//             ),
+//           ),
+//           ...['A', 'B', 'C', 'D'].map((option) {
+//             return Padding(
+//               padding: EdgeInsets.symmetric(horizontal: 8),
+//               child: InkWell(
+//                 onTap: () {
+//                   setState(() {
+//                     scannedAnswers[questionNumber] = option;
+//                   });
+//                 },
+//                 child: Container(
+//                   width: 30,
+//                   height: 30,
+//                   decoration: BoxDecoration(
+//                     shape: BoxShape.circle,
+//                     color: scannedAnswers[questionNumber] == option
+//                         ? Colors.blue
+//                         : Colors.white,
+//                     border: Border.all(
+//                       color: scannedAnswers[questionNumber] == option
+//                           ? Colors.blue
+//                           : Colors.grey,
+//                       width: 2,
+//                     ),
+//                   ),
+//                   child: Center(
+//                     child: Text(
+//                       option,
+//                       style: TextStyle(
+//                         color: scannedAnswers[questionNumber] == option
+//                             ? Colors.white
+//                             : Colors.black,
+//                         fontWeight: FontWeight.bold,
+//                       ),
+//                     ),
+//                   ),
+//                 ),
+//               ),
+//             );
+//           }).toList(),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildResultSection() {
+//     int correctAnswers = 0;
+//     for (int i = 1; i <= widget.config.numberOfQuestions; i++) {
+//       if (scannedAnswers[i] != null &&
+//           widget.config.correctAnswers.length >= i &&
+//           scannedAnswers[i] == widget.config.correctAnswers[i - 1]) {
+//         correctAnswers++;
+//       }
+//     }
+//
+//     double score = (correctAnswers / widget.config.numberOfQuestions) * 100;
+//
+//     return Container(
+//       padding: EdgeInsets.all(16),
+//       child: Card(
+//         child: Padding(
+//           padding: EdgeInsets.all(16),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               Text(
+//                 'Results',
+//                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//               ),
+//               SizedBox(height: 16),
+//               Text('Correct Answers: $correctAnswers/${widget.config.numberOfQuestions}'),
+//               Text('Score: ${score.toStringAsFixed(2)}%'),
+//               SizedBox(height: 16),
+//               ElevatedButton(
+//                 onPressed: _showDetailedResults,
+//                 child: Text('View Detailed Results'),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   void _saveResults() {
+//     List<int> answers = [];
+//     for (int i = 1; i <= widget.config.numberOfQuestions; i++) {
+//       String? answer = scannedAnswers[i];
+//       if (answer != null) {
+//         answers.add(['A', 'B', 'C', 'D'].indexOf(answer));
+//       } else {
+//         answers.add(-1); // No answer marked
+//       }
+//     }
+//
+//     int correctAnswers = 0;
+//     for (int i = 0; i < widget.config.numberOfQuestions; i++) {
+//       if (answers[i] != -1 &&
+//           widget.config.correctAnswers.length > i &&
+//           ['A', 'B', 'C', 'D'][answers[i]] == widget.config.correctAnswers[i]) {
+//         correctAnswers++;
+//       }
+//     }
+//
+//     double score = (correctAnswers / widget.config.numberOfQuestions) * 100;
+//
+//     OMRResponse response = OMRResponse(
+//       setNumber: widget.config.setNumber,
+//       studentId: widget.config.studentId,
+//       mobileNumber: widget.config.mobileNumber,
+//       answers: answers,
+//       score: score,
+//     );
+//
+//     // Save or process the response
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(content: Text('Results saved successfully!')),
+//     );
+//   }
+//
+//   void _showDetailedResults() {
+//     showDialog(
+//       context: context,
+//       builder: (context) => AlertDialog(
+//         title: Text('Detailed Results'),
+//         content: Container(
+//           width: double.maxFinite,
+//           child: ListView.builder(
+//             shrinkWrap: true,
+//             itemCount: widget.config.numberOfQuestions,
+//             itemBuilder: (context, index) {
+//               int questionNumber = index + 1;
+//               String? userAnswer = scannedAnswers[questionNumber];
+//               String correctAnswer = widget.config.correctAnswers.length > index
+//                   ? widget.config.correctAnswers[index]
+//                   : '';
+//               bool isCorrect = userAnswer == correctAnswer;
+//
+//               return ListTile(
+//                 leading: CircleAvatar(
+//                   backgroundColor: isCorrect ? Colors.green : Colors.red,
+//                   child: Text(
+//                     questionNumber.toString(),
+//                     style: TextStyle(color: Colors.white),
+//                   ),
+//                 ),
+//                 title: Text('Question $questionNumber'),
+//                 subtitle: Text(
+//                   'Your Answer: ${userAnswer ?? "Not answered"} | Correct: $correctAnswer',
+//                 ),
+//                 trailing: Icon(
+//                   isCorrect ? Icons.check : Icons.close,
+//                   color: isCorrect ? Colors.green : Colors.red,
+//                 ),
+//               );
+//             },
+//           ),
+//         ),
+//         actions: [
+//           TextButton(
+//             onPressed: () => Navigator.pop(context),
+//             child: Text('Close'),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+
+
+
+
+// Main App Widget
+// class OMRApp extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       title: 'OMR System',
+//       theme: ThemeData(
+//         primarySwatch: Colors.blue,
+//         fontFamily: 'NotoSansBengali', // Make sure to add Bengali font
+//       ),
+//       home: OMRHomePage(),
+//     );
+//   }
+// }
+//
+// class OMRHomePage extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     // Sample configuration
+//     final config = OMRExamConfig(
+//       examName: 'Mid Term Exam',
+//       numberOfQuestions: 40,
+//       setNumber: 1,
+//       studentId: '12345',
+//       mobileNumber: '01712345678',
+//       examDate: DateTime.now(),
+//       correctAnswers: List.generate(40, (index) => ['A', 'B', 'C', 'D'][index % 4]),
+//     );
+//
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('OMR System'),
+//       ),
+//       body: Center(
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             ElevatedButton.icon(
+//               onPressed: () {
+//                 Navigator.push(
+//                   context,
+//                   MaterialPageRoute(
+//                     builder: (context) => OMRGenerator(config: config),
+//                   ),
+//                 );
+//               },
+//               icon: Icon(Icons.create),
+//               label: Text('Generate OMR Sheet'),
+//               style: ElevatedButton.styleFrom(
+//                 padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+//               ),
+//             ),
+//             SizedBox(height: 20),
+//             ElevatedButton.icon(
+//               onPressed: () {
+//                 Navigator.push(
+//                   context,
+//                   MaterialPageRoute(
+//                     builder: (context) => OMRScanner(config: config),
+//                   ),
+//                 );
+//               },
+//               icon: Icon(Icons.scanner),
+//               label: Text('Scan OMR Sheet'),
+//               style: ElevatedButton.styleFrom(
+//                 padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+// Add this to your pubspec.yaml:
+/*
+dependencies:
+  flutter:
+    sdk: flutter
+  pdf: ^3.10.4
+  printing: ^5.11.0
+
+fonts:
+  - family: NotoSansBengali
+    fonts:
+      - asset: fonts/NotoSansBengali-Regular.ttf
+      - asset: fonts/NotoSansBengali-Bold.ttf
+        weight: 700
+*/
+
+
+
+
+
+// import 'dart:ui';
+// import 'package:flutter/material.dart';
+// import 'dart:typed_data';
+// import 'dart:io';
+// import 'package:path_provider/path_provider.dart';
+// import 'omr_models.dart';
+//
+// class OMRGenerator {
+//   static const double A4_WIDTH = 595.0;
+//   static const double A4_HEIGHT = 842.0;
+//   static const double MARGIN = 20.0;
+//   static const double BUBBLE_RADIUS = 5.5;
+//   static const double BUBBLE_SPACING = 18.0;
+//   static const double LINE_HEIGHT = 20.0;
+//
+//   // Colors matching the uploaded sheet
+//   static final Color primaryColor = const Color(0xFF8B0000); // Dark red
+//   static final Color secondaryColor = const Color(0xFFFFE4E1); // Light pink
+//   static final Color borderColor = const Color(0xFF8B0000);
+//   static final Color textColor = Colors.black;
+//
+//   static Future<File> generateOMRSheet(OMRExamConfig config) async {
+//     final recorder = PictureRecorder();
+//     final canvas = Canvas(recorder);
+//
+//     // White background
+//     canvas.drawRect(
+//         Rect.fromLTWH(0, 0, A4_WIDTH, A4_HEIGHT),
+//         Paint()..color = Colors.white
+//     );
+//
+//     // Draw main components
+//     _drawHeader(canvas, config);
+//     _drawBarcodeSection(canvas);
+//     _drawStudentInfoSection(canvas, config);
+//     _drawAnswerGrid(canvas, config);
+//     _drawFooterSection(canvas);
+//
+//     final picture = recorder.endRecording();
+//     final image = await picture.toImage(A4_WIDTH.toInt(), A4_HEIGHT.toInt());
+//     final byteData = await image.toByteData(format: ImageByteFormat.png);
+//     final bytes = byteData!.buffer.asUint8List();
+//
+//     final directory = await getTemporaryDirectory();
+//     final file = File('${directory.path}/professional_omr_${DateTime.now().millisecondsSinceEpoch}.png');
+//     await file.writeAsBytes(bytes);
+//
+//     return file;
+//   }
+//
+//   static void _drawHeader(Canvas canvas, OMRExamConfig config) {
+//     // Main border
+//     final borderPaint = Paint()
+//       ..color = borderColor
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 2.0;
+//
+//     canvas.drawRect(
+//         Rect.fromLTWH(MARGIN, MARGIN, A4_WIDTH - 2 * MARGIN, A4_HEIGHT - 2 * MARGIN),
+//         borderPaint
+//     );
+//
+//     // Logo placeholder (circle with emblem)
+//     final logoPaint = Paint()
+//       ..color = borderColor
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 1.5;
+//
+//     canvas.drawCircle(Offset(MARGIN + 40, MARGIN + 40), 25, logoPaint);
+//
+//     // Institution name
+//     final titlePainter = TextPainter(
+//       text: TextSpan(
+//         text: config.examName.toUpperCase(),
+//         style: TextStyle(
+//           fontSize: 18,
+//           fontWeight: FontWeight.bold,
+//           color: borderColor,
+//         ),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     titlePainter.layout();
+//     titlePainter.paint(canvas, Offset(A4_WIDTH / 2 - titlePainter.width / 2, MARGIN + 25));
+//
+//     // Code number box
+//     _drawBox(canvas, A4_WIDTH - MARGIN - 100, MARGIN + 20, 80, 30, "কোড নং");
+//   }
+//
+//   static void _drawBarcodeSection(Canvas canvas) {
+//     final y = MARGIN + 70;
+//     final barcodeWidth = A4_WIDTH - 2 * MARGIN - 40;
+//
+//     // Draw barcode placeholder
+//     final barcodePaint = Paint()
+//       ..color = Colors.black
+//       ..style = PaintingStyle.fill;
+//
+//     // Simulate barcode pattern
+//     for (int i = 0; i < 50; i++) {
+//       final x = MARGIN + 20 + (i * 10);
+//       final width = (i % 3 == 0) ? 3.0 : 1.5;
+//       final height = (i % 2 == 0) ? 15.0 : 10.0;
+//
+//       if (x + width < A4_WIDTH - MARGIN - 20) {
+//         canvas.drawRect(
+//             Rect.fromLTWH(x, y, width, height),
+//             barcodePaint
+//         );
+//       }
+//     }
+//
+//     // Barcode bubbles
+//     final bubbleY = y + 20;
+//     for (int i = 0; i < 20; i++) {
+//       final x = MARGIN + 20 + (i * 25);
+//       if (x < A4_WIDTH - MARGIN - 30) {
+//         _drawBubble(canvas, x, bubbleY, false);
+//       }
+//     }
+//   }
+//
+//   static void _drawStudentInfoSection(Canvas canvas, OMRExamConfig config) {
+//     final startY = MARGIN + 110;
+//
+//     // Section background
+//     final bgPaint = Paint()..color = secondaryColor;
+//     canvas.drawRect(
+//         Rect.fromLTWH(MARGIN + 10, startY, A4_WIDTH - 2 * MARGIN - 20, 150),
+//         bgPaint
+//     );
+//
+//     // Section border
+//     final borderPaint = Paint()
+//       ..color = borderColor
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 1.0;
+//
+//     canvas.drawRect(
+//         Rect.fromLTWH(MARGIN + 10, startY, A4_WIDTH - 2 * MARGIN - 20, 150),
+//         borderPaint
+//     );
+//
+//     // Title bar
+//     final titleBgPaint = Paint()..color = borderColor;
+//     canvas.drawRect(
+//         Rect.fromLTWH(MARGIN + 10, startY, A4_WIDTH - 2 * MARGIN - 20, 25),
+//         titleBgPaint
+//     );
+//
+//     final titlePainter = TextPainter(
+//       text: const TextSpan(
+//         text: "অবশ্যই কালোকালির বল পয়েন্ট কলম দিয়ে বৃত্ত ভরাট করতে হবে",
+//         style: TextStyle(
+//           fontSize: 11,
+//           color: Colors.white,
+//           fontWeight: FontWeight.bold,
+//         ),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     titlePainter.layout();
+//     titlePainter.paint(canvas, Offset(A4_WIDTH / 2 - titlePainter.width / 2, startY + 6));
+//
+//     // Subject selection area
+//     _drawSubjectSelection(canvas, MARGIN + 20, startY + 35);
+//
+//     // Roll number area
+//     _drawRollNumberSection(canvas, MARGIN + 200, startY + 35, config);
+//
+//     // Additional info boxes
+//     _drawInfoBoxes(canvas, startY + 120);
+//   }
+//
+//   static void _drawSubjectSelection(Canvas canvas, double x, double y) {
+//     final subjects = [
+//       "প্রথম মেয়াদি", "দ্বিতীয় মেয়াদি", "অর্ধ-বার্ষিক",
+//       "বার্ষিক", "প্রাক-নির্বাচনী", "নির্বাচনী", "প্রস্তুতি মূল্যায়ন", "মডেল টেস্ট"
+//     ];
+//
+//     final labelPainter = TextPainter(
+//       text: const TextSpan(
+//         text: "পরীক্ষা:",
+//         style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     labelPainter.layout();
+//     labelPainter.paint(canvas, Offset(x, y - 15));
+//
+//     for (int i = 0; i < subjects.length; i++) {
+//       final dy = y + (i * 15);
+//       _drawBubble(canvas, x, dy, false);
+//
+//       final textPainter = TextPainter(
+//         text: TextSpan(
+//           text: subjects[i],
+//           style: const TextStyle(fontSize: 9),
+//         ),
+//         textDirection: TextDirection.ltr,
+//       );
+//       textPainter.layout();
+//       textPainter.paint(canvas, Offset(x + 15, dy - 3));
+//     }
+//   }
+//
+//   static void _drawRollNumberSection(Canvas canvas, double x, double y, OMRExamConfig config) {
+//     // Roll number grid
+//     _drawDigitGrid(canvas, x, y, "রোল নম্বর", 6);
+//     _drawDigitGrid(canvas, x + 120, y, "রেজিস্ট্রেশন নম্বর", 10);
+//
+//     // Additional fields
+//     _drawSmallBox(canvas, x + 300, y, "বিষয় কোড");
+//     _drawSmallBox(canvas, x + 300, y + 30, "সেট কোড");
+//   }
+//
+//   static void _drawDigitGrid(Canvas canvas, double x, double y, String label, int digits) {
+//     final labelPainter = TextPainter(
+//       text: TextSpan(
+//         text: label,
+//         style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     labelPainter.layout();
+//     labelPainter.paint(canvas, Offset(x, y - 15));
+//
+//     for (int col = 0; col < digits; col++) {
+//       for (int row = 0; row < 10; row++) {
+//         final dx = x + (col * 15);
+//         final dy = y + (row * 12);
+//         _drawSmallBubble(canvas, dx, dy, false);
+//
+//         if (col == 0) {
+//           final numPainter = TextPainter(
+//             text: TextSpan(
+//               text: row.toString(),
+//               style: const TextStyle(fontSize: 8),
+//             ),
+//             textDirection: TextDirection.ltr,
+//           );
+//           numPainter.layout();
+//           numPainter.paint(canvas, Offset(x - 15, dy - 3));
+//         }
+//       }
+//     }
+//   }
+//
+//   static void _drawAnswerGrid(Canvas canvas, OMRExamConfig config) {
+//     final startY = MARGIN + 280;
+//
+//     // Answer section background
+//     final bgPaint = Paint()..color = secondaryColor;
+//     canvas.drawRect(
+//         Rect.fromLTWH(MARGIN + 10, startY, A4_WIDTH - 2 * MARGIN - 20, 320),
+//         bgPaint
+//     );
+//
+//     // Border
+//     final borderPaint = Paint()
+//       ..color = borderColor
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 1.0;
+//
+//     canvas.drawRect(
+//         Rect.fromLTWH(MARGIN + 10, startY, A4_WIDTH - 2 * MARGIN - 20, 320),
+//         borderPaint
+//     );
+//
+//     // Title
+//     final titleBgPaint = Paint()..color = borderColor;
+//     canvas.drawRect(
+//         Rect.fromLTWH(MARGIN + 10, startY, A4_WIDTH - 2 * MARGIN - 20, 25),
+//         titleBgPaint
+//     );
+//
+//     final titlePainter = TextPainter(
+//       text: const TextSpan(
+//         text: "বহু নির্বাচনী উত্তরপত্র",
+//         style: TextStyle(
+//           fontSize: 12,
+//           color: Colors.white,
+//           fontWeight: FontWeight.bold,
+//         ),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     titlePainter.layout();
+//     titlePainter.paint(canvas, Offset(A4_WIDTH / 2 - titlePainter.width / 2, startY + 6));
+//
+//     // Draw question grid
+//     _drawQuestionGrid(canvas, MARGIN + 30, startY + 40, config.numberOfQuestions);
+//
+//     // Draw answer key section
+//     _drawAnswerKeySection(canvas, A4_WIDTH - MARGIN - 150, startY + 40);
+//   }
+//
+//   static void _drawQuestionGrid(Canvas canvas, double x, double y, int totalQuestions) {
+//     final questionsPerColumn = 20;
+//     final columns = (totalQuestions / questionsPerColumn).ceil();
+//
+//     for (int col = 0; col < columns; col++) {
+//       final colX = x + (col * 140);
+//
+//       // Column header
+//       final headerPainter = TextPainter(
+//         text: TextSpan(
+//           text: "প্রশ্ন নম্বর        উত্তর",
+//           style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: borderColor),
+//         ),
+//         textDirection: TextDirection.ltr,
+//       );
+//       headerPainter.layout();
+//       headerPainter.paint(canvas, Offset(colX, y - 20));
+//
+//       // Options header
+//       final optionsPainter = TextPainter(
+//         text: const TextSpan(
+//           text: "ক    খ    গ    ঘ",
+//           style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold),
+//         ),
+//         textDirection: TextDirection.ltr,
+//       );
+//       optionsPainter.layout();
+//       optionsPainter.paint(canvas, Offset(colX + 50, y - 5));
+//
+//       for (int i = 0; i < questionsPerColumn; i++) {
+//         final questionNum = col * questionsPerColumn + i + 1;
+//         if (questionNum > totalQuestions) break;
+//
+//         final qy = y + (i * 13);
+//
+//         // Question number
+//         final numPainter = TextPainter(
+//           text: TextSpan(
+//             text: questionNum.toString().padLeft(2, '0'),
+//             style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+//           ),
+//           textDirection: TextDirection.ltr,
+//         );
+//         numPainter.layout();
+//         numPainter.paint(canvas, Offset(colX, qy));
+//
+//         // Answer bubbles
+//         for (int opt = 0; opt < 4; opt++) {
+//           final ox = colX + 40 + (opt * 15);
+//           _drawSmallBubble(canvas, ox, qy, false);
+//         }
+//       }
+//     }
+//   }
+//
+//   static void _drawAnswerKeySection(Canvas canvas, double x, double y) {
+//     // Answer key title
+//     final titlePainter = TextPainter(
+//       text: const TextSpan(
+//         text: "প্রশ্ন নম্বর  প্রাপ্ত নম্বর",
+//         style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     titlePainter.layout();
+//     titlePainter.paint(canvas, Offset(x, y - 20));
+//
+//     // Draw grid for answer key
+//     for (int i = 1; i <= 16; i++) {
+//       final dy = y + (i - 1) * 15;
+//
+//       // Draw box for question number
+//       final boxPaint = Paint()
+//         ..color = Colors.white
+//         ..style = PaintingStyle.fill;
+//
+//       final borderPaint = Paint()
+//         ..color = borderColor
+//         ..style = PaintingStyle.stroke
+//         ..strokeWidth = 0.5;
+//
+//       canvas.drawRect(
+//           Rect.fromLTWH(x, dy, 30, 12),
+//           boxPaint
+//       );
+//       canvas.drawRect(
+//           Rect.fromLTWH(x, dy, 30, 12),
+//           borderPaint
+//       );
+//
+//       // Draw box for marks
+//       canvas.drawRect(
+//           Rect.fromLTWH(x + 35, dy, 40, 12),
+//           boxPaint
+//       );
+//       canvas.drawRect(
+//           Rect.fromLTWH(x + 35, dy, 40, 12),
+//           borderPaint
+//       );
+//
+//       // Question number
+//       final numPainter = TextPainter(
+//         text: TextSpan(
+//           text: i.toString(),
+//           style: const TextStyle(fontSize: 8),
+//         ),
+//         textDirection: TextDirection.ltr,
+//       );
+//       numPainter.layout();
+//       numPainter.paint(canvas, Offset(x + 10, dy + 2));
+//     }
+//
+//     // Total marks section
+//     final totalY = y + 250;
+//     final totalPainter = TextPainter(
+//       text: const TextSpan(
+//         text: "প্রাপ্ত নম্বর\n(সংখ্যায়)\nপ্রাপ্ত নম্বর\n(কথায়)\nসর্বমোট\n(প্রাপ্ত নম্বর)\nপূর্ণমান",
+//         style: TextStyle(fontSize: 8, height: 1.5),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     totalPainter.layout();
+//     totalPainter.paint(canvas, Offset(x - 10, totalY));
+//   }
+//
+//   static void _drawInfoBoxes(Canvas canvas, double y) {
+//     final boxes = [
+//       {"label": "নাম :", "width": 200.0},
+//       {"label": "শ্রেণি :", "width": 80.0},
+//       {"label": "রোল :", "width": 80.0},
+//       {"label": "বিভাগ :", "width": 80.0},
+//       {"label": "নিষম :", "width": 80.0},
+//       {"label": "পদ :", "width": 60.0},
+//       {"label": "শাখা :", "width": 60.0},
+//     ];
+//
+//     double currentX = MARGIN + 20;
+//     for (var box in boxes) {
+//       _drawLabeledBox(canvas, currentX, y, box["label"] as String, box["width"] as double);
+//       currentX += (box["width"] as double) + 10;
+//       if (currentX > A4_WIDTH - MARGIN - 100) {
+//         currentX = MARGIN + 20;
+//         y += 25;
+//       }
+//     }
+//   }
+//
+//   static void _drawFooterSection(Canvas canvas) {
+//     final y = A4_HEIGHT - MARGIN - 100;
+//
+//     // Footer border
+//     final borderPaint = Paint()
+//       ..color = borderColor
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 1.0;
+//
+//     canvas.drawRect(
+//         Rect.fromLTWH(MARGIN + 10, y, A4_WIDTH - 2 * MARGIN - 20, 80),
+//         borderPaint
+//     );
+//
+//     // Left section - Instructions
+//     final instructionsPainter = TextPainter(
+//       text: const TextSpan(
+//         text: "পরীক্ষকের স্বাক্ষর ও তারিখ\n\n\nনিরীক্ষকের স্বাক্ষর ও তারিখ\n\n\nভিতিবদ্ধকের স্বাক্ষর ও তারিখ\n\n\nকলেজের সীলমোহর",
+//         style: TextStyle(fontSize: 9, height: 1.8),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     instructionsPainter.layout();
+//     instructionsPainter.paint(canvas, Offset(MARGIN + 20, y + 10));
+//
+//     // Seal area (circle)
+//     final sealPaint = Paint()
+//       ..color = borderColor
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 1.0;
+//
+//     canvas.drawOval(
+//         Rect.fromLTWH(MARGIN + 40, y + 45, 60, 30),
+//         sealPaint
+//     );
+//
+//     // Right section - Additional barcode
+//     _drawSmallBarcode(canvas, A4_WIDTH - MARGIN - 150, y + 10);
+//   }
+//
+//   static void _drawSmallBarcode(Canvas canvas, double x, double y) {
+//     // Small barcode section
+//     final barcodePaint = Paint()
+//       ..color = Colors.black
+//       ..style = PaintingStyle.fill;
+//
+//     for (int i = 0; i < 20; i++) {
+//       final dx = x + (i * 5);
+//       final width = (i % 3 == 0) ? 2.0 : 1.0;
+//       final height = 10.0;
+//
+//       canvas.drawRect(
+//           Rect.fromLTWH(dx, y, width, height),
+//           barcodePaint
+//       );
+//     }
+//
+//     // Bubbles below barcode
+//     for (int i = 0; i < 10; i++) {
+//       _drawSmallBubble(canvas, x + (i * 12), y + 15, false);
+//     }
+//   }
+//
+//   // Helper methods for drawing elements
+//   static void _drawBubble(Canvas canvas, double x, double y, bool filled) {
+//     final borderPaint = Paint()
+//       ..color = borderColor
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 1.0;
+//
+//     final fillPaint = Paint()
+//       ..color = borderColor
+//       ..style = PaintingStyle.fill;
+//
+//     canvas.drawCircle(Offset(x + BUBBLE_RADIUS, y + BUBBLE_RADIUS), BUBBLE_RADIUS, borderPaint);
+//
+//     if (filled) {
+//       canvas.drawCircle(Offset(x + BUBBLE_RADIUS, y + BUBBLE_RADIUS), BUBBLE_RADIUS - 1, fillPaint);
+//     }
+//   }
+//
+//   static void _drawSmallBubble(Canvas canvas, double x, double y, bool filled) {
+//     final radius = 3.5;
+//     final borderPaint = Paint()
+//       ..color = borderColor
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 0.8;
+//
+//     final fillPaint = Paint()
+//       ..color = borderColor
+//       ..style = PaintingStyle.fill;
+//
+//     canvas.drawCircle(Offset(x + radius, y + radius), radius, borderPaint);
+//
+//     if (filled) {
+//       canvas.drawCircle(Offset(x + radius, y + radius), radius - 0.5, fillPaint);
+//     }
+//   }
+//
+//   static void _drawBox(Canvas canvas, double x, double y, double width, double height, String label) {
+//     final boxPaint = Paint()
+//       ..color = Colors.white
+//       ..style = PaintingStyle.fill;
+//
+//     final borderPaint = Paint()
+//       ..color = borderColor
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 1.0;
+//
+//     canvas.drawRect(Rect.fromLTWH(x, y, width, height), boxPaint);
+//     canvas.drawRect(Rect.fromLTWH(x, y, width, height), borderPaint);
+//
+//     if (label.isNotEmpty) {
+//       final labelPainter = TextPainter(
+//         text: TextSpan(
+//           text: label,
+//           style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+//         ),
+//         textDirection: TextDirection.ltr,
+//       );
+//       labelPainter.layout();
+//       labelPainter.paint(canvas, Offset(x + 5, y + height / 2 - labelPainter.height / 2));
+//     }
+//   }
+//
+//   static void _drawSmallBox(Canvas canvas, double x, double y, String label) {
+//     _drawBox(canvas, x, y, 60, 20, label);
+//   }
+//
+//   static void _drawLabeledBox(Canvas canvas, double x, double y, String label, double width) {
+//     final labelPainter = TextPainter(
+//       text: TextSpan(
+//         text: label,
+//         style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     labelPainter.layout();
+//     labelPainter.paint(canvas, Offset(x, y + 3));
+//
+//     // Draw underline
+//     final linePaint = Paint()
+//       ..color = borderColor
+//       ..strokeWidth = 0.5;
+//
+//     canvas.drawLine(
+//         Offset(x + labelPainter.width + 5, y + 15),
+//         Offset(x + width, y + 15),
+//         linePaint
+//     );
+//   }
+// }
+
+// Updated OMR Models to support Bengali options
+// class OMRExamConfig {
+//   final String examName;
+//   final DateTime examDate;
+//   final int numberOfQuestions;
+//   final String studentId;
+//   final String mobileNumber;
+//   final int setNumber;
+//   final List<String> correctAnswers;
+//   final String examType; // For Bengali exam types
+//   final String subjectCode;
+//   final String registrationNumber;
+//
+//   OMRExamConfig({
+//     required this.examName,
+//     required this.examDate,
+//     required this.numberOfQuestions,
+//     this.studentId = '',
+//     this.mobileNumber = '',
+//     this.setNumber = 0,
+//     this.correctAnswers = const [],
+//     this.examType = '',
+//     this.subjectCode = '',
+//     this.registrationNumber = '',
+//   });
+// }
+//
+// // Usage example
+// class OMRGeneratorExample extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Professional OMR Generator'),
+//         backgroundColor: const Color(0xFF8B0000),
+//       ),
+//       body: Center(
+//         child: ElevatedButton(
+//           onPressed: () async {
+//             final config = OMRExamConfig(
+//               examName: 'বি এ এফ শাহীন কলেজ যশোর',
+//               examDate: DateTime.now(),
+//               numberOfQuestions: 40,
+//               studentId: '123456789',
+//               mobileNumber: '01712345678',
+//               setNumber: 1,
+//               examType: 'প্রথম মেয়াদি',
+//               subjectCode: '101',
+//               registrationNumber: '2023456789',
+//             );
+//
+//             final file = await OMRGenerator.generateOMRSheet(config);
+//
+//             ScaffoldMessenger.of(context).showSnackBar(
+//               SnackBar(content: Text('OMR Sheet saved to: ${file.path}')),
+//             );
+//           },
+//           style: ElevatedButton.styleFrom(
+//             backgroundColor: const Color(0xFF8B0000),
+//             padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+//           ),
+//           child: const Text(
+//             'Generate Professional OMR Sheet',
+//             style: TextStyle(fontSize: 16),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+
+
+// import 'dart:ui';
+// import 'package:flutter/material.dart';
+// import 'dart:typed_data';
+// import 'dart:io';
+// import 'package:path_provider/path_provider.dart';
+// import 'omr_models.dart';
+//
+// class OMRGenerator {
+//   static const double A4_WIDTH = 595.0;
+//   static const double A4_HEIGHT = 842.0;
+//   static const double MARGIN = 25.0;
+//   static const double BUBBLE_RADIUS = 4.0;
+//   static const double COLUMN_SPACING = 12.0;
+//
+//   static Future<File> generateOMRSheet(OMRExamConfig config) async {
+//     final recorder = PictureRecorder();
+//     final canvas = Canvas(recorder);
+//
+//     // Background
+//     canvas.drawRect(Rect.fromLTWH(0, 0, A4_WIDTH, A4_HEIGHT), Paint()..color = Colors.white);
+//
+//     _drawProfessionalBorder(canvas);
+//     _drawProfessionalHeader(canvas, config);
+//     _drawStudentInfoSection(canvas, config);
+//     _drawAnswerSectionWithThreeColumns(canvas, config.numberOfQuestions);
+//     _drawProfessionalFooter(canvas);
+//
+//     if (config.correctAnswers.isNotEmpty) {
+//       _drawAnswerKey(canvas, config.correctAnswers, config.numberOfQuestions);
+//     }
+//
+//     final picture = recorder.endRecording();
+//     final image = await picture.toImage(A4_WIDTH.toInt(), A4_HEIGHT.toInt());
+//     final byteData = await image.toByteData(format: ImageByteFormat.png);
+//     final bytes = byteData!.buffer.asUint8List();
+//
+//     final directory = await getTemporaryDirectory();
+//     final file = File('${directory.path}/omr_sheet_${DateTime.now().millisecondsSinceEpoch}.png');
+//     await file.writeAsBytes(bytes);
+//
+//     return file;
+//   }
+//
+//   // === FRAME & HEADER ===
+//   static void _drawProfessionalBorder(Canvas canvas) {
+//     final borderPaint = Paint()
+//       ..color = Colors.black
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 1.2;
+//     canvas.drawRect(
+//         Rect.fromLTWH(MARGIN, MARGIN, A4_WIDTH - 2 * MARGIN, A4_HEIGHT - 2 * MARGIN),
+//         borderPaint);
+//   }
+//
+//   static void _drawProfessionalHeader(Canvas canvas, OMRExamConfig config) {
+//     // Header Title
+//     final headerPainter = TextPainter(
+//       text: TextSpan(
+//         text: "PROFESSIONAL EXAM OMR ANSWER SHEET",
+//         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue[900]),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     headerPainter.layout();
+//     headerPainter.paint(canvas, Offset(A4_WIDTH / 2 - headerPainter.width / 2, MARGIN + 5));
+//
+//     // Exam Name
+//     final examPainter = TextPainter(
+//       text: TextSpan(
+//         text: config.examName.toUpperCase(),
+//         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     examPainter.layout();
+//     examPainter.paint(canvas, Offset(A4_WIDTH / 2 - examPainter.width / 2, MARGIN + 25));
+//
+//     // Details
+//     final detailStyle = const TextStyle(fontSize: 9, color: Colors.black87);
+//     final datePainter = TextPainter(
+//       text: TextSpan(text: "Date: ${_formatDate(config.examDate)}", style: detailStyle),
+//       textDirection: TextDirection.ltr,
+//     );
+//     datePainter.layout();
+//     datePainter.paint(canvas, Offset(MARGIN + 10, MARGIN + 45));
+//
+//     final totalPainter = TextPainter(
+//       text: TextSpan(text: "Total Questions: ${config.numberOfQuestions}", style: detailStyle),
+//       textDirection: TextDirection.ltr,
+//     );
+//     totalPainter.layout();
+//     totalPainter.paint(canvas, Offset(A4_WIDTH / 2 - totalPainter.width / 2, MARGIN + 45));
+//
+//     final timePainter = TextPainter(
+//       text: const TextSpan(text: "Time: 3 Hours", style: TextStyle(fontSize: 9)),
+//       textDirection: TextDirection.ltr,
+//     );
+//     timePainter.layout();
+//     timePainter.paint(canvas, Offset(A4_WIDTH - MARGIN - 10 - timePainter.width, MARGIN + 45));
+//
+//     _drawInstructionsBox(canvas, MARGIN + 62);
+//   }
+//
+//   static void _drawInstructionsBox(Canvas canvas, double startY) {
+//     final boxPaint = Paint()..color = Colors.grey[100]!;
+//     final borderPaint = Paint()
+//       ..color = Colors.grey[400]!
+//       ..style = PaintingStyle.stroke;
+//
+//     canvas.drawRect(Rect.fromLTWH(MARGIN + 10, startY, A4_WIDTH - 2 * MARGIN - 20, 38), boxPaint);
+//     canvas.drawRect(Rect.fromLTWH(MARGIN + 10, startY, A4_WIDTH - 2 * MARGIN - 20, 38), borderPaint);
+//
+//     final instructions = [
+//       "• Use BLACK/BLUE pen only. Fill bubbles completely.",
+//       "• Avoid stray marks. Erase fully to change answers."
+//     ];
+//     double y = startY + 10;
+//     for (var t in instructions) {
+//       final tp = TextPainter(
+//         text: TextSpan(text: t, style: const TextStyle(fontSize: 8, color: Colors.black87)),
+//         textDirection: TextDirection.ltr,
+//       );
+//       tp.layout();
+//       tp.paint(canvas, Offset(MARGIN + 18, y));
+//       y += 10;
+//     }
+//   }
+//
+//   // === STUDENT INFO ===
+//   static void _drawStudentInfoSection(Canvas canvas, OMRExamConfig config) {
+//     final startY = MARGIN + 115;
+//     _drawSectionTitle(canvas, "STUDENT INFORMATION", startY - 5);
+//
+//     // Row 1: Set Number + Student Name
+//     _drawSetNumberAndName(canvas, config, startY + 18);
+//
+//     // Row 2: ID & Mobile
+//     _drawIdAndMobileRow(canvas, config, startY + 55);
+//   }
+//
+//   static void _drawSectionTitle(Canvas canvas, String title, double y) {
+//     final bgPaint = Paint()..color = Colors.blue[800]!;
+//     canvas.drawRect(Rect.fromLTWH(MARGIN + 10, y, 180, 14), bgPaint);
+//     final tp = TextPainter(
+//       text: TextSpan(
+//           text: title,
+//           style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+//       textDirection: TextDirection.ltr,
+//     );
+//     tp.layout();
+//     tp.paint(canvas, Offset(MARGIN + 15, y + 2));
+//   }
+//
+//   static void _drawSetNumberAndName(Canvas canvas, OMRExamConfig config, double y) {
+//     final setPainter = TextPainter(
+//       text: const TextSpan(
+//           text: "SET NO:",
+//           style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black)),
+//       textDirection: TextDirection.ltr,
+//     );
+//     setPainter.layout();
+//     setPainter.paint(canvas, Offset(MARGIN + 15, y));
+//
+//     double x = MARGIN + 65;
+//     for (int i = 0; i < 10; i++) {
+//       _drawProfessionalBubble(canvas, x + i * 15, y - 3, i == config.setNumber);
+//     }
+//
+//     final namePainter = TextPainter(
+//       text: const TextSpan(
+//           text: "STUDENT NAME:",
+//           style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black)),
+//       textDirection: TextDirection.ltr,
+//     );
+//     namePainter.layout();
+//     namePainter.paint(canvas, Offset(A4_WIDTH / 2 - 40, y));
+//     canvas.drawLine(Offset(A4_WIDTH / 2 + 55, y + 10), Offset(A4_WIDTH - MARGIN - 30, y + 10),
+//         Paint()..color = Colors.black);
+//   }
+//
+//   static void _drawIdAndMobileRow(Canvas canvas, OMRExamConfig config, double y) {
+//     final leftX = MARGIN + 15;
+//     final rightX = A4_WIDTH / 2 + 5;
+//
+//     _drawColumnWithBubbles(canvas, leftX, "STUDENT ID (9 digits)", config.studentId, 9, y);
+//     _drawColumnWithBubbles(canvas, rightX, "MOBILE NUMBER (11 digits)", config.mobileNumber, 11, y);
+//   }
+//
+//   static void _drawColumnWithBubbles(Canvas canvas, double x, String label, String value,
+//       int length, double y) {
+//     final title = TextPainter(
+//       text: TextSpan(text: label, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+//       textDirection: TextDirection.ltr,
+//     );
+//     title.layout();
+//     title.paint(canvas, Offset(x, y));
+//
+//     for (int pos = 0; pos < length; pos++) {
+//       final dx = x + 8 + pos * 14;
+//       for (int n = 0; n < 10; n++) {
+//         final filled = pos < value.length && value[pos] == n.toString();
+//         _drawProfessionalBubble(canvas, dx, y + 14 + n * 11, filled);
+//         if (pos == 0) {
+//           final np = TextPainter(
+//               text: TextSpan(text: n.toString(), style: const TextStyle(fontSize: 7)),
+//               textDirection: TextDirection.ltr);
+//           np.layout();
+//           np.paint(canvas, Offset(x - 5, y + 14 + n * 11));
+//         }
+//       }
+//     }
+//   }
+//
+//   // === ANSWER SECTION ===
+//   static void _drawAnswerSectionWithThreeColumns(Canvas canvas, int count) {
+//     final startY = MARGIN + 345;
+//     _drawSectionTitle(canvas, "ANSWER SHEET", startY - 5);
+//     _drawOptionsLegend(canvas, startY + 20);
+//
+//     final perCol = (count / 3).ceil();
+//     final colWidth = (A4_WIDTH - 2 * MARGIN - 30) / 3;
+//     for (int col = 0; col < 3; col++) {
+//       final x = MARGIN + 15 + col * (colWidth + COLUMN_SPACING);
+//       final startQ = col * perCol + 1;
+//       final endQ = (startQ + perCol - 1).clamp(1, count);
+//       _drawQuestionColumn(canvas, x, startY + 40, startQ, endQ);
+//     }
+//   }
+//
+//   static void _drawOptionsLegend(Canvas canvas, double y) {
+//     final tp = TextPainter(
+//       text: const TextSpan(
+//           text: "OPTIONS: A • B • C • D • E",
+//           style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.blue)),
+//       textDirection: TextDirection.ltr,
+//     );
+//     tp.layout();
+//     tp.paint(canvas, Offset(A4_WIDTH / 2 - tp.width / 2, y));
+//   }
+//
+//   static void _drawQuestionColumn(Canvas canvas, double x, double y, int start, int end) {
+//     for (int q = start; q <= end; q++) {
+//       final yPos = y + (q - start) * 15;
+//       final qNum = TextPainter(
+//           text: TextSpan(
+//               text: "Q${q.toString().padLeft(2, '0')}",
+//               style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.black)),
+//           textDirection: TextDirection.ltr);
+//       qNum.layout();
+//       qNum.paint(canvas, Offset(x, yPos));
+//
+//       for (int o = 0; o < 5; o++) {
+//         final ox = x + 25 + o * 14;
+//         _drawProfessionalBubble(canvas, ox, yPos, false);
+//         final op = TextPainter(
+//             text: TextSpan(text: String.fromCharCode(65 + o), style: const TextStyle(fontSize: 7)),
+//             textDirection: TextDirection.ltr);
+//         op.layout();
+//         op.paint(canvas, Offset(ox + 2, yPos - 9));
+//       }
+//     }
+//   }
+//
+//   // === FOOTER ===
+//   static void _drawProfessionalFooter(Canvas canvas) {
+//     final y = A4_HEIGHT - MARGIN - 45;
+//     canvas.drawLine(Offset(MARGIN + 15, y), Offset(A4_WIDTH - MARGIN - 15, y),
+//         Paint()..color = Colors.black);
+//
+//     _drawSignature(canvas, "STUDENT’S SIGNATURE", MARGIN + 25, y + 10);
+//     _drawSignature(canvas, "INVIGILATOR’S SIGNATURE", A4_WIDTH / 2 - 60, y + 10);
+//     _drawSignature(canvas, "DATE", A4_WIDTH - MARGIN - 120, y + 10);
+//
+//     final note = TextPainter(
+//       text: TextSpan(
+//         text: "Note: Ensure all bubbles are filled properly for machine evaluation.",
+//         style: TextStyle(fontSize: 7, color: Colors.grey[600], fontStyle: FontStyle.italic),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//     note.layout();
+//     note.paint(canvas, Offset(A4_WIDTH / 2 - note.width / 2, y + 35));
+//   }
+//
+//   static void _drawSignature(Canvas canvas, String label, double x, double y) {
+//     final tp = TextPainter(
+//       text: TextSpan(text: label, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+//       textDirection: TextDirection.ltr,
+//     );
+//     tp.layout();
+//     tp.paint(canvas, Offset(x, y));
+//     canvas.drawLine(Offset(x, y + 12), Offset(x + 100, y + 12), Paint()..color = Colors.black);
+//   }
+//
+//   // === SHARED DRAW METHODS ===
+//   static void _drawProfessionalBubble(Canvas canvas, double x, double y, bool filled) {
+//     final border = Paint()
+//       ..color = Colors.black
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 0.9;
+//     final fill = Paint()..color = Colors.black;
+//     canvas.drawCircle(Offset(x + 4, y + 4), BUBBLE_RADIUS, border);
+//     if (filled) canvas.drawCircle(Offset(x + 4, y + 4), BUBBLE_RADIUS - 0.8, fill);
+//   }
+//
+//   static void _drawAnswerKey(Canvas canvas, List<String> answers, int count) {
+//     final red = Paint()..color = Colors.red;
+//     final perCol = (count / 3).ceil();
+//     final colWidth = (A4_WIDTH - 2 * MARGIN - 30) / 3;
+//
+//     for (int i = 0; i < answers.length; i++) {
+//       final col = i ~/ perCol;
+//       final qInCol = i % perCol;
+//       final opt = answers[i].codeUnitAt(0) - 65;
+//       final x = MARGIN + 15 + col * (colWidth + COLUMN_SPACING) + 25 + opt * 14;
+//       final y = MARGIN + 385 + qInCol * 15;
+//       canvas.drawCircle(Offset(x + 4, y + 4), BUBBLE_RADIUS - 0.5, red);
+//     }
+//   }
+//
+//   static String _formatDate(DateTime d) {
+//     const m = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+//     return '${d.day} ${m[d.month - 1]} ${d.year}';
+//   }
+// }
+
+
+
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'dart:typed_data';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'omr_models.dart';
+
+class OMRGenerator {
+  static const double A4_WIDTH = 595.0;
+  static const double A4_HEIGHT = 842.0;
+  static const double MARGIN = 25.0;
+  static const double BUBBLE_RADIUS = 4.0;
+  static const double COLUMN_SPACING = 12.0;
+
+  /// Generate professional OMR sheet as PNG
+  static Future<File> generateOMRSheet(OMRExamConfig config) async {
+    final recorder = PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    // White background
+    canvas.drawRect(Rect.fromLTWH(0, 0, A4_WIDTH, A4_HEIGHT), Paint()..color = Colors.white);
+
+    _drawBorder(canvas);
+    _drawHeader(canvas, config);
+    _drawStudentInfo(canvas, config);
+    _drawAnswerSection(canvas, config.numberOfQuestions);
+    _drawFooter(canvas);
+
+    // Optional: draw answer key overlay in red if provided
+    if (config.correctAnswers.isNotEmpty) {
+      _drawAnswerKey(canvas, config.correctAnswers, config.numberOfQuestions);
+    }
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(A4_WIDTH.toInt(), A4_HEIGHT.toInt());
+    final byteData = await image.toByteData(format: ImageByteFormat.png);
+    final bytes = byteData!.buffer.asUint8List();
+
+    final directory = await getTemporaryDirectory();
+    final file = File('${directory.path}/omr_sheet_${DateTime.now().millisecondsSinceEpoch}.png');
+    await file.writeAsBytes(bytes);
+    return file;
+  }
+
+  // ----------------------------------------------------------
+  // BORDER + HEADER SECTION
+  // ----------------------------------------------------------
+  static void _drawBorder(Canvas canvas) {
+    final border = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    canvas.drawRect(
+        Rect.fromLTWH(MARGIN, MARGIN, A4_WIDTH - 2 * MARGIN, A4_HEIGHT - 2 * MARGIN), border);
+  }
+
+  static void _drawHeader(Canvas canvas, OMRExamConfig config) {
+    final blue = Colors.blue[900]!;
+
+    _text(canvas, "PROFESSIONAL EXAM OMR ANSWER SHEET",
+        Offset(A4_WIDTH / 2, MARGIN + 8),
+        size: 17,
+        weight: FontWeight.bold,
+        color: blue,
+        align: TextAlign.center);
+
+    _text(canvas, config.examName.toUpperCase(),
+        Offset(A4_WIDTH / 2, MARGIN + 28),
+        size: 13,
+        weight: FontWeight.bold,
+        color: Colors.black,
+        align: TextAlign.center);
+
+    final detailStyle = const TextStyle(fontSize: 9, color: Colors.black87);
+    _text(canvas, "Date: ${_formatDate(config.examDate)}",
+        Offset(MARGIN + 10, MARGIN + 48), style: detailStyle);
+    _text(canvas, "Total Questions: ${config.numberOfQuestions}",
+        Offset(A4_WIDTH / 2, MARGIN + 48), style: detailStyle, align: TextAlign.center);
+    _text(canvas, "Time: 3 Hours",
+        Offset(A4_WIDTH - MARGIN - 10, MARGIN + 48),
+        style: detailStyle,
+        align: TextAlign.right);
+
+    _drawInstructions(canvas, MARGIN + 65);
+  }
+
+  static void _drawInstructions(Canvas canvas, double y) {
+    final bg = Paint()..color = Colors.grey[100]!;
+    final border = Paint()
+      ..color = Colors.grey[400]!
+      ..style = PaintingStyle.stroke;
+    final rect = Rect.fromLTWH(MARGIN + 10, y, A4_WIDTH - 2 * MARGIN - 20, 36);
+    canvas.drawRect(rect, bg);
+    canvas.drawRect(rect, border);
+
+    final ins = [
+      "• Use BLACK/BLUE pen only. Fill bubbles completely.",
+      "• Avoid stray marks. Erase fully to change answers."
+    ];
+    double yy = y + 10;
+    for (var t in ins) {
+      _text(canvas, t, Offset(MARGIN + 18, yy), size: 8);
+      yy += 10;
+    }
+  }
+
+  // ----------------------------------------------------------
+  // STUDENT INFO SECTION
+  // ----------------------------------------------------------
+  static void _drawStudentInfo(Canvas canvas, OMRExamConfig config) {
+    final y = MARGIN + 115;
+    _drawSectionTitle(canvas, "STUDENT INFORMATION", y - 5);
+    _drawSetAndName(canvas, config, y + 18);
+    _drawIdAndPhone(canvas, config, y + 55);
+  }
+
+  static void _drawSectionTitle(Canvas canvas, String title, double y) {
+    final bg = Paint()..color = Colors.blue[800]!;
+    canvas.drawRect(Rect.fromLTWH(MARGIN + 10, y, 190, 14), bg);
+    _text(canvas, title, Offset(MARGIN + 18, y + 2),
+        size: 10, color: Colors.white, weight: FontWeight.bold);
+  }
+
+  static void _drawSetAndName(Canvas canvas, OMRExamConfig config, double y) {
+    _text(canvas, "SET NO:", Offset(MARGIN + 15, y),
+        size: 9, color: Colors.black, weight: FontWeight.bold);
+
+    double x = MARGIN + 65;
+    for (int i = 0; i < 10; i++) {
+      _bubble(canvas, x + i * 15, y - 3, i == config.setNumber);
+    }
+
+    _text(canvas, "STUDENT NAME:", Offset(A4_WIDTH / 2 - 40, y),
+        size: 9, color: Colors.black, weight: FontWeight.bold);
+    canvas.drawLine(
+        Offset(A4_WIDTH / 2 + 55, y + 10),
+        Offset(A4_WIDTH - MARGIN - 30, y + 10),
+        Paint()..color = Colors.black);
+  }
+
+  static void _drawIdAndPhone(Canvas canvas, OMRExamConfig config, double y) {
+    final leftX = MARGIN + 15;
+    final rightX = A4_WIDTH / 2 + 5;
+    _digitColumn(canvas, leftX, "STUDENT ID (9 digits)", config.studentId, 9, y);
+    _digitColumn(canvas, rightX, "MOBILE NUMBER (11 digits)", config.mobileNumber, 11, y);
+  }
+
+  static void _digitColumn(
+      Canvas canvas, double x, String label, String value, int length, double y) {
+    _text(canvas, label, Offset(x, y),
+        size: 8, weight: FontWeight.bold, color: Colors.black);
+    for (int pos = 0; pos < length; pos++) {
+      final dx = x + 8 + pos * 14;
+      for (int n = 0; n < 10; n++) {
+        final filled = pos < value.length && value[pos] == n.toString();
+        _bubble(canvas, dx, y + 14 + n * 11, filled);
+        if (pos == 0) _text(canvas, "$n", Offset(x - 5, y + 12 + n * 11), size: 7);
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // ANSWER SECTION
+  // ----------------------------------------------------------
+  static void _drawAnswerSection(Canvas canvas, int count) {
+    final startY = MARGIN + 345;
+    _drawSectionTitle(canvas, "ANSWER SHEET", startY - 5);
+    _text(canvas, "OPTIONS:  A • B • C • D • E",
+        Offset(A4_WIDTH / 2, startY + 20),
+        size: 9,
+        color: Colors.blue[900],
+        weight: FontWeight.bold,
+        align: TextAlign.center);
+
+    final perCol = (count / 3).ceil();
+    final colWidth = (A4_WIDTH - 2 * MARGIN - 30) / 3;
+    for (int col = 0; col < 3; col++) {
+      final x = MARGIN + 15 + col * (colWidth + COLUMN_SPACING);
+      final startQ = col * perCol + 1;
+      final endQ = (startQ + perCol - 1).clamp(1, count);
+      _questionColumn(canvas, x, startY + 40, startQ, endQ);
+    }
+  }
+
+  static void _questionColumn(Canvas canvas, double x, double y, int start, int end) {
+    for (int q = start; q <= end; q++) {
+      final yPos = y + (q - start) * 15;
+      _text(canvas, "Q${q.toString().padLeft(2, '0')}", Offset(x, yPos),
+          size: 8, color: Colors.black, weight: FontWeight.bold);
+      for (int o = 0; o < 5; o++) {
+        final ox = x + 25 + o * 14;
+        _bubble(canvas, ox, yPos, false);
+        _text(canvas, String.fromCharCode(65 + o), Offset(ox + 2, yPos - 9), size: 7);
+      }
+    }
+  }
+
+  // ----------------------------------------------------------
+  // FOOTER SECTION
+  // ----------------------------------------------------------
+  static void _drawFooter(Canvas canvas) {
+    final y = A4_HEIGHT - MARGIN - 45;
+    canvas.drawLine(
+        Offset(MARGIN + 15, y), Offset(A4_WIDTH - MARGIN - 15, y), Paint()..color = Colors.black);
+
+    _signature(canvas, "STUDENT’S SIGNATURE", MARGIN + 25, y + 10);
+    _signature(canvas, "INVIGILATOR’S SIGNATURE", A4_WIDTH / 2 - 60, y + 10);
+    _signature(canvas, "DATE", A4_WIDTH - MARGIN - 120, y + 10);
+
+    _text(canvas,
+        "Note: Ensure all bubbles are filled properly for machine evaluation.",
+        Offset(A4_WIDTH / 2, y + 35),
+        size: 7,
+        color: Colors.grey[600],
+        align: TextAlign.center,
+        italic: true);
+  }
+
+  static void _signature(Canvas canvas, String label, double x, double y) {
+    _text(canvas, label, Offset(x, y),
+        size: 8, weight: FontWeight.bold, color: Colors.black);
+    canvas.drawLine(Offset(x, y + 12), Offset(x + 100, y + 12), Paint()..color = Colors.black);
+  }
+
+  // ----------------------------------------------------------
+  // ANSWER KEY OVERLAY
+  // ----------------------------------------------------------
+  static void _drawAnswerKey(Canvas canvas, List<String> answers, int count) {
+    final red = Paint()..color = Colors.red;
+    final perCol = (count / 3).ceil();
+    final colWidth = (A4_WIDTH - 2 * MARGIN - 30) / 3;
+    for (int i = 0; i < answers.length; i++) {
+      final col = i ~/ perCol;
+      final qInCol = i % perCol;
+      final opt = answers[i].codeUnitAt(0) - 65;
+      final x = MARGIN + 15 + col * (colWidth + COLUMN_SPACING) + 25 + opt * 14;
+      final y = MARGIN + 385 + qInCol * 15;
+      canvas.drawCircle(Offset(x + 4, y + 4), BUBBLE_RADIUS - 0.5, red);
+    }
+  }
+
+  // ----------------------------------------------------------
+  // DRAW HELPERS
+  // ----------------------------------------------------------
+  static void _bubble(Canvas canvas, double x, double y, bool filled) {
+    final stroke = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.9;
+    final fill = Paint()..color = Colors.black;
+    canvas.drawCircle(Offset(x + 4, y + 4), BUBBLE_RADIUS, stroke);
+    if (filled) canvas.drawCircle(Offset(x + 4, y + 4), BUBBLE_RADIUS - 0.8, fill);
+  }
+
+  static void _text(Canvas canvas, String text, Offset pos,
+      {double size = 9,
+        FontWeight weight = FontWeight.normal,
+        Color? color,
+        TextAlign align = TextAlign.left,
+        bool italic = false,
+        TextStyle? style}) {
+    final span = style != null
+        ? TextSpan(text: text, style: style)
+        : TextSpan(
+        text: text,
+        style: TextStyle(
+            fontSize: size,
+            fontWeight: weight,
+            color: color ?? Colors.black,
+            fontStyle: italic ? FontStyle.italic : FontStyle.normal));
+    final tp = TextPainter(text: span, textAlign: align, textDirection: TextDirection.ltr);
+    tp.layout();
+    Offset offset = pos;
+    if (align == TextAlign.center) offset = Offset(pos.dx - tp.width / 2, pos.dy);
+    if (align == TextAlign.right) offset = Offset(pos.dx - tp.width, pos.dy);
+    tp.paint(canvas, offset);
+  }
+
+  static String _formatDate(DateTime d) {
+    const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    return '${d.day} ${months[d.month - 1]} ${d.year}';
+  }
+}
+
+
+
 // import 'dart:ui';
 // import 'package:flutter/material.dart';
 // import 'package:flutter/rendering.dart';
@@ -1445,331 +3746,7 @@
 
 
 
-import 'dart:ui';
-import 'package:flutter/material.dart';
-import 'dart:typed_data';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'omr_models.dart';
 
-class OMRGenerator {
-  static const double A4_WIDTH = 595.0;
-  static const double A4_HEIGHT = 842.0;
-  static const double MARGIN = 25.0;
-  static const double BUBBLE_RADIUS = 4.0;
-  static const double COLUMN_SPACING = 12.0;
-
-  static Future<File> generateOMRSheet(OMRExamConfig config) async {
-    final recorder = PictureRecorder();
-    final canvas = Canvas(recorder);
-
-    // Background
-    canvas.drawRect(Rect.fromLTWH(0, 0, A4_WIDTH, A4_HEIGHT), Paint()..color = Colors.white);
-
-    _drawProfessionalBorder(canvas);
-    _drawProfessionalHeader(canvas, config);
-    _drawStudentInfoSection(canvas, config);
-    _drawAnswerSectionWithThreeColumns(canvas, config.numberOfQuestions);
-    _drawProfessionalFooter(canvas);
-
-    if (config.correctAnswers.isNotEmpty) {
-      _drawAnswerKey(canvas, config.correctAnswers, config.numberOfQuestions);
-    }
-
-    final picture = recorder.endRecording();
-    final image = await picture.toImage(A4_WIDTH.toInt(), A4_HEIGHT.toInt());
-    final byteData = await image.toByteData(format: ImageByteFormat.png);
-    final bytes = byteData!.buffer.asUint8List();
-
-    final directory = await getTemporaryDirectory();
-    final file = File('${directory.path}/omr_sheet_${DateTime.now().millisecondsSinceEpoch}.png');
-    await file.writeAsBytes(bytes);
-
-    return file;
-  }
-
-  // === FRAME & HEADER ===
-  static void _drawProfessionalBorder(Canvas canvas) {
-    final borderPaint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    canvas.drawRect(
-        Rect.fromLTWH(MARGIN, MARGIN, A4_WIDTH - 2 * MARGIN, A4_HEIGHT - 2 * MARGIN),
-        borderPaint);
-  }
-
-  static void _drawProfessionalHeader(Canvas canvas, OMRExamConfig config) {
-    // Header Title
-    final headerPainter = TextPainter(
-      text: TextSpan(
-        text: "PROFESSIONAL EXAM OMR ANSWER SHEET",
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue[900]),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    headerPainter.layout();
-    headerPainter.paint(canvas, Offset(A4_WIDTH / 2 - headerPainter.width / 2, MARGIN + 5));
-
-    // Exam Name
-    final examPainter = TextPainter(
-      text: TextSpan(
-        text: config.examName.toUpperCase(),
-        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.black),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    examPainter.layout();
-    examPainter.paint(canvas, Offset(A4_WIDTH / 2 - examPainter.width / 2, MARGIN + 25));
-
-    // Details
-    final detailStyle = const TextStyle(fontSize: 9, color: Colors.black87);
-    final datePainter = TextPainter(
-      text: TextSpan(text: "Date: ${_formatDate(config.examDate)}", style: detailStyle),
-      textDirection: TextDirection.ltr,
-    );
-    datePainter.layout();
-    datePainter.paint(canvas, Offset(MARGIN + 10, MARGIN + 45));
-
-    final totalPainter = TextPainter(
-      text: TextSpan(text: "Total Questions: ${config.numberOfQuestions}", style: detailStyle),
-      textDirection: TextDirection.ltr,
-    );
-    totalPainter.layout();
-    totalPainter.paint(canvas, Offset(A4_WIDTH / 2 - totalPainter.width / 2, MARGIN + 45));
-
-    final timePainter = TextPainter(
-      text: const TextSpan(text: "Time: 3 Hours", style: TextStyle(fontSize: 9)),
-      textDirection: TextDirection.ltr,
-    );
-    timePainter.layout();
-    timePainter.paint(canvas, Offset(A4_WIDTH - MARGIN - 10 - timePainter.width, MARGIN + 45));
-
-    _drawInstructionsBox(canvas, MARGIN + 62);
-  }
-
-  static void _drawInstructionsBox(Canvas canvas, double startY) {
-    final boxPaint = Paint()..color = Colors.grey[100]!;
-    final borderPaint = Paint()
-      ..color = Colors.grey[400]!
-      ..style = PaintingStyle.stroke;
-
-    canvas.drawRect(Rect.fromLTWH(MARGIN + 10, startY, A4_WIDTH - 2 * MARGIN - 20, 38), boxPaint);
-    canvas.drawRect(Rect.fromLTWH(MARGIN + 10, startY, A4_WIDTH - 2 * MARGIN - 20, 38), borderPaint);
-
-    final instructions = [
-      "• Use BLACK/BLUE pen only. Fill bubbles completely.",
-      "• Avoid stray marks. Erase fully to change answers."
-    ];
-    double y = startY + 10;
-    for (var t in instructions) {
-      final tp = TextPainter(
-        text: TextSpan(text: t, style: const TextStyle(fontSize: 8, color: Colors.black87)),
-        textDirection: TextDirection.ltr,
-      );
-      tp.layout();
-      tp.paint(canvas, Offset(MARGIN + 18, y));
-      y += 10;
-    }
-  }
-
-  // === STUDENT INFO ===
-  static void _drawStudentInfoSection(Canvas canvas, OMRExamConfig config) {
-    final startY = MARGIN + 115;
-    _drawSectionTitle(canvas, "STUDENT INFORMATION", startY - 5);
-
-    // Row 1: Set Number + Student Name
-    _drawSetNumberAndName(canvas, config, startY + 18);
-
-    // Row 2: ID & Mobile
-    _drawIdAndMobileRow(canvas, config, startY + 55);
-  }
-
-  static void _drawSectionTitle(Canvas canvas, String title, double y) {
-    final bgPaint = Paint()..color = Colors.blue[800]!;
-    canvas.drawRect(Rect.fromLTWH(MARGIN + 10, y, 180, 14), bgPaint);
-    final tp = TextPainter(
-      text: TextSpan(
-          text: title,
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
-      textDirection: TextDirection.ltr,
-    );
-    tp.layout();
-    tp.paint(canvas, Offset(MARGIN + 15, y + 2));
-  }
-
-  static void _drawSetNumberAndName(Canvas canvas, OMRExamConfig config, double y) {
-    final setPainter = TextPainter(
-      text: const TextSpan(
-          text: "SET NO:",
-          style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black)),
-      textDirection: TextDirection.ltr,
-    );
-    setPainter.layout();
-    setPainter.paint(canvas, Offset(MARGIN + 15, y));
-
-    double x = MARGIN + 65;
-    for (int i = 0; i < 10; i++) {
-      _drawProfessionalBubble(canvas, x + i * 15, y - 3, i == config.setNumber);
-    }
-
-    final namePainter = TextPainter(
-      text: const TextSpan(
-          text: "STUDENT NAME:",
-          style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black)),
-      textDirection: TextDirection.ltr,
-    );
-    namePainter.layout();
-    namePainter.paint(canvas, Offset(A4_WIDTH / 2 - 40, y));
-    canvas.drawLine(Offset(A4_WIDTH / 2 + 55, y + 10), Offset(A4_WIDTH - MARGIN - 30, y + 10),
-        Paint()..color = Colors.black);
-  }
-
-  static void _drawIdAndMobileRow(Canvas canvas, OMRExamConfig config, double y) {
-    final leftX = MARGIN + 15;
-    final rightX = A4_WIDTH / 2 + 5;
-
-    _drawColumnWithBubbles(canvas, leftX, "STUDENT ID (9 digits)", config.studentId, 9, y);
-    _drawColumnWithBubbles(canvas, rightX, "MOBILE NUMBER (11 digits)", config.mobileNumber, 11, y);
-  }
-
-  static void _drawColumnWithBubbles(Canvas canvas, double x, String label, String value,
-      int length, double y) {
-    final title = TextPainter(
-      text: TextSpan(text: label, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
-      textDirection: TextDirection.ltr,
-    );
-    title.layout();
-    title.paint(canvas, Offset(x, y));
-
-    for (int pos = 0; pos < length; pos++) {
-      final dx = x + 8 + pos * 14;
-      for (int n = 0; n < 10; n++) {
-        final filled = pos < value.length && value[pos] == n.toString();
-        _drawProfessionalBubble(canvas, dx, y + 14 + n * 11, filled);
-        if (pos == 0) {
-          final np = TextPainter(
-              text: TextSpan(text: n.toString(), style: const TextStyle(fontSize: 7)),
-              textDirection: TextDirection.ltr);
-          np.layout();
-          np.paint(canvas, Offset(x - 5, y + 14 + n * 11));
-        }
-      }
-    }
-  }
-
-  // === ANSWER SECTION ===
-  static void _drawAnswerSectionWithThreeColumns(Canvas canvas, int count) {
-    final startY = MARGIN + 345;
-    _drawSectionTitle(canvas, "ANSWER SHEET", startY - 5);
-    _drawOptionsLegend(canvas, startY + 20);
-
-    final perCol = (count / 3).ceil();
-    final colWidth = (A4_WIDTH - 2 * MARGIN - 30) / 3;
-    for (int col = 0; col < 3; col++) {
-      final x = MARGIN + 15 + col * (colWidth + COLUMN_SPACING);
-      final startQ = col * perCol + 1;
-      final endQ = (startQ + perCol - 1).clamp(1, count);
-      _drawQuestionColumn(canvas, x, startY + 40, startQ, endQ);
-    }
-  }
-
-  static void _drawOptionsLegend(Canvas canvas, double y) {
-    final tp = TextPainter(
-      text: const TextSpan(
-          text: "OPTIONS: A • B • C • D • E",
-          style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.blue)),
-      textDirection: TextDirection.ltr,
-    );
-    tp.layout();
-    tp.paint(canvas, Offset(A4_WIDTH / 2 - tp.width / 2, y));
-  }
-
-  static void _drawQuestionColumn(Canvas canvas, double x, double y, int start, int end) {
-    for (int q = start; q <= end; q++) {
-      final yPos = y + (q - start) * 15;
-      final qNum = TextPainter(
-          text: TextSpan(
-              text: "Q${q.toString().padLeft(2, '0')}",
-              style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.black)),
-          textDirection: TextDirection.ltr);
-      qNum.layout();
-      qNum.paint(canvas, Offset(x, yPos));
-
-      for (int o = 0; o < 5; o++) {
-        final ox = x + 25 + o * 14;
-        _drawProfessionalBubble(canvas, ox, yPos, false);
-        final op = TextPainter(
-            text: TextSpan(text: String.fromCharCode(65 + o), style: const TextStyle(fontSize: 7)),
-            textDirection: TextDirection.ltr);
-        op.layout();
-        op.paint(canvas, Offset(ox + 2, yPos - 9));
-      }
-    }
-  }
-
-  // === FOOTER ===
-  static void _drawProfessionalFooter(Canvas canvas) {
-    final y = A4_HEIGHT - MARGIN - 45;
-    canvas.drawLine(Offset(MARGIN + 15, y), Offset(A4_WIDTH - MARGIN - 15, y),
-        Paint()..color = Colors.black);
-
-    _drawSignature(canvas, "STUDENT’S SIGNATURE", MARGIN + 25, y + 10);
-    _drawSignature(canvas, "INVIGILATOR’S SIGNATURE", A4_WIDTH / 2 - 60, y + 10);
-    _drawSignature(canvas, "DATE", A4_WIDTH - MARGIN - 120, y + 10);
-
-    final note = TextPainter(
-      text: TextSpan(
-        text: "Note: Ensure all bubbles are filled properly for machine evaluation.",
-        style: TextStyle(fontSize: 7, color: Colors.grey[600], fontStyle: FontStyle.italic),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    note.layout();
-    note.paint(canvas, Offset(A4_WIDTH / 2 - note.width / 2, y + 35));
-  }
-
-  static void _drawSignature(Canvas canvas, String label, double x, double y) {
-    final tp = TextPainter(
-      text: TextSpan(text: label, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
-      textDirection: TextDirection.ltr,
-    );
-    tp.layout();
-    tp.paint(canvas, Offset(x, y));
-    canvas.drawLine(Offset(x, y + 12), Offset(x + 100, y + 12), Paint()..color = Colors.black);
-  }
-
-  // === SHARED DRAW METHODS ===
-  static void _drawProfessionalBubble(Canvas canvas, double x, double y, bool filled) {
-    final border = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.9;
-    final fill = Paint()..color = Colors.black;
-    canvas.drawCircle(Offset(x + 4, y + 4), BUBBLE_RADIUS, border);
-    if (filled) canvas.drawCircle(Offset(x + 4, y + 4), BUBBLE_RADIUS - 0.8, fill);
-  }
-
-  static void _drawAnswerKey(Canvas canvas, List<String> answers, int count) {
-    final red = Paint()..color = Colors.red;
-    final perCol = (count / 3).ceil();
-    final colWidth = (A4_WIDTH - 2 * MARGIN - 30) / 3;
-
-    for (int i = 0; i < answers.length; i++) {
-      final col = i ~/ perCol;
-      final qInCol = i % perCol;
-      final opt = answers[i].codeUnitAt(0) - 65;
-      final x = MARGIN + 15 + col * (colWidth + COLUMN_SPACING) + 25 + opt * 14;
-      final y = MARGIN + 385 + qInCol * 15;
-      canvas.drawCircle(Offset(x + 4, y + 4), BUBBLE_RADIUS - 0.5, red);
-    }
-  }
-
-  static String _formatDate(DateTime d) {
-    const m = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-    return '${d.day} ${m[d.month - 1]} ${d.year}';
-  }
-}
 
 
 

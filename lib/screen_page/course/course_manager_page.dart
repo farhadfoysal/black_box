@@ -3,6 +3,8 @@ import 'package:black_box/model/course/course_model.dart';
 import 'package:black_box/model/course/section_model.dart';
 import 'package:black_box/model/course/tools_model.dart';
 import 'package:black_box/screen_page/course/detail_course_screen.dart';
+import 'package:black_box/screen_page/course/omr_fv/screens/home_screen.dart';
+import 'package:black_box/screen_page/course/omr_v3/omr_config_page.dart';
 import 'package:black_box/screen_page/course/screen/course_omr_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -10,8 +12,10 @@ import 'package:flutter/material.dart';
 import '../../model/course/teacher.dart';
 import '../../model/school/school.dart';
 import '../../model/user/user.dart';
+import 'omr_fv/utils/omr_generator_fv.dart';
 import 'omr_v1/omr_home_page.dart';
 import 'omr_v2/omr_dashboard.dart';
+// import 'omr_v3/omr_v4.dart';
 
 class CourseManagerScreen extends StatefulWidget {
   final CourseModel course;
@@ -373,8 +377,11 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
               builder: (context) => DetailCourseScreen(course: widget.course)));
     } else if (pageName == 'scanner') {
       Navigator.push(
+          // context, MaterialPageRoute(builder: (context) => HomeScreen()));
           // context, MaterialPageRoute(builder: (context) => OMRDashboard()));
-          context, MaterialPageRoute(builder: (context) => OMRHomePage()));
+          context, MaterialPageRoute(builder: (context) => ProfessionalOMRGeneratorExample())); // completed
+          // context, MaterialPageRoute(builder: (context) => OMRConfigPage()));
+          // context, MaterialPageRoute(builder: (context) => OMRHomePage()));
           // context, MaterialPageRoute(builder: (context) => CourseOmrPage()));
     } else if (pageName == 'rooms') {
       Navigator.push(

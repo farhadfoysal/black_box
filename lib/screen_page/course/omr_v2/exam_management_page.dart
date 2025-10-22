@@ -95,6 +95,13 @@ class _ExamManagementPageState extends State<ExamManagementPage> {
             : [],
       );
 
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => OMRGenerator(config: config),
+      //   ),
+      // );
+
       final file = await OMRGenerator.generateOMRSheet(config);
       _showPreviewDialog(file, isAnswerKey);
     } catch (e) {
@@ -268,7 +275,7 @@ class _ExamManagementPageState extends State<ExamManagementPage> {
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(8.0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -282,7 +289,7 @@ class _ExamManagementPageState extends State<ExamManagementPage> {
                           Card(
                             elevation: 4,
                             child: Padding(
-                              padding: EdgeInsets.all(16.0),
+                              padding: EdgeInsets.all(8.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
@@ -402,7 +409,7 @@ class _ExamManagementPageState extends State<ExamManagementPage> {
                                           thickness: 8,
                                           interactive: true,
                                           child: GridView.builder(
-                                            padding: EdgeInsets.all(8),
+                                            padding: EdgeInsets.all(4),
                                             gridDelegate:
                                                 SliverGridDelegateWithFixedCrossAxisCount(
                                                   crossAxisCount:
@@ -431,17 +438,17 @@ class _ExamManagementPageState extends State<ExamManagementPage> {
                                                     ),
                                                   ],
                                                 ),
-                                                child: Column(
+                                                child: Row(
                                                   mainAxisAlignment:
                                                       MainAxisAlignment.center,
                                                   children: [
                                                     Text(
                                                       'Q${index + 1}',
                                                       style: TextStyle(
-                                                        fontSize: 12,
+                                                        fontSize: 13,
                                                       ),
                                                     ),
-                                                    SizedBox(height: 4),
+                                                    SizedBox(height: 1),
                                                     DropdownButton<String>(
                                                       value:
                                                           _answerControllers[index]
@@ -580,9 +587,9 @@ class _ExamManagementPageState extends State<ExamManagementPage> {
                                                   null,
                                                 ),
                                           icon: Icon(Icons.picture_as_pdf),
-                                          label: Text('Generate OMR'),
+                                          label: Text('Gen OMR'),
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.green,
+                                            backgroundColor: Colors.lightGreenAccent,
                                             padding: EdgeInsets.symmetric(
                                               vertical: 15,
                                             ),
