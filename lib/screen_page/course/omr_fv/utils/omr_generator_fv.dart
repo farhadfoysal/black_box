@@ -8,6 +8,11 @@ import 'package:gal/gal.dart';
 import 'package:pdf/pdf.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:printing/printing.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+
+enum PageOrientation { portrait, landscape }
+
+enum BubbleStyle { circle, square, diamond }
 
 class OMRExamConfig {
   final String examName;
@@ -42,11 +47,62 @@ class ProfessionalOMRGenerator {
 
   // Professional color scheme
   static final Color primaryColor = const Color(0xFF2C3E50); // Dark blue-gray
-  static final Color secondaryColor = const Color(0xFF34495E); // Slightly lighter
-  static final Color accentColor = const Color(0xFFE74C3C); // Red for important elements
-  static final Color lightBgColor = const Color(0xFFF8F9FA); // Light gray background
+  static final Color secondaryColor = const Color(
+    0xFF34495E,
+  ); // Slightly lighter
+  static final Color accentColor = const Color(
+    0xFFE74C3C,
+  ); // Red for important elements
+  static final Color lightBgColor = const Color(
+    0xFFF8F9FA,
+  ); // Light gray background
   static final Color borderColor = const Color(0xFF2C3E50);
   static final Color textColor = const Color(0xFF2C3E50);
+
+  static Future<void> _drawQRCode(
+    Canvas canvas,
+    double x,
+    double y,
+    String data,
+  ) async {
+    final qrPainter = QrPainter(
+      data: data,
+      version: QrVersions.auto,
+      gapless: true,
+    );
+
+    final size = 80.0;
+    qrPainter.paint(canvas, Size(size, size));
+  }
+
+  static void _drawStyledBubble(
+    Canvas canvas,
+    double x,
+    double y,
+    bool filled,
+    BubbleStyle style,
+  ) {
+    switch (style) {
+      case BubbleStyle.circle:
+        // existing circle code
+        break;
+      case BubbleStyle.square:
+        // draw square bubble
+        break;
+      case BubbleStyle.diamond:
+        // draw diamond bubble
+        break;
+    }
+  }
+
+  // static Future<Uint8List> _generateOMRImage(
+  // OMRExamConfig config,
+  // {PageOrientation orientation = PageOrientation.portrait}
+  // ) async {
+  // final width = orientation == PageOrientation.portrait ? A4_WIDTH : A4_HEIGHT;
+  // final height = orientation == PageOrientation.portrait ? A4_HEIGHT : A4_WIDTH;
+  // // ... adjust layout accordingly ...
+  // }
 
   static Future<File> generateOMRSheet(OMRExamConfig config) async {
     try {
@@ -68,49 +124,69 @@ class ProfessionalOMRGenerator {
   // CANVAS IMAGE CREATION
   // ===========================================================
   static Future<Uint8List> _generateOMRImage(OMRExamConfig config) async {
-    final recorder = PictureRecorder();
-    final canvas = Canvas(recorder);
-    final paint = Paint();
+    try {
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+      final paint = Paint();
 
-    // Background
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, A4_WIDTH, A4_HEIGHT),
-      paint..color = Colors.white,
-    );
+      // Background
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, A4_WIDTH, A4_HEIGHT),
+        paint..color = Colors.white,
+      );
 
-    // Main border
-    _drawRoundedRect(
-      canvas,
-      Rect.fromLTWH(MARGIN, MARGIN, A4_WIDTH - 2 * MARGIN, A4_HEIGHT - 2 * MARGIN),
-      8.0,
-      borderColor,
-      false,
-    );
+      // Main border
+      _drawRoundedRect(
+        canvas,
+        Rect.fromLTWH(
+          MARGIN,
+          MARGIN,
+          A4_WIDTH - 2 * MARGIN,
+          A4_HEIGHT - 2 * MARGIN,
+        ),
+        8.0,
+        borderColor,
+        false,
+      );
 
-    // Draw sections
-    _drawHeaderSection(canvas, config);
-    _drawStudentInfoSection(canvas, config);
-    _drawSetSelectionSection(canvas, config);
-    _drawIdNumberSection(canvas, config);
-    _drawAnswerGridSection(canvas, config);
-    _drawFooterSection(canvas);
+      // Add bounds checking
+      if (config.numberOfQuestions > 100) {
+        throw ArgumentError('Too many questions for single page');
+      }
 
-    final picture = recorder.endRecording();
-    final image = await picture.toImage(A4_WIDTH.toInt(), A4_HEIGHT.toInt());
-    final byteData = await image.toByteData(format: ImageByteFormat.png);
-    return byteData!.buffer.asUint8List();
+      // Draw sections
+      _drawHeaderSection(canvas, config);
+      _drawStudentInfoSection(canvas, config);
+      _drawSetSelectionSection(canvas, config);
+      _drawIdNumberSection(canvas, config);
+      _drawAnswerGridSection(canvas, config);
+      _drawFooterSection(canvas);
+
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(A4_WIDTH.toInt(), A4_HEIGHT.toInt());
+      final byteData = await image.toByteData(format: ImageByteFormat.png);
+      return byteData!.buffer.asUint8List();
+    } catch (e) {
+      print('Error in canvas generation: $e');
+      rethrow;
+    }
   }
 
   // ===========================================================
   // SAVE TO GALLERY + PERMANENT STORAGE
   // ===========================================================
-  static Future<File> _saveOMRSheetWithGal(Uint8List bytes, OMRExamConfig config) async {
+  static Future<File> _saveOMRSheetWithGal(
+    Uint8List bytes,
+    OMRExamConfig config,
+  ) async {
     await _requestGalleryPermissions();
 
     try {
       // 1️⃣ Attempt to save using Gal (safest)
       final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/_temp_omr_${DateTime.now().millisecondsSinceEpoch}.png');
+      final tempFile = File(
+        '${tempDir.path}/_temp_omr_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
       await tempFile.writeAsBytes(bytes);
       await Gal.putImage(tempFile.path, album: 'OMR Sheets');
 
@@ -132,9 +208,13 @@ class ProfessionalOMRGenerator {
   // ===========================================================
   // SAVE TO PUBLIC PICTURES DIRECTORY (VISIBLE IN GALLERY)
   // ===========================================================
-  static Future<File> _saveToPublicPictures(Uint8List bytes, OMRExamConfig config) async {
+  static Future<File> _saveToPublicPictures(
+    Uint8List bytes,
+    OMRExamConfig config,
+  ) async {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final fileName = 'OMR_${_sanitizeFileName(config.examName)}_${config.studentName}_$timestamp.png';
+    final fileName =
+        'OMR_${_sanitizeFileName(config.examName)}_${config.studentName}_$timestamp.png';
 
     Directory? publicDir;
     if (Platform.isAndroid) {
@@ -150,7 +230,13 @@ class ProfessionalOMRGenerator {
     // ✅ Trigger Android media scanner
     if (Platform.isAndroid) {
       try {
-        await Process.run('am', ['broadcast', '-a', 'android.intent.action.MEDIA_SCANNER_SCAN_FILE', '-d', 'file://${file.path}']);
+        await Process.run('am', [
+          'broadcast',
+          '-a',
+          'android.intent.action.MEDIA_SCANNER_SCAN_FILE',
+          '-d',
+          'file://${file.path}',
+        ]);
       } catch (_) {
         // Ignore if unavailable
       }
@@ -195,8 +281,61 @@ class ProfessionalOMRGenerator {
   // HELPERS
   // ===========================================================
   static String _sanitizeFileName(String name) {
-    final sanitized = name.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_').replaceAll(RegExp(r'\s+'), '_');
+    final sanitized = name
+        .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+        .replaceAll(RegExp(r'\s+'), '_');
     return sanitized.length > 50 ? sanitized.substring(0, 50) : sanitized;
+  }
+
+  static void _drawWatermark(Canvas canvas, String text) {
+    final watermarkPaint = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: TextStyle(
+          fontSize: 60,
+          color: Colors.grey.withOpacity(0.1),
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+
+    watermarkPaint.layout();
+
+    // Draw diagonally
+    canvas.save();
+    canvas.translate(A4_WIDTH / 2, A4_HEIGHT / 2);
+    canvas.rotate(-0.5); // Rotate 45 degrees
+    watermarkPaint.paint(
+      canvas,
+      Offset(-watermarkPaint.width / 2, -watermarkPaint.height / 2),
+    );
+    canvas.restore();
+  }
+
+  static Future<void> _drawTextWithCustomFont(
+    Canvas canvas,
+    String text,
+    double x,
+    double y,
+    TextStyle style,
+    String? fontFamily,
+  ) async {
+    final textStyle = style.copyWith(fontFamily: fontFamily);
+    // ... existing text drawing code ...
+  }
+
+  static Stream<File> generateBatchOMRSheetsStream(
+    List<OMRExamConfig> configs,
+  ) async* {
+    for (final config in configs) {
+      try {
+        final file = await generateOMRSheet(config);
+        yield file;
+      } catch (e) {
+        print('Error generating OMR for ${config.studentName}: $e');
+      }
+    }
   }
 
   static void _drawHeaderSection(Canvas canvas, OMRExamConfig config) {
@@ -278,22 +417,33 @@ class ProfessionalOMRGenerator {
       "STUDENT INFORMATION",
       MARGIN + 20,
       startY + 10,
-      TextStyle(
-        fontSize: 10,
-        fontWeight: FontWeight.bold,
-        color: lightBgColor,
-      ),
+      TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: lightBgColor),
       TextAlign.left,
     );
 
     // Student Name field
-    _drawLabeledField(canvas, MARGIN + 20, startY + 30, "Student Name:", config.studentName, 200);
+    _drawLabeledField(
+      canvas,
+      MARGIN + 20,
+      startY + 30,
+      "Student Name:",
+      config.studentName,
+      200,
+    );
 
     // Class field
-    _drawLabeledField(canvas, MARGIN + 250, startY + 30, "Class:", config.className, 120);
+    _drawLabeledField(
+      canvas,
+      MARGIN + 250,
+      startY + 30,
+      "Class:",
+      config.className,
+      120,
+    );
 
     // Date field
-    final dateStr = "${config.examDate.day}/${config.examDate.month}/${config.examDate.year}";
+    final dateStr =
+        "${config.examDate.day}/${config.examDate.month}/${config.examDate.year}";
     _drawLabeledField(canvas, MARGIN + 400, startY + 30, "Date:", dateStr, 120);
   }
 
@@ -305,11 +455,7 @@ class ProfessionalOMRGenerator {
       "SET NUMBER:",
       MARGIN + 20,
       startY,
-      TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.bold,
-        color: textColor,
-      ),
+      TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor),
       TextAlign.left,
     );
 
@@ -317,7 +463,13 @@ class ProfessionalOMRGenerator {
     final setNumbers = ["1", "2", "3", "4"];
     for (int i = 0; i < setNumbers.length; i++) {
       final x = MARGIN + 120 + (i * 80);
-      _drawBubbleWithLabel(canvas, x, startY - 5, setNumbers[i], config.setNumber == i + 1);
+      _drawBubbleWithLabel(
+        canvas,
+        x,
+        startY - 5,
+        setNumbers[i],
+        config.setNumber == i + 1,
+      );
     }
   }
 
@@ -366,13 +518,13 @@ class ProfessionalOMRGenerator {
 
   /// Draws a full digit entry section with boxes and bubbles
   static void _drawDigitEntrySection(
-      Canvas canvas, {
-        required double offsetX,
-        required double offsetY,
-        required int totalDigits,
-        required String userValue,
-        required String label,
-      }) {
+    Canvas canvas, {
+    required double offsetX,
+    required double offsetY,
+    required int totalDigits,
+    required String userValue,
+    required String label,
+  }) {
     const double digitBoxSize = 20.0;
     const double bubbleRadius = 6.0;
     const double bubbleSpacing = 18.0;
@@ -436,7 +588,11 @@ class ProfessionalOMRGenerator {
           final Paint fillPaint = Paint()
             ..style = PaintingStyle.fill
             ..color = Colors.black;
-          canvas.drawCircle(Offset(bubbleX, bubbleY), bubbleRadius - 1.5, fillPaint);
+          canvas.drawCircle(
+            Offset(bubbleX, bubbleY),
+            bubbleRadius - 1.5,
+            fillPaint,
+          );
         }
       }
     }
@@ -450,14 +606,24 @@ class ProfessionalOMRGenerator {
     // Section background
     final bgPaint = Paint()..color = lightBgColor;
     canvas.drawRect(
-      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, sectionHeight.toDouble()),
+      Rect.fromLTWH(
+        MARGIN + 10,
+        startY,
+        sectionWidth,
+        sectionHeight.toDouble(),
+      ),
       bgPaint,
     );
 
     // Section border
     _drawRoundedRect(
       canvas,
-      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, sectionHeight.toDouble()),
+      Rect.fromLTWH(
+        MARGIN + 10,
+        startY,
+        sectionWidth,
+        sectionHeight.toDouble(),
+      ),
       4.0,
       borderColor,
       false,
@@ -476,11 +642,7 @@ class ProfessionalOMRGenerator {
       "ANSWER GRID - MARK YOUR ANSWERS CLEARLY",
       A4_WIDTH / 2,
       startY + 10,
-      TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.bold,
-        color: lightBgColor,
-      ),
+      TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: lightBgColor),
       TextAlign.center,
     );
 
@@ -488,7 +650,11 @@ class ProfessionalOMRGenerator {
     _drawAnswerGrid(canvas, startY + 35, config.numberOfQuestions);
   }
 
-  static void _drawAnswerGrid(Canvas canvas, double startY, int totalQuestions) {
+  static void _drawAnswerGrid(
+    Canvas canvas,
+    double startY,
+    int totalQuestions,
+  ) {
     final questionsPerColumn = (totalQuestions / 3).ceil();
     final columnWidth = (A4_WIDTH - 2 * MARGIN - 40) / 3;
 
@@ -574,10 +740,7 @@ class ProfessionalOMRGenerator {
             options[opt],
             x + BUBBLE_RADIUS,
             y + BUBBLE_RADIUS - 1,
-            TextStyle(
-              fontSize: 8,
-              color: textColor.withOpacity(0.6),
-            ),
+            TextStyle(fontSize: 8, color: textColor.withOpacity(0.6)),
             TextAlign.center,
           );
         }
@@ -617,7 +780,7 @@ class ProfessionalOMRGenerator {
     final signatures = [
       "Student's Signature",
       "Invigilator's Signature",
-      "Examiner's Signature"
+      "Examiner's Signature",
     ];
 
     final fieldWidth = (sectionWidth - 40) / 3;
@@ -629,11 +792,7 @@ class ProfessionalOMRGenerator {
         signatures[i],
         x + fieldWidth / 2,
         startY + 15,
-        TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: textColor,
-        ),
+        TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: textColor),
         TextAlign.center,
       );
 
@@ -654,10 +813,7 @@ class ProfessionalOMRGenerator {
         "Date:",
         x + 15,
         startY + 50,
-        TextStyle(
-          fontSize: 9,
-          color: textColor,
-        ),
+        TextStyle(fontSize: 9, color: textColor),
         TextAlign.left,
       );
 
@@ -695,14 +851,18 @@ class ProfessionalOMRGenerator {
     }
 
     // Draw border
-    canvas.drawRect(
-      Rect.fromLTWH(x, y, width, height),
-      barcodePaint,
-    );
+    canvas.drawRect(Rect.fromLTWH(x, y, width, height), barcodePaint);
   }
 
   // Helper Methods
-  static void _drawText(Canvas canvas, String text, double x, double y, TextStyle style, TextAlign align) {
+  static void _drawText(
+    Canvas canvas,
+    String text,
+    double x,
+    double y,
+    TextStyle style,
+    TextAlign align,
+  ) {
     final textPainter = TextPainter(
       text: TextSpan(text: text, style: style),
       textDirection: TextDirection.ltr,
@@ -719,10 +879,19 @@ class ProfessionalOMRGenerator {
       offsetX -= textPainter.width;
     }
 
-    textPainter.paint(canvas, Offset(offsetX, offsetY - textPainter.height / 2));
+    textPainter.paint(
+      canvas,
+      Offset(offsetX, offsetY - textPainter.height / 2),
+    );
   }
 
-  static void _drawRoundedRect(Canvas canvas, Rect rect, double radius, Color color, bool fill) {
+  static void _drawRoundedRect(
+    Canvas canvas,
+    Rect rect,
+    double radius,
+    Color color,
+    bool fill,
+  ) {
     final paint = Paint()
       ..color = color
       ..style = fill ? PaintingStyle.fill : PaintingStyle.stroke
@@ -742,14 +911,28 @@ class ProfessionalOMRGenerator {
       ..color = primaryColor
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(Offset(x + BUBBLE_RADIUS, y + BUBBLE_RADIUS), BUBBLE_RADIUS, borderPaint);
+    canvas.drawCircle(
+      Offset(x + BUBBLE_RADIUS, y + BUBBLE_RADIUS),
+      BUBBLE_RADIUS,
+      borderPaint,
+    );
 
     if (filled) {
-      canvas.drawCircle(Offset(x + BUBBLE_RADIUS, y + BUBBLE_RADIUS), BUBBLE_RADIUS - 1.5, fillPaint);
+      canvas.drawCircle(
+        Offset(x + BUBBLE_RADIUS, y + BUBBLE_RADIUS),
+        BUBBLE_RADIUS - 1.5,
+        fillPaint,
+      );
     }
   }
 
-  static void _drawBubbleWithLabel(Canvas canvas, double x, double y, String label, bool filled) {
+  static void _drawBubbleWithLabel(
+    Canvas canvas,
+    double x,
+    double y,
+    String label,
+    bool filled,
+  ) {
     _drawBubble(canvas, x, y, filled);
 
     _drawText(
@@ -757,16 +940,19 @@ class ProfessionalOMRGenerator {
       label,
       x + BUBBLE_RADIUS,
       y + BUBBLE_RADIUS * 2 + 8,
-      TextStyle(
-        fontSize: 10,
-        fontWeight: FontWeight.w500,
-        color: textColor,
-      ),
+      TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: textColor),
       TextAlign.center,
     );
   }
 
-  static void _drawLabeledField(Canvas canvas, double x, double y, String label, String value, double width) {
+  static void _drawLabeledField(
+    Canvas canvas,
+    double x,
+    double y,
+    String label,
+    String value,
+    double width,
+  ) {
     _drawText(
       canvas,
       label,
@@ -781,11 +967,7 @@ class ProfessionalOMRGenerator {
       ..color = borderColor
       ..strokeWidth = 0.8;
 
-    canvas.drawLine(
-      Offset(x, y + 17),
-      Offset(x + width, y + 17),
-      linePaint,
-    );
+    canvas.drawLine(Offset(x, y + 17), Offset(x + width, y + 17), linePaint);
 
     if (value.isNotEmpty) {
       _drawText(
@@ -800,7 +982,9 @@ class ProfessionalOMRGenerator {
   }
 
   // Additional utility methods for enhanced functionality
-  static Future<List<File>> generateBatchOMRSheets(List<OMRExamConfig> configs) async {
+  static Future<List<File>> generateBatchOMRSheets(
+    List<OMRExamConfig> configs,
+  ) async {
     final List<File> generatedFiles = [];
 
     for (final config in configs) {
@@ -820,7 +1004,8 @@ class ProfessionalOMRGenerator {
     // Convert to PDF using the printing package
     final pdf = await Printing.convertHtml(
       format: PdfPageFormat.a4,
-      html: '<img src="data:image/png;base64,${base64Encode(imageBytes)}" style="width: 100%; height: auto;"/>',
+      html:
+          '<img src="data:image/png;base64,${base64Encode(imageBytes)}" style="width: 100%; height: auto;"/>',
     );
     return pdf;
   }
@@ -882,11 +1067,15 @@ class ProfessionalOMRGeneratorExample extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () async {
                 try {
-                  final file = await ProfessionalOMRGenerator.generateOMRSheet(config);
+                  final file = await ProfessionalOMRGenerator.generateOMRSheet(
+                    config,
+                  );
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Professional OMR Sheet Generated!\nSaved to: ${file.path}'),
+                      content: Text(
+                        'Professional OMR Sheet Generated!\nSaved to: ${file.path}',
+                      ),
                       backgroundColor: Colors.green,
                       duration: const Duration(seconds: 3),
                     ),
@@ -905,7 +1094,10 @@ class ProfessionalOMRGeneratorExample extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: ProfessionalOMRGenerator.accentColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 30,
+                  vertical: 15,
+                ),
                 textStyle: const TextStyle(fontSize: 16),
               ),
             ),
@@ -917,23 +1109,34 @@ class ProfessionalOMRGeneratorExample extends StatelessWidget {
                   onPressed: () async {
                     try {
                       // Generate multiple OMR sheets for demonstration
-                      final configs = List.generate(5, (index) => OMRExamConfig(
-                        examName: "PRE-UNIVERSITY FINAL EXAMINATION",
-                        numberOfQuestions: 40,
-                        setNumber: (index % 4) + 1,
-                        studentId: "202300${1234 + index}",
-                        mobileNumber: "017123456${78 + index}",
-                        examDate: DateTime.now(),
-                        correctAnswers: List.generate(40, (i) => ["A", "B", "C", "D"][i % 4]),
-                        studentName: "Student ${index + 1}",
-                        className: "Grade XII - Science",
-                      ));
+                      final configs = List.generate(
+                        5,
+                        (index) => OMRExamConfig(
+                          examName: "PRE-UNIVERSITY FINAL EXAMINATION",
+                          numberOfQuestions: 40,
+                          setNumber: (index % 4) + 1,
+                          studentId: "202300${1234 + index}",
+                          mobileNumber: "017123456${78 + index}",
+                          examDate: DateTime.now(),
+                          correctAnswers: List.generate(
+                            40,
+                            (i) => ["A", "B", "C", "D"][i % 4],
+                          ),
+                          studentName: "Student ${index + 1}",
+                          className: "Grade XII - Science",
+                        ),
+                      );
 
-                      final files = await ProfessionalOMRGenerator.generateBatchOMRSheets(configs);
+                      final files =
+                          await ProfessionalOMRGenerator.generateBatchOMRSheets(
+                            configs,
+                          );
 
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Generated ${files.length} OMR Sheets!'),
+                          content: Text(
+                            'Generated ${files.length} OMR Sheets!',
+                          ),
                           backgroundColor: Colors.green,
                           duration: const Duration(seconds: 3),
                         ),
@@ -952,14 +1155,20 @@ class ProfessionalOMRGeneratorExample extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ProfessionalOMRGenerator.primaryColor,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton.icon(
                   onPressed: () async {
                     try {
-                      final imageBytes = await ProfessionalOMRGenerator._generateOMRImage(config);
+                      final imageBytes =
+                          await ProfessionalOMRGenerator._generateOMRImage(
+                            config,
+                          );
                       await ProfessionalOMRGenerator.printOMRSheet(imageBytes);
 
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -983,7 +1192,10 @@ class ProfessionalOMRGeneratorExample extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
                   ),
                 ),
               ],
@@ -999,16 +1211,21 @@ class ProfessionalOMRGeneratorExample extends StatelessWidget {
 class OMRGeneratorExtensions {
   // Generate OMR with custom answer pattern
   static Future<File> generateOMRWithAnswerKey(
-      OMRExamConfig config,
-      bool showAnswerKey,
-      ) async {
+    OMRExamConfig config,
+    bool showAnswerKey,
+  ) async {
     final recorder = PictureRecorder();
     final canvas = Canvas(recorder);
     final paint = Paint();
 
     // Background
     canvas.drawRect(
-      Rect.fromLTWH(0, 0, ProfessionalOMRGenerator.A4_WIDTH, ProfessionalOMRGenerator.A4_HEIGHT),
+      Rect.fromLTWH(
+        0,
+        0,
+        ProfessionalOMRGenerator.A4_WIDTH,
+        ProfessionalOMRGenerator.A4_HEIGHT,
+      ),
       paint..color = Colors.white,
     );
 
@@ -1040,20 +1257,33 @@ class OMRGeneratorExtensions {
 
   static void _drawAnswerGridWithKey(Canvas canvas, OMRExamConfig config) {
     final startY = ProfessionalOMRGenerator.MARGIN + 362;
-    final sectionWidth = ProfessionalOMRGenerator.A4_WIDTH - 2 * ProfessionalOMRGenerator.MARGIN - 20;
+    final sectionWidth =
+        ProfessionalOMRGenerator.A4_WIDTH -
+        2 * ProfessionalOMRGenerator.MARGIN -
+        20;
     final sectionHeight = 365;
 
     // Section background
     final bgPaint = Paint()..color = ProfessionalOMRGenerator.lightBgColor;
     canvas.drawRect(
-      Rect.fromLTWH(ProfessionalOMRGenerator.MARGIN + 10, startY, sectionWidth, sectionHeight.toDouble()),
+      Rect.fromLTWH(
+        ProfessionalOMRGenerator.MARGIN + 10,
+        startY,
+        sectionWidth,
+        sectionHeight.toDouble(),
+      ),
       bgPaint,
     );
 
     // Section border
     ProfessionalOMRGenerator._drawRoundedRect(
       canvas,
-      Rect.fromLTWH(ProfessionalOMRGenerator.MARGIN + 10, startY, sectionWidth, sectionHeight.toDouble()),
+      Rect.fromLTWH(
+        ProfessionalOMRGenerator.MARGIN + 10,
+        startY,
+        sectionWidth,
+        sectionHeight.toDouble(),
+      ),
       4.0,
       ProfessionalOMRGenerator.borderColor,
       false,
@@ -1062,7 +1292,12 @@ class OMRGeneratorExtensions {
     // Title with "ANSWER KEY" label
     final titleBgPaint = Paint()..color = ProfessionalOMRGenerator.accentColor;
     canvas.drawRect(
-      Rect.fromLTWH(ProfessionalOMRGenerator.MARGIN + 10, startY, sectionWidth, 20),
+      Rect.fromLTWH(
+        ProfessionalOMRGenerator.MARGIN + 10,
+        startY,
+        sectionWidth,
+        20,
+      ),
       titleBgPaint,
     );
 
@@ -1071,11 +1306,7 @@ class OMRGeneratorExtensions {
       "ANSWER KEY - CORRECT ANSWERS MARKED",
       ProfessionalOMRGenerator.A4_WIDTH / 2,
       startY + 10,
-      TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.bold,
-        color: Colors.white,
-      ),
+      TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
       TextAlign.center,
     );
 
@@ -1083,16 +1314,25 @@ class OMRGeneratorExtensions {
     _drawAnswerGridWithMarks(canvas, startY + 35, config);
   }
 
-  static void _drawAnswerGridWithMarks(Canvas canvas, double startY, OMRExamConfig config) {
+  static void _drawAnswerGridWithMarks(
+    Canvas canvas,
+    double startY,
+    OMRExamConfig config,
+  ) {
     final questionsPerColumn = (config.numberOfQuestions / 3).ceil();
-    final columnWidth = (ProfessionalOMRGenerator.A4_WIDTH - 2 * ProfessionalOMRGenerator.MARGIN - 40) / 3;
+    final columnWidth =
+        (ProfessionalOMRGenerator.A4_WIDTH -
+            2 * ProfessionalOMRGenerator.MARGIN -
+            40) /
+        3;
     final options = ["A", "B", "C", "D"];
 
     for (int col = 0; col < 3; col++) {
       final colX = ProfessionalOMRGenerator.MARGIN + 20 + (col * columnWidth);
 
       // Column header
-      final headerPaint = Paint()..color = ProfessionalOMRGenerator.secondaryColor.withOpacity(0.8);
+      final headerPaint = Paint()
+        ..color = ProfessionalOMRGenerator.secondaryColor.withOpacity(0.8);
       canvas.drawRect(
         Rect.fromLTWH(colX, startY - 5, columnWidth - 10, 20),
         headerPaint,
@@ -1165,7 +1405,9 @@ class OMRGeneratorExtensions {
             y + ProfessionalOMRGenerator.BUBBLE_RADIUS - 1,
             TextStyle(
               fontSize: 8,
-              color: isCorrect ? Colors.white : ProfessionalOMRGenerator.textColor.withOpacity(0.6),
+              color: isCorrect
+                  ? Colors.white
+                  : ProfessionalOMRGenerator.textColor.withOpacity(0.6),
               fontWeight: isCorrect ? FontWeight.bold : FontWeight.normal,
             ),
             TextAlign.center,
@@ -1252,7 +1494,8 @@ class OMRValidator {
     }
 
     if (config.numberOfQuestions < 10 || config.numberOfQuestions > 100) {
-      errors['numberOfQuestions'] = 'Number of questions must be between 10 and 100';
+      errors['numberOfQuestions'] =
+          'Number of questions must be between 10 and 100';
     }
 
     if (config.setNumber < 1 || config.setNumber > 4) {
@@ -1275,11 +1518,36 @@ class OMRValidator {
   }
 }
 
+class OMRGenerationLogger {
+  static final List<Map<String, dynamic>> _logs = [];
 
+  static void logGeneration(OMRExamConfig config, bool success) {
+    _logs.add({
+      'timestamp': DateTime.now(),
+      'examName': config.examName,
+      'studentName': config.studentName,
+      'success': success,
+    });
+  }
 
+  static List<Map<String, dynamic>> getLogs() => List.unmodifiable(_logs);
+}
 
+class OMRLocalizations {
+  final String studentName;
+  final String className;
+  final String date;
+  final String mobileNumber;
+  final String studentId;
 
-
+  const OMRLocalizations({
+    this.studentName = "Student Name:",
+    this.className = "Class:",
+    this.date = "Date:",
+    this.mobileNumber = "Mobile Number:",
+    this.studentId = "Student ID Number:",
+  });
+}
 
 // import 'dart:ui';
 // import 'package:flutter/material.dart';

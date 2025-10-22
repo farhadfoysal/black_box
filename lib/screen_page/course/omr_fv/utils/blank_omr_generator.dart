@@ -28,8 +28,9 @@ class BlankOMRConfig {
 class BlankOMRGenerator {
   static const double A4_WIDTH = 595.0;
   static const double A4_HEIGHT = 842.0;
-  static const double MARGIN = 20.0;
+  static const double MARGIN = 10.0;
   static const double BUBBLE_RADIUS = 7;
+  static const double SMALL_BUBBLE_RADIUS = 6;
 
   // Professional color scheme
   static final Color primaryColor = const Color(0xFF2C3E50);
@@ -74,6 +75,8 @@ class BlankOMRGenerator {
     // Draw sections
     _drawHeaderSection(canvas, config);
     _drawStudentInfoSection(canvas, config);
+    _drawSetSelectionSection(canvas);  // New section
+    _drawIdNumberSection(canvas);       // New section
     _drawAnswerGridSection(canvas, config);
     _drawFooterSection(canvas);
 
@@ -130,20 +133,6 @@ class BlankOMRGenerator {
       TextAlign.center,
     );
 
-    // Set number and date
-    _drawText(
-      canvas,
-      "SET ${config.setNumber} | Date: ${_formatDate(config.examDate)}",
-      centerX,
-      MARGIN + 75,
-      TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
-        color: textColor,
-      ),
-      TextAlign.center,
-    );
-
     // Decorative line
     final linePaint = Paint()
       ..color = accentColor
@@ -151,27 +140,27 @@ class BlankOMRGenerator {
       ..style = PaintingStyle.stroke;
 
     canvas.drawLine(
-      Offset(centerX - 120, MARGIN + 85),
-      Offset(centerX + 120, MARGIN + 85),
+      Offset(centerX - 120, MARGIN + 70),
+      Offset(centerX + 120, MARGIN + 70),
       linePaint,
     );
   }
 
   static void _drawStudentInfoSection(Canvas canvas, BlankOMRConfig config) {
-    final startY = MARGIN + 95;
+    final startY = MARGIN + 80;
     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
 
     // Section background
     final bgPaint = Paint()..color = lightBgColor;
     canvas.drawRect(
-      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 80),
+      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 60),
       bgPaint,
     );
 
     // Section border
     _drawRoundedRect(
       canvas,
-      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 80),
+      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 60),
       4.0,
       borderColor,
       false,
@@ -199,19 +188,142 @@ class BlankOMRGenerator {
     );
 
     // Student fields
-    _drawBlankField(canvas, MARGIN + 20, startY + 35, "Name:", 200);
-    _drawBlankField(canvas, MARGIN + 240, startY + 35, "Roll No:", 100);
-    _drawBlankField(canvas, MARGIN + 360, startY + 35, "Section:", 80);
+    _drawBlankField(canvas, MARGIN + 20, startY + 30, "Name:", 200);
+    _drawBlankField(canvas, MARGIN + 240, startY + 30, "Roll No:", 100);
+    _drawBlankField(canvas, MARGIN + 360, startY + 30, "Class:", 80);
+  }
 
-    _drawBlankField(canvas, MARGIN + 20, startY + 55, "Student ID:", 150);
-    _drawBlankField(canvas, MARGIN + 190, startY + 55, "Mobile No:", 150);
-    _drawBlankField(canvas, MARGIN + 360, startY + 55, "Class:", 80);
+  // New method for Set Selection Section
+  static void _drawSetSelectionSection(Canvas canvas) {
+    final startY = MARGIN + 150;
+
+    _drawText(
+      canvas,
+      "SET NUMBER:",
+      MARGIN + 20,
+      startY,
+      TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.bold,
+        color: textColor,
+      ),
+      TextAlign.left,
+    );
+
+    // Set number bubbles (1-4)
+    final setNumbers = ["1", "2", "3", "4"];
+    for (int i = 0; i < setNumbers.length; i++) {
+      final x = MARGIN + 120 + (i * 80);
+      _drawBubbleWithLabel(canvas, x, startY - 5, setNumbers[i], false); // All bubbles empty
+    }
+  }
+
+  // New method for ID Number Section
+  static void _drawIdNumberSection(Canvas canvas) {
+    final startY = MARGIN + 180;
+
+    // ==== Titles ====
+    _drawText(
+      canvas,
+      "STUDENT ID NUMBER:",
+      MARGIN + 20,
+      startY,
+      TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor),
+      TextAlign.left,
+    );
+
+    _drawText(
+      canvas,
+      "MOBILE NUMBER:",
+      MARGIN + 300,
+      startY,
+      TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor),
+      TextAlign.left,
+    );
+
+    // ==== Draw Student ID section (10 digits) ====
+    _drawBlankDigitEntrySection(
+      canvas,
+      offsetX: MARGIN + 20,
+      offsetY: startY + 10,
+      totalDigits: 10,
+      label: "Student ID",
+    );
+
+    // ==== Draw Mobile number section (11 digits) ====
+    _drawBlankDigitEntrySection(
+      canvas,
+      offsetX: MARGIN + 300,
+      offsetY: startY + 10,
+      totalDigits: 11,
+      label: "Mobile Number",
+    );
+  }
+
+  // New method for drawing blank digit entry sections
+  static void _drawBlankDigitEntrySection(
+      Canvas canvas, {
+        required double offsetX,
+        required double offsetY,
+        required int totalDigits,
+        required String label,
+      }) {
+    const double digitBoxSize = 20.0;
+    const double bubbleRadius = 5.0;
+    const double bubbleSpacing = 18.0;
+    const double columnSpacing = 25.0;
+    const double leftIndexOffset = 15.0;
+
+    final Paint boxPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0
+      ..color = Colors.black;
+
+    // === Draw header boxes for digits (for writing) ===
+    for (int i = 0; i < totalDigits; i++) {
+      final double x = offsetX + i * columnSpacing;
+      final double y = offsetY;
+
+      final Rect rect = Rect.fromLTWH(x, y, digitBoxSize, digitBoxSize);
+      canvas.drawRect(rect, boxPaint);
+    }
+
+    // === Draw vertical bubbles (0–9) for each column ===
+    for (int row = 0; row < 10; row++) {
+      final double bubbleY = offsetY + digitBoxSize + 15 + row * bubbleSpacing;
+
+      // Draw row index (0–9) on left side
+      _drawText(
+        canvas,
+        row.toString(),
+        offsetX - leftIndexOffset,
+        bubbleY,
+        TextStyle(fontSize: 8, color: textColor),
+        TextAlign.center,
+      );
+
+      // Draw bubbles for each column
+      for (int col = 0; col < totalDigits; col++) {
+        final double bubbleX = offsetX + col * columnSpacing + digitBoxSize / 2;
+        canvas.drawCircle(Offset(bubbleX, bubbleY), bubbleRadius, boxPaint);
+
+        // Draw digit inside bubble
+        _drawText(
+          canvas,
+          row.toString(),
+          bubbleX,
+          bubbleY - 1,
+          TextStyle(fontSize: 7, color: textColor),
+          TextAlign.center,
+        );
+      }
+    }
   }
 
   static void _drawAnswerGridSection(Canvas canvas, BlankOMRConfig config) {
-    final startY = MARGIN + 185;
+    final startY = MARGIN + 400;
     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
-    final sectionHeight = 480;
+    final sectionHeight = 320;
 
     // Section background
     final bgPaint = Paint()..color = lightBgColor;
@@ -267,7 +379,7 @@ class BlankOMRGenerator {
     }
 
     // Draw answer grid
-    _drawAnswerGrid(canvas, startY + 50, config.numberOfQuestions);
+    _drawAnswerGrid(canvas, startY + 10, config.numberOfQuestions);
   }
 
   static void _drawAnswerGrid(Canvas canvas, double startY, int totalQuestions) {
@@ -285,13 +397,13 @@ class BlankOMRGenerator {
         final questionNum = col * questionsPerColumn + i + 1;
         if (questionNum > totalQuestions) break;
 
-        final y = startY + (i * 25);
+        final y = startY + (i * 22);
 
         // Alternate row background
         if (i % 2 == 0) {
           final rowBgPaint = Paint()..color = Colors.grey.withOpacity(0.05);
           canvas.drawRect(
-            Rect.fromLTWH(colX - 5, y - 5, columnWidth - 10, 22),
+            Rect.fromLTWH(colX - 5, y - 5, columnWidth - 10, 20),
             rowBgPaint,
           );
         }
@@ -323,7 +435,7 @@ class BlankOMRGenerator {
       canvas,
       "INSTRUCTIONS: Use HB pencil only • Fill the bubble completely • Erase cleanly to change answer",
       A4_WIDTH / 2,
-      startY + 410,
+      startY + 320,
       TextStyle(
         fontSize: 9,
         fontWeight: FontWeight.w500,
@@ -334,22 +446,22 @@ class BlankOMRGenerator {
   }
 
   static void _drawFooterSection(Canvas canvas) {
-    final startY = A4_HEIGHT - MARGIN - 100;
+    final startY = A4_HEIGHT - MARGIN - 80;
     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
 
     // Section border
     _drawRoundedRect(
       canvas,
-      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 90),
+      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 58),
       4.0,
       borderColor,
       false,
     );
 
-    // Important note section
+    // Important note section (continued)
     final noteBgPaint = Paint()..color = accentColor.withOpacity(0.1);
     canvas.drawRect(
-      Rect.fromLTWH(MARGIN + 20, startY + 10, sectionWidth - 20, 30),
+      Rect.fromLTWH(MARGIN + 20, startY + 55, sectionWidth - 20, 30),
       noteBgPaint,
     );
 
@@ -357,7 +469,7 @@ class BlankOMRGenerator {
       canvas,
       "IMPORTANT: Do not fold or damage this sheet • Ensure all marks are within the bubbles",
       A4_WIDTH / 2,
-      startY + 25,
+      startY + 70,
       TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.w600,
@@ -380,7 +492,7 @@ class BlankOMRGenerator {
         canvas,
         signatures[i],
         x + fieldWidth / 2,
-        startY + 55,
+        startY + 50,
         TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w600,
@@ -395,8 +507,8 @@ class BlankOMRGenerator {
         ..strokeWidth = 0.8;
 
       canvas.drawLine(
-        Offset(x + 20, startY + 75),
-        Offset(x + fieldWidth - 20, startY + 75),
+        Offset(x + 20, startY + 45),
+        Offset(x + fieldWidth - 20, startY + 45),
         linePaint,
       );
     }
@@ -407,17 +519,20 @@ class BlankOMRGenerator {
     final textPainter = TextPainter(
       text: TextSpan(text: text, style: style),
       textDirection: TextDirection.ltr,
+      textAlign: align,
     );
     textPainter.layout();
 
     double offsetX = x;
+    double offsetY = y;
+
     if (align == TextAlign.center) {
       offsetX -= textPainter.width / 2;
     } else if (align == TextAlign.right) {
       offsetX -= textPainter.width;
     }
 
-    textPainter.paint(canvas, Offset(offsetX, y - textPainter.height / 2));
+    textPainter.paint(canvas, Offset(offsetX, offsetY - textPainter.height / 2));
   }
 
   static void _drawRoundedRect(Canvas canvas, Rect rect, double radius, Color color, bool fill) {
@@ -445,6 +560,38 @@ class BlankOMRGenerator {
       option,
       x + BUBBLE_RADIUS,
       y + BUBBLE_RADIUS,
+      TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w500,
+        color: textColor,
+      ),
+      TextAlign.center,
+    );
+  }
+
+  static void _drawBubbleWithLabel(Canvas canvas, double x, double y, String label, bool filled) {
+    final borderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+
+    final fillPaint = Paint()
+      ..color = primaryColor
+      ..style = PaintingStyle.fill;
+
+    // Draw bubble
+    canvas.drawCircle(Offset(x + BUBBLE_RADIUS, y + BUBBLE_RADIUS), BUBBLE_RADIUS, borderPaint);
+
+    if (filled) {
+      canvas.drawCircle(Offset(x + BUBBLE_RADIUS, y + BUBBLE_RADIUS), BUBBLE_RADIUS - 1.5, fillPaint);
+    }
+
+    // Draw label below bubble
+    _drawText(
+      canvas,
+      label,
+      x + BUBBLE_RADIUS,
+      y + BUBBLE_RADIUS * 2 + 8,
       TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.w500,
@@ -522,6 +669,15 @@ class BlankOMRGenerator {
     final file = File('${publicDir.path}/$fileName');
     await file.writeAsBytes(bytes);
 
+    // Trigger Android media scanner
+    if (Platform.isAndroid) {
+      try {
+        await Process.run('am', ['broadcast', '-a', 'android.intent.action.MEDIA_SCANNER_SCAN_FILE', '-d', 'file://${file.path}']);
+      } catch (_) {
+        // Ignore if unavailable
+      }
+    }
+
     return file;
   }
 
@@ -556,7 +712,193 @@ class BlankOMRGenerator {
       print('❌ Error printing OMR sheet: $e');
     }
   }
+
+  // Batch generation support
+  static Future<List<File>> generateBatchBlankOMRSheets(List<BlankOMRConfig> configs) async {
+    final List<File> generatedFiles = [];
+
+    for (final config in configs) {
+      try {
+        final file = await generateBlankOMRSheet(config);
+        generatedFiles.add(file);
+      } catch (e) {
+        print('Error generating blank OMR for ${config.examName}: $e');
+      }
+    }
+
+    return generatedFiles;
+  }
 }
+
+// Example usage widget
+class BlankOMRGeneratorExample extends StatelessWidget {
+  final BlankOMRConfig config = BlankOMRConfig(
+    examName: "FINAL EXAMINATION 2024",
+    subjectName: "Mathematics",
+    numberOfQuestions: 50,
+    setNumber: 1,
+    examDate: DateTime.now(),
+    instructions: "Fill the bubbles completely with HB pencil. Do not use pen.",
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Blank OMR Generator'),
+        backgroundColor: BlankOMRGenerator.primaryColor,
+        foregroundColor: Colors.white,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                color: BlankOMRGenerator.lightBgColor,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: BlankOMRGenerator.borderColor),
+              ),
+              child: Icon(
+                Icons.description_outlined,
+                size: 80,
+                color: BlankOMRGenerator.primaryColor,
+              ),
+            ),
+            const SizedBox(height: 30),
+            const Text(
+              'Blank OMR Sheet Generator',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Generate blank OMR sheets with student ID,\nmobile number, and answer bubbles.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton.icon(
+              onPressed: () async {
+                try {
+                  final file = await BlankOMRGenerator.generateBlankOMRSheet(config);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Blank OMR Sheet Generated!\nSaved to: ${file.path}'),
+                      backgroundColor: Colors.green,
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error generating OMR sheet: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              icon: const Icon(Icons.create_new_folder),
+              label: const Text('Generate Blank OMR'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: BlankOMRGenerator.accentColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                textStyle: const TextStyle(fontSize: 16),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    try {
+                      // Generate multiple blank OMR sheets
+                      final configs = List.generate(4, (index) => BlankOMRConfig(
+                        examName: "FINAL EXAMINATION 2024",
+                        subjectName: "Mathematics",
+                        numberOfQuestions: 50,
+                        setNumber: index + 1,
+                        examDate: DateTime.now(),
+                        instructions: "Fill the bubbles completely with HB pencil.",
+                      ));
+
+                      final files = await BlankOMRGenerator.generateBatchBlankOMRSheets(configs);
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Generated ${files.length} Blank OMR Sheets!'),
+                          backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error generating batch: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.library_books),
+                  label: const Text('Generate Sets 1-4'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: BlankOMRGenerator.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    try {
+                      final imageBytes = await BlankOMRGenerator._generateOMRImage(config);
+                      await BlankOMRGenerator.printBlankOMRSheet(imageBytes);
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Sent to printer!'),
+                          backgroundColor: Colors.blue,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error printing: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.print),
+                  label: const Text('Print'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+
+
+
+
 
 
 

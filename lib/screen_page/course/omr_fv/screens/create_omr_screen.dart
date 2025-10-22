@@ -30,7 +30,7 @@ class _CreateOMRScreenState extends State<CreateOMRScreen> {
 
   // Form values
   Course? _selectedCourse;
-  int _numberOfQuestions = 50;
+  int _numberOfQuestions = 40;
   int _setNumber = 1;
   DateTime _examDate = DateTime.now();
   List<String> _correctAnswers = [];
@@ -1018,7 +1018,7 @@ class _CreateOMRScreenState extends State<CreateOMRScreen> {
 //
 //   // Form values
 //   Course? _selectedCourse;
-//   int _numberOfQuestions = 50;
+//   int _numberOfQuestions = 40;
 //   int _setNumber = 1;
 //   DateTime _examDate = DateTime.now();
 //   List<String> _correctAnswers = [];
