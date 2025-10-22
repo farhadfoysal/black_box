@@ -4,6 +4,7 @@ import '../models/omr_sheet_model.dart';
 import '../models/student_model.dart';
 import '../models/exam_result_model.dart';
 import '../models/course_model.dart';
+import 'package:synchronized/synchronized.dart';
 
 class DatabaseService {
   static const String _omrSheetsKey = 'omr_sheets';
@@ -12,6 +13,8 @@ class DatabaseService {
   static const String _coursesKey = 'courses';
 
   final SharedPreferences _prefs;
+  final _lock = Lock();
+
 
   DatabaseService(this._prefs);
 
@@ -33,7 +36,18 @@ class DatabaseService {
     }
   }
 
+  Future<void> deleteStudent(String id) async {
+    final students = await getAllStudents();
+    students.removeWhere((s) => s.id == id);
+    await _prefs.setString(_studentsKey, json.encode(students.map((s) => s.toJson()).toList()));
+  }
+  Future<void> saveStudentList(List<Student> students) async {
+    await _prefs.setString(_studentsKey, json.encode(students.map((s) => s.toJson()).toList()));
+  }
+
+
   Future<void> saveOMRSheet(OMRSheet sheet) async {
+    // sheet.lastUpdated = DateTime.now().toIso8601String();
     final sheets = await getAllOMRSheets();
     final index = sheets.indexWhere((s) => s.id == sheet.id);
 
@@ -82,6 +96,21 @@ class DatabaseService {
 
     await _prefs.setString(_studentsKey, json.encode(students.map((s) => s.toJson()).toList()));
   }
+
+  Future<List<Student>> searchStudents(String query) async {
+    final students = await getAllStudents();
+    return students
+        .where((s) =>
+    s.name.toLowerCase().contains(query.toLowerCase()) ||
+        s.studentId.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+  }
+
+  Future<List<Course>> filterCoursesBySubject(String subject) async {
+    final courses = await getAllCourses();
+    return courses.where((c) => c.subjects.contains(subject)).toList();
+  }
+
 
   // Exam Result Operations
   Future<List<ExamResult>> getAllResults() async {
@@ -152,4 +181,45 @@ class DatabaseService {
       ),
     ];
   }
+
+  List<dynamic> _safeDecode(String? data) {
+    if (data == null || data.isEmpty) return [];
+    try {
+      return json.decode(data);
+    } catch (e) {
+      print('JSON decode error: $e');
+      return [];
+    }
+  }
+
+
+  Future<void> clearAllData() async {
+    await _prefs.remove(_omrSheetsKey);
+    await _prefs.remove(_studentsKey);
+    await _prefs.remove(_resultsKey);
+    await _prefs.remove(_coursesKey);
+  }
+
+  Future<void> deleteAllResultsBySheet(String omrSheetId) async {
+    final results = await getAllResults();
+    results.removeWhere((r) => r.omrSheetId == omrSheetId);
+    await _prefs.setString(_resultsKey, json.encode(results.map((r) => r.toJson()).toList()));
+  }
+
+
+
+  Future<void> saveOMRSheet1(OMRSheet sheet) async {
+    await _lock.synchronized(() async {
+      final sheets = await getAllOMRSheets();
+      final index = sheets.indexWhere((s) => s.id == sheet.id);
+      if (index != -1) {
+        sheets[index] = sheet;
+      } else {
+        sheets.add(sheet);
+      }
+      await _prefs.setString(_omrSheetsKey, json.encode(sheets.map((s) => s.toJson()).toList()));
+    });
+  }
+
+
 }

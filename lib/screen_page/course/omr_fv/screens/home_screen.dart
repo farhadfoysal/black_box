@@ -1,3 +1,5 @@
+import 'package:black_box/screen_page/course/omr_fv/screens/course_management_screen.dart';
+import 'package:black_box/screen_page/course/omr_fv/screens/student_management_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/database_service.dart';
@@ -151,6 +153,41 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => ResultsScreen()),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildActionCard(
+                icon: Icons.list_alt,
+                title: 'All Students',
+                subtitle: 'Manage Student',
+                color: Color(0xFF170075),
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => StudentManagementScreen()),
+                  );
+                  _loadData();
+                },
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: _buildActionCard(
+                icon: Icons.assessment,
+                title: 'Courses',
+                subtitle: 'View course',
+                color: Color(0xFFEEA5FF),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => CourseManagementScreen()),
                   );
                 },
               ),

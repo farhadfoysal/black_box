@@ -8,6 +8,7 @@ plugins {
 android {
     namespace = "com.edu.black_box.black_box"
     compileSdk = flutter.compileSdkVersion
+//    compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -26,6 +27,7 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 23
         targetSdk = flutter.targetSdkVersion
+//        targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

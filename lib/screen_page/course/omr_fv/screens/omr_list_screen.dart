@@ -277,72 +277,154 @@ class _OMRListScreenState extends State<OMRListScreen> {
     );
   }
 
+
   void _showSheetOptions(OMRSheet sheet) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Icon(Icons.download, color: Color(0xFF2ECC71)),
-              title: Text('Generate OMR Sheet'),
-              subtitle: Text('Create printable OMR for this template'),
-              onTap: () {
-                Navigator.pop(context);
-                _generateOMR(sheet);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.group, color: Color(0xFF9B59B6)),
-              title: Text('Generate for Multiple Students'),
-              subtitle: Text('Create OMRs for selected students'),
-              onTap: () {
-                Navigator.pop(context);
-                _showStudentSelectionDialog(sheet);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.visibility, color: Color(0xFF3498DB)),
-              title: Text('View Answer Key'),
-              subtitle: Text('See correct answers for this sheet'),
-              onTap: () {
-                Navigator.pop(context);
-                _showAnswerKey(sheet);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.analytics, color: Color(0xFFF39C12)),
-              title: Text('View Results'),
-              subtitle: Text('See all scanned results for this sheet'),
-              onTap: () {
-                Navigator.pop(context);
-                _viewResults(sheet);
-              },
-            ),
-            Divider(),
-            ListTile(
-              leading: Icon(Icons.edit, color: Color(0xFF3498DB)),
-              title: Text('Edit Sheet'),
-              onTap: () {
-                Navigator.pop(context);
-                _editSheet(sheet);
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.delete, color: Color(0xFFE74C3C)),
-              title: Text('Delete Sheet'),
-              onTap: () {
-                Navigator.pop(context);
-                _confirmDelete(sheet);
-              },
-            ),
-          ],
+      isScrollControlled: true, // allows full height if needed
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 10,
+            right: 10,
+            top: 10,
+            // prevent bottom overflow when keyboard appears
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.download, color: Color(0xFF2ECC71)),
+                title: const Text('Generate OMR Sheet'),
+                subtitle: const Text('Create printable OMR for this template'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _generateOMR(sheet);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.group, color: Color(0xFF9B59B6)),
+                title: const Text('Generate for Multiple Students'),
+                subtitle: const Text('Create OMRs for selected students'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showStudentSelectionDialog(sheet);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.visibility, color: Color(0xFF3498DB)),
+                title: const Text('View Answer Key'),
+                subtitle: const Text('See correct answers for this sheet'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showAnswerKey(sheet);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.analytics, color: Color(0xFFF39C12)),
+                title: const Text('View Results'),
+                subtitle: const Text('See all scanned results for this sheet'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _viewResults(sheet);
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.edit, color: Color(0xFF3498DB)),
+                title: const Text('Edit Sheet'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _editSheet(sheet);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete, color: Color(0xFFE74C3C)),
+                title: const Text('Delete Sheet'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmDelete(sheet);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
+
+
+  // void _showSheetOptions(OMRSheet sheet) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     builder: (context) => Container(
+  //       padding: EdgeInsets.all(10),
+  //       child: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         children: [
+  //           ListTile(
+  //             leading: Icon(Icons.download, color: Color(0xFF2ECC71)),
+  //             title: Text('Generate OMR Sheet'),
+  //             subtitle: Text('Create printable OMR for this template'),
+  //             onTap: () {
+  //               Navigator.pop(context);
+  //               _generateOMR(sheet);
+  //             },
+  //           ),
+  //           ListTile(
+  //             leading: Icon(Icons.group, color: Color(0xFF9B59B6)),
+  //             title: Text('Generate for Multiple Students'),
+  //             subtitle: Text('Create OMRs for selected students'),
+  //             onTap: () {
+  //               Navigator.pop(context);
+  //               _showStudentSelectionDialog(sheet);
+  //             },
+  //           ),
+  //           ListTile(
+  //             leading: Icon(Icons.visibility, color: Color(0xFF3498DB)),
+  //             title: Text('View Answer Key'),
+  //             subtitle: Text('See correct answers for this sheet'),
+  //             onTap: () {
+  //               Navigator.pop(context);
+  //               _showAnswerKey(sheet);
+  //             },
+  //           ),
+  //           ListTile(
+  //             leading: Icon(Icons.analytics, color: Color(0xFFF39C12)),
+  //             title: Text('View Results'),
+  //             subtitle: Text('See all scanned results for this sheet'),
+  //             onTap: () {
+  //               Navigator.pop(context);
+  //               _viewResults(sheet);
+  //             },
+  //           ),
+  //           Divider(),
+  //           ListTile(
+  //             leading: Icon(Icons.edit, color: Color(0xFF3498DB)),
+  //             title: Text('Edit Sheet'),
+  //             onTap: () {
+  //               Navigator.pop(context);
+  //               _editSheet(sheet);
+  //             },
+  //           ),
+  //           ListTile(
+  //             leading: Icon(Icons.delete, color: Color(0xFFE74C3C)),
+  //             title: Text('Delete Sheet'),
+  //             onTap: () {
+  //               Navigator.pop(context);
+  //               _confirmDelete(sheet);
+  //             },
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Future<void> _generateOMR(OMRSheet sheet) async {
     final config = OMRExamConfig(
@@ -544,18 +626,18 @@ class _OMRListScreenState extends State<OMRListScreen> {
         title: Text('Answer Key - ${sheet.examName}'),
         content: Container(
           width: double.maxFinite,
-          height: 400,
+          height: 440,
           child: Column(
             children: [
               Text(
                 'Set ${sheet.setNumber} - ${sheet.numberOfQuestions} Questions',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 16),
+              SizedBox(height: 8),
               Expanded(
                 child: GridView.builder(
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 5,
+                    crossAxisCount: 3,
                     childAspectRatio: 1.5,
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,

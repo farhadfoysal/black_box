@@ -670,7 +670,7 @@ class ProfessionalOMRGenerator {
     }
 
     // Add barcode/QR code area (optional)
-    _drawBarcodeArea(canvas, MARGIN + 10, A4_HEIGHT - MARGIN - 30);
+    // _drawBarcodeArea(canvas, MARGIN + 10, A4_HEIGHT - MARGIN - 30);
   }
 
   static void _drawBarcodeArea(Canvas canvas, double x, double y) {
