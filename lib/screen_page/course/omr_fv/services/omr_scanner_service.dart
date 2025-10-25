@@ -8,6 +8,11 @@ import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart
 import '../models/omr_sheet_model.dart';
 import '../models/scan_result.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:math';
+import 'package:opencv_dart/opencv_dart.dart' as cv;
+import 'package:path_provider/path_provider.dart';
+
 
 class OMRScannerService {
   final textRecognizer = TextRecognizer();
@@ -750,7 +755,6 @@ class OMRScannerService {
   }
 }
 
-// Helper classes
 class Circle {
   final Point<int> center;
   final int radius;
@@ -779,8 +783,14 @@ class OMRScanResultWidget extends StatelessWidget {
             ),
             SizedBox(height: 16),
             _buildInfoRow('Student ID', result.studentId ?? 'Not detected'),
-            _buildInfoRow('Mobile Number', result.mobileNumber ?? 'Not detected'),
-            _buildInfoRow('Set Number', result.setNumber?.toString() ?? 'Not detected'),
+            _buildInfoRow(
+              'Mobile Number',
+              result.mobileNumber ?? 'Not detected',
+            ),
+            _buildInfoRow(
+              'Set Number',
+              result.setNumber?.toString() ?? 'Not detected',
+            ),
             SizedBox(height: 16),
             Text(
               'Confidence: ${(result.confidence * 100).toStringAsFixed(1)}%',
@@ -814,10 +824,7 @@ class OMRScanResultWidget extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Text(
-            '$label: ',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+          Text('$label: ', style: TextStyle(fontWeight: FontWeight.bold)),
           Text(value),
         ],
       ),
@@ -849,10 +856,6 @@ class OMRScanResultWidget extends StatelessWidget {
     );
   }
 }
-
-
-
-
 
 // import 'dart:io';
 // import 'dart:math';
@@ -1560,8 +1563,6 @@ class OMRScanResultWidget extends StatelessWidget {
 //   });
 // }
 
-
-
 // import 'dart:io';
 // import 'dart:typed_data';
 // import 'dart:ui' as ui;
@@ -1835,7 +1836,6 @@ class OMRScanResultWidget extends StatelessWidget {
 //   });
 // }
 //
-
 
 // import 'dart:io';
 // import 'dart:typed_data';

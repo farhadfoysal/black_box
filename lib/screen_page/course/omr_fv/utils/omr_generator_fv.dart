@@ -10,6 +10,12 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:printing/printing.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+enum CornerPosition {
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+}
 enum PageOrientation { portrait, landscape }
 
 enum BubbleStyle { circle, square, diamond }
@@ -58,6 +64,117 @@ class ProfessionalOMRGenerator {
   ); // Light gray background
   static final Color borderColor = const Color(0xFF2C3E50);
   static final Color textColor = const Color(0xFF2C3E50);
+
+  // OMR Scanner Symbols
+  static const double SCANNER_SYMBOL_SIZE = 25.0;
+  static const double CORNER_MARKER_SIZE = 15.0;
+
+
+  // ===========================================================
+  // ADVANCED OMR SCANNER SYMBOLS
+  // ===========================================================
+
+  /// Draws the main OMR scanner detection symbol (concentric pattern)
+  static void _drawOMRScannerSymbol(Canvas canvas, double x, double y) {
+    final center = Offset(x + SCANNER_SYMBOL_SIZE / 2, y + SCANNER_SYMBOL_SIZE / 2);
+
+    // Outer filled square (black)
+    final outerSquarePaint = Paint()..color = Colors.black;
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: center,
+        width: SCANNER_SYMBOL_SIZE,
+        height: SCANNER_SYMBOL_SIZE,
+      ),
+      outerSquarePaint,
+    );
+
+    // Middle white circle
+    final middleCirclePaint = Paint()..color = Colors.white;
+    canvas.drawCircle(center, SCANNER_SYMBOL_SIZE * 0.4, middleCirclePaint);
+
+    // Inner black circle (unfilled - just border)
+    final innerCirclePaint = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawCircle(center, SCANNER_SYMBOL_SIZE * 0.25, innerCirclePaint);
+
+    // Crosshair lines for precise alignment
+    final crosshairPaint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 1.0;
+
+    // Horizontal line
+    canvas.drawLine(
+      Offset(center.dx - SCANNER_SYMBOL_SIZE * 0.2, center.dy),
+      Offset(center.dx + SCANNER_SYMBOL_SIZE * 0.2, center.dy),
+      crosshairPaint,
+    );
+
+    // Vertical line
+    canvas.drawLine(
+      Offset(center.dx, center.dy - SCANNER_SYMBOL_SIZE * 0.2),
+      Offset(center.dx, center.dy + SCANNER_SYMBOL_SIZE * 0.2),
+      crosshairPaint,
+    );
+  }
+
+  /// Draws corner alignment markers for scanner
+  static void _drawCornerAlignmentMarker(Canvas canvas, double x, double y, CornerPosition position) {
+    final center = Offset(x + CORNER_MARKER_SIZE / 2, y + CORNER_MARKER_SIZE / 2);
+    final paint = Paint()..color = Colors.black;
+
+    switch (position) {
+      case CornerPosition.topLeft:
+      // Draw L-shape
+        canvas.drawRect(Rect.fromLTWH(x, y, CORNER_MARKER_SIZE * 0.3, CORNER_MARKER_SIZE), paint);
+        canvas.drawRect(Rect.fromLTWH(x, y, CORNER_MARKER_SIZE, CORNER_MARKER_SIZE * 0.3), paint);
+        break;
+      case CornerPosition.topRight:
+        canvas.drawRect(Rect.fromLTWH(x + CORNER_MARKER_SIZE * 0.7, y, CORNER_MARKER_SIZE * 0.3, CORNER_MARKER_SIZE), paint);
+        canvas.drawRect(Rect.fromLTWH(x, y, CORNER_MARKER_SIZE, CORNER_MARKER_SIZE * 0.3), paint);
+        break;
+      case CornerPosition.bottomLeft:
+        canvas.drawRect(Rect.fromLTWH(x, y, CORNER_MARKER_SIZE * 0.3, CORNER_MARKER_SIZE), paint);
+        canvas.drawRect(Rect.fromLTWH(x, y + CORNER_MARKER_SIZE * 0.7, CORNER_MARKER_SIZE, CORNER_MARKER_SIZE * 0.3), paint);
+        break;
+      case CornerPosition.bottomRight:
+        canvas.drawRect(Rect.fromLTWH(x + CORNER_MARKER_SIZE * 0.7, y, CORNER_MARKER_SIZE * 0.3, CORNER_MARKER_SIZE), paint);
+        canvas.drawRect(Rect.fromLTWH(x, y + CORNER_MARKER_SIZE * 0.7, CORNER_MARKER_SIZE, CORNER_MARKER_SIZE * 0.3), paint);
+        break;
+    }
+  }
+
+  /// Draws timing track for scanner synchronization
+  static void _drawTimingTrack(Canvas canvas, double startX, double startY, double length, bool horizontal) {
+    final paint = Paint()..color = Colors.black;
+    const double trackWidth = 2.0;
+    const double segmentLength = 8.0;
+    const double gapLength = 4.0;
+
+    double position = 0;
+    bool drawSegment = true;
+
+    while (position < length) {
+      if (drawSegment) {
+        if (horizontal) {
+          canvas.drawRect(
+            Rect.fromLTWH(startX + position, startY, segmentLength, trackWidth),
+            paint,
+          );
+        } else {
+          canvas.drawRect(
+            Rect.fromLTWH(startX, startY + position, trackWidth, segmentLength),
+            paint,
+          );
+        }
+      }
+      position += drawSegment ? segmentLength : gapLength;
+      drawSegment = !drawSegment;
+    }
+  }
+
 
   static Future<void> _drawQRCode(
     Canvas canvas,
@@ -120,6 +237,41 @@ class ProfessionalOMRGenerator {
     }
   }
 
+  /// Draws all OMR scanner detection symbols
+  static void _drawScannerSymbols(Canvas canvas) {
+    // Main scanner symbols in corners
+    _drawOMRScannerSymbol(canvas, MARGIN - 6, MARGIN - 6); // Top-left
+    _drawOMRScannerSymbol(canvas, A4_WIDTH - MARGIN + 6 - SCANNER_SYMBOL_SIZE, MARGIN - 6); // Top-right
+    _drawOMRScannerSymbol(canvas, MARGIN - 6, A4_HEIGHT - MARGIN + 6 - SCANNER_SYMBOL_SIZE); // Bottom-left
+    _drawOMRScannerSymbol(canvas, A4_WIDTH - MARGIN + 6 - SCANNER_SYMBOL_SIZE, A4_HEIGHT - MARGIN + 6 - SCANNER_SYMBOL_SIZE); // Bottom-right
+
+    // Corner alignment markers
+    _drawCornerAlignmentMarker(canvas, MARGIN + 0, MARGIN + 90, CornerPosition.topLeft);
+    _drawCornerAlignmentMarker(canvas, A4_WIDTH - MARGIN - 0 - CORNER_MARKER_SIZE, MARGIN + 90, CornerPosition.topRight);
+    _drawCornerAlignmentMarker(canvas, MARGIN + 0, A4_HEIGHT - MARGIN - 80 - CORNER_MARKER_SIZE, CornerPosition.bottomLeft);
+    _drawCornerAlignmentMarker(canvas, A4_WIDTH - MARGIN - 0 - CORNER_MARKER_SIZE, A4_HEIGHT - MARGIN - 80 - CORNER_MARKER_SIZE, CornerPosition.bottomRight);
+
+    // Timing tracks around the edges
+    _drawTimingTrack(canvas, MARGIN + 60, MARGIN + 90, A4_WIDTH - 2 * MARGIN - 120, true); // Top
+    _drawTimingTrack(canvas, MARGIN + 60, A4_HEIGHT - MARGIN - 85, A4_WIDTH - 2 * MARGIN - 120, true); // Bottom
+    _drawTimingTrack(canvas, MARGIN + 0, MARGIN + 120, A4_HEIGHT - 3 * MARGIN - 220, false); // Left
+    _drawTimingTrack(canvas, A4_WIDTH - MARGIN - 0, MARGIN + 120, A4_HEIGHT - 3 * MARGIN - 220, false); // Right
+
+    // Add scanner instruction text
+    _drawText(
+      canvas,
+      "OMR SCANNER AREA - KEEP CLEAR",
+      A4_WIDTH / 2,
+      MARGIN + 95,
+      TextStyle(
+        fontSize: 8,
+        color: Colors.grey,
+        fontWeight: FontWeight.bold,
+      ),
+      TextAlign.center,
+    );
+  }
+
   // ===========================================================
   // CANVAS IMAGE CREATION
   // ===========================================================
@@ -136,23 +288,26 @@ class ProfessionalOMRGenerator {
       );
 
       // Main border
-      _drawRoundedRect(
-        canvas,
-        Rect.fromLTWH(
-          MARGIN,
-          MARGIN,
-          A4_WIDTH - 2 * MARGIN,
-          A4_HEIGHT - 2 * MARGIN,
-        ),
-        8.0,
-        borderColor,
-        false,
-      );
+      // _drawRoundedRect(
+      //   canvas,
+      //   Rect.fromLTWH(
+      //     MARGIN,
+      //     MARGIN,
+      //     A4_WIDTH - 2 * MARGIN,
+      //     A4_HEIGHT - 2 * MARGIN,
+      //   ),
+      //   8.0,
+      //   borderColor,
+      //   false,
+      // );
 
       // Add bounds checking
       if (config.numberOfQuestions > 100) {
         throw ArgumentError('Too many questions for single page');
       }
+
+      // Draw OMR scanner symbols FIRST (so they're underneath other content)
+      _drawScannerSymbols(canvas);
 
       // Draw sections
       _drawHeaderSection(canvas, config);
@@ -185,7 +340,7 @@ class ProfessionalOMRGenerator {
       // 1️⃣ Attempt to save using Gal (safest)
       final tempDir = await getTemporaryDirectory();
       final tempFile = File(
-        '${tempDir.path}/_temp_omr_${DateTime.now().millisecondsSinceEpoch}.png',
+        '${tempDir.path}/_WafiSphere_omr_${DateTime.now().millisecondsSinceEpoch}.png',
       );
       await tempFile.writeAsBytes(bytes);
       await Gal.putImage(tempFile.path, album: 'OMR Sheets');
@@ -448,7 +603,7 @@ class ProfessionalOMRGenerator {
   }
 
   static void _drawSetSelectionSection(Canvas canvas, OMRExamConfig config) {
-    final startY = MARGIN + 95;
+    final startY = MARGIN + 105;
 
     _drawText(
       canvas,
@@ -474,7 +629,7 @@ class ProfessionalOMRGenerator {
   }
 
   static void _drawIdNumberSection(Canvas canvas, OMRExamConfig config) {
-    final startY = MARGIN + 122;
+    final startY = MARGIN + 132;
 
     // ==== Titles ====
     _drawText(
@@ -498,7 +653,7 @@ class ProfessionalOMRGenerator {
     // ==== Draw Student ID section (10 digits) ====
     _drawDigitEntrySection(
       canvas,
-      offsetX: MARGIN + 20,
+      offsetX: MARGIN + 25,
       offsetY: startY + 10,
       totalDigits: 10,
       userValue: config.studentId.padLeft(10, ' '),
@@ -599,9 +754,9 @@ class ProfessionalOMRGenerator {
   }
 
   static void _drawAnswerGridSection(Canvas canvas, OMRExamConfig config) {
-    final startY = MARGIN + 345;
+    final startY = MARGIN + 363;
     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
-    final sectionHeight = 365;
+    final sectionHeight = 363;
 
     // Section background
     final bgPaint = Paint()..color = lightBgColor;
@@ -752,7 +907,7 @@ class ProfessionalOMRGenerator {
       canvas,
       "INSTRUCTIONS: Use HB pencil only. Completely darken the bubble. Erase completely to change.",
       A4_WIDTH / 2,
-      startY + 345,
+      startY + 367,
       TextStyle(
         fontSize: 9,
         fontWeight: FontWeight.w500,
@@ -764,13 +919,13 @@ class ProfessionalOMRGenerator {
   }
 
   static void _drawFooterSection(Canvas canvas) {
-    final startY = A4_HEIGHT - MARGIN - 80;
+    final startY = A4_HEIGHT - MARGIN - 75;
     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
 
     // Section border
     _drawRoundedRect(
       canvas,
-      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 70),
+      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 65),
       4.0,
       borderColor,
       false,
@@ -791,7 +946,7 @@ class ProfessionalOMRGenerator {
         canvas,
         signatures[i],
         x + fieldWidth / 2,
-        startY + 15,
+        startY + 19,
         TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: textColor),
         TextAlign.center,
       );
@@ -802,8 +957,8 @@ class ProfessionalOMRGenerator {
         ..strokeWidth = 0.8;
 
       canvas.drawLine(
-        Offset(x + 10, startY + 40),
-        Offset(x + fieldWidth - 10, startY + 40),
+        Offset(x + 10, startY + 50),
+        Offset(x + fieldWidth - 10, startY + 50),
         linePaint,
       );
 
@@ -812,15 +967,15 @@ class ProfessionalOMRGenerator {
         canvas,
         "Date:",
         x + 15,
-        startY + 50,
+        startY + 57,
         TextStyle(fontSize: 9, color: textColor),
         TextAlign.left,
       );
 
       // Date line
       canvas.drawLine(
-        Offset(x + 45, startY + 55),
-        Offset(x + fieldWidth - 20, startY + 55),
+        Offset(x + 45, startY + 60),
+        Offset(x + fieldWidth - 20, startY + 60),
         linePaint,
       );
     }
@@ -1548,6 +1703,1130 @@ class OMRLocalizations {
     this.studentId = "Student ID Number:",
   });
 }
+
+
+
+// class ProfessionalOMRGenerator {
+//   static const double A4_WIDTH = 595.0; // 8.27 inches at 72 DPI
+//   static const double A4_HEIGHT = 842.0; // 11.69 inches at 72 DPI
+//   static const double MARGIN = 8.0;
+//   static const double BUBBLE_RADIUS = 7;
+//   static const double SMALL_BUBBLE_RADIUS = 7;
+//
+//   // Professional color scheme
+//   static final Color primaryColor = const Color(0xFF2C3E50); // Dark blue-gray
+//   static final Color secondaryColor = const Color(
+//     0xFF34495E,
+//   ); // Slightly lighter
+//   static final Color accentColor = const Color(
+//     0xFFE74C3C,
+//   ); // Red for important elements
+//   static final Color lightBgColor = const Color(
+//     0xFFF8F9FA,
+//   ); // Light gray background
+//   static final Color borderColor = const Color(0xFF2C3E50);
+//   static final Color textColor = const Color(0xFF2C3E50);
+//
+//   // OMR Scanner Symbols
+//   static const double SCANNER_SYMBOL_SIZE = 25.0;
+//   static const double CORNER_MARKER_SIZE = 15.0;
+//
+//   static Future<void> _drawQRCode(
+//       Canvas canvas,
+//       double x,
+//       double y,
+//       String data,
+//       ) async {
+//     final qrPainter = QrPainter(
+//       data: data,
+//       version: QrVersions.auto,
+//       gapless: true,
+//     );
+//
+//     final size = 80.0;
+//     qrPainter.paint(canvas, Size(size, size));
+//   }
+//
+//   static void _drawStyledBubble(
+//       Canvas canvas,
+//       double x,
+//       double y,
+//       bool filled,
+//       BubbleStyle style,
+//       ) {
+//     switch (style) {
+//       case BubbleStyle.circle:
+//       // existing circle code
+//         break;
+//       case BubbleStyle.square:
+//       // draw square bubble
+//         break;
+//       case BubbleStyle.diamond:
+//       // draw diamond bubble
+//         break;
+//     }
+//   }
+//
+//   // ===========================================================
+//   // ADVANCED OMR SCANNER SYMBOLS
+//   // ===========================================================
+//
+//   /// Draws the main OMR scanner detection symbol (concentric pattern)
+//   static void _drawOMRScannerSymbol(Canvas canvas, double x, double y) {
+//     final center = Offset(x + SCANNER_SYMBOL_SIZE / 2, y + SCANNER_SYMBOL_SIZE / 2);
+//
+//     // Outer filled square (black)
+//     final outerSquarePaint = Paint()..color = Colors.black;
+//     canvas.drawRect(
+//       Rect.fromCenter(
+//         center: center,
+//         width: SCANNER_SYMBOL_SIZE,
+//         height: SCANNER_SYMBOL_SIZE,
+//       ),
+//       outerSquarePaint,
+//     );
+//
+//     // Middle white circle
+//     final middleCirclePaint = Paint()..color = Colors.white;
+//     canvas.drawCircle(center, SCANNER_SYMBOL_SIZE * 0.4, middleCirclePaint);
+//
+//     // Inner black circle (unfilled - just border)
+//     final innerCirclePaint = Paint()
+//       ..color = Colors.black
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 2.0;
+//     canvas.drawCircle(center, SCANNER_SYMBOL_SIZE * 0.25, innerCirclePaint);
+//
+//     // Crosshair lines for precise alignment
+//     final crosshairPaint = Paint()
+//       ..color = Colors.black
+//       ..strokeWidth = 1.0;
+//
+//     // Horizontal line
+//     canvas.drawLine(
+//       Offset(center.dx - SCANNER_SYMBOL_SIZE * 0.2, center.dy),
+//       Offset(center.dx + SCANNER_SYMBOL_SIZE * 0.2, center.dy),
+//       crosshairPaint,
+//     );
+//
+//     // Vertical line
+//     canvas.drawLine(
+//       Offset(center.dx, center.dy - SCANNER_SYMBOL_SIZE * 0.2),
+//       Offset(center.dx, center.dy + SCANNER_SYMBOL_SIZE * 0.2),
+//       crosshairPaint,
+//     );
+//   }
+//
+//   /// Draws corner alignment markers for scanner
+//   static void _drawCornerAlignmentMarker(Canvas canvas, double x, double y, CornerPosition position) {
+//     final center = Offset(x + CORNER_MARKER_SIZE / 2, y + CORNER_MARKER_SIZE / 2);
+//     final paint = Paint()..color = Colors.black;
+//
+//     switch (position) {
+//       case CornerPosition.topLeft:
+//       // Draw L-shape
+//         canvas.drawRect(Rect.fromLTWH(x, y, CORNER_MARKER_SIZE * 0.3, CORNER_MARKER_SIZE), paint);
+//         canvas.drawRect(Rect.fromLTWH(x, y, CORNER_MARKER_SIZE, CORNER_MARKER_SIZE * 0.3), paint);
+//         break;
+//       case CornerPosition.topRight:
+//         canvas.drawRect(Rect.fromLTWH(x + CORNER_MARKER_SIZE * 0.7, y, CORNER_MARKER_SIZE * 0.3, CORNER_MARKER_SIZE), paint);
+//         canvas.drawRect(Rect.fromLTWH(x, y, CORNER_MARKER_SIZE, CORNER_MARKER_SIZE * 0.3), paint);
+//         break;
+//       case CornerPosition.bottomLeft:
+//         canvas.drawRect(Rect.fromLTWH(x, y, CORNER_MARKER_SIZE * 0.3, CORNER_MARKER_SIZE), paint);
+//         canvas.drawRect(Rect.fromLTWH(x, y + CORNER_MARKER_SIZE * 0.7, CORNER_MARKER_SIZE, CORNER_MARKER_SIZE * 0.3), paint);
+//         break;
+//       case CornerPosition.bottomRight:
+//         canvas.drawRect(Rect.fromLTWH(x + CORNER_MARKER_SIZE * 0.7, y, CORNER_MARKER_SIZE * 0.3, CORNER_MARKER_SIZE), paint);
+//         canvas.drawRect(Rect.fromLTWH(x, y + CORNER_MARKER_SIZE * 0.7, CORNER_MARKER_SIZE, CORNER_MARKER_SIZE * 0.3), paint);
+//         break;
+//     }
+//   }
+//
+//   /// Draws timing track for scanner synchronization
+//   static void _drawTimingTrack(Canvas canvas, double startX, double startY, double length, bool horizontal) {
+//     final paint = Paint()..color = Colors.black;
+//     const double trackWidth = 2.0;
+//     const double segmentLength = 8.0;
+//     const double gapLength = 4.0;
+//
+//     double position = 0;
+//     bool drawSegment = true;
+//
+//     while (position < length) {
+//       if (drawSegment) {
+//         if (horizontal) {
+//           canvas.drawRect(
+//             Rect.fromLTWH(startX + position, startY, segmentLength, trackWidth),
+//             paint,
+//           );
+//         } else {
+//           canvas.drawRect(
+//             Rect.fromLTWH(startX, startY + position, trackWidth, segmentLength),
+//             paint,
+//           );
+//         }
+//       }
+//       position += drawSegment ? segmentLength : gapLength;
+//       drawSegment = !drawSegment;
+//     }
+//   }
+//
+//   // static Future<Uint8List> _generateOMRImage(
+//   // OMRExamConfig config,
+//   // {PageOrientation orientation = PageOrientation.portrait}
+//   // ) async {
+//   // final width = orientation == PageOrientation.portrait ? A4_WIDTH : A4_HEIGHT;
+//   // final height = orientation == PageOrientation.portrait ? A4_HEIGHT : A4_WIDTH;
+//   // // ... adjust layout accordingly ...
+//   // }
+//
+//   static Future<File> generateOMRSheet(OMRExamConfig config) async {
+//     try {
+//       // Generate OMR sheet bytes
+//       final Uint8List imageBytes = await _generateOMRImage(config);
+//
+//       // Save to gallery and permanent directory
+//       final file = await _saveOMRSheetWithGal(imageBytes, config);
+//
+//       print('✅ OMR Sheet generated successfully.');
+//       return file;
+//     } catch (e) {
+//       print('❌ Error generating OMR sheet: $e');
+//       rethrow;
+//     }
+//   }
+//
+//   // ===========================================================
+//   // CANVAS IMAGE CREATION (UPDATED WITH SCANNER SYMBOLS)
+//   // ===========================================================
+//   static Future<Uint8List> _generateOMRImage(OMRExamConfig config) async {
+//     try {
+//       final recorder = PictureRecorder();
+//       final canvas = Canvas(recorder);
+//       final paint = Paint();
+//
+//       // Background
+//       canvas.drawRect(
+//         Rect.fromLTWH(0, 0, A4_WIDTH, A4_HEIGHT),
+//         paint..color = Colors.white,
+//       );
+//
+//       // Main border
+//       _drawRoundedRect(
+//         canvas,
+//         Rect.fromLTWH(
+//           MARGIN,
+//           MARGIN,
+//           A4_WIDTH - 2 * MARGIN,
+//           A4_HEIGHT - 2 * MARGIN,
+//         ),
+//         8.0,
+//         borderColor,
+//         false,
+//       );
+//
+//       // Add bounds checking
+//       if (config.numberOfQuestions > 100) {
+//         throw ArgumentError('Too many questions for single page');
+//       }
+//
+//       // Draw OMR scanner symbols FIRST (so they're underneath other content)
+//       _drawScannerSymbols(canvas);
+//
+//       // Draw sections
+//       _drawHeaderSection(canvas, config);
+//       _drawStudentInfoSection(canvas, config);
+//       _drawSetSelectionSection(canvas, config);
+//       _drawIdNumberSection(canvas, config);
+//       _drawAnswerGridSection(canvas, config);
+//       _drawFooterSection(canvas);
+//
+//       final picture = recorder.endRecording();
+//       final image = await picture.toImage(A4_WIDTH.toInt(), A4_HEIGHT.toInt());
+//       final byteData = await image.toByteData(format: ImageByteFormat.png);
+//       return byteData!.buffer.asUint8List();
+//     } catch (e) {
+//       print('Error in canvas generation: $e');
+//       rethrow;
+//     }
+//   }
+//
+//   /// Draws all OMR scanner detection symbols
+//   static void _drawScannerSymbols(Canvas canvas) {
+//     // Main scanner symbols in corners
+//     _drawOMRScannerSymbol(canvas, MARGIN + 10, MARGIN + 10); // Top-left
+//     _drawOMRScannerSymbol(canvas, A4_WIDTH - MARGIN - 10 - SCANNER_SYMBOL_SIZE, MARGIN + 10); // Top-right
+//     _drawOMRScannerSymbol(canvas, MARGIN + 10, A4_HEIGHT - MARGIN - 10 - SCANNER_SYMBOL_SIZE); // Bottom-left
+//     _drawOMRScannerSymbol(canvas, A4_WIDTH - MARGIN - 10 - SCANNER_SYMBOL_SIZE, A4_HEIGHT - MARGIN - 10 - SCANNER_SYMBOL_SIZE); // Bottom-right
+//
+//     // Corner alignment markers
+//     _drawCornerAlignmentMarker(canvas, MARGIN + 40, MARGIN + 40, CornerPosition.topLeft);
+//     _drawCornerAlignmentMarker(canvas, A4_WIDTH - MARGIN - 40 - CORNER_MARKER_SIZE, MARGIN + 40, CornerPosition.topRight);
+//     _drawCornerAlignmentMarker(canvas, MARGIN + 40, A4_HEIGHT - MARGIN - 40 - CORNER_MARKER_SIZE, CornerPosition.bottomLeft);
+//     _drawCornerAlignmentMarker(canvas, A4_WIDTH - MARGIN - 40 - CORNER_MARKER_SIZE, A4_HEIGHT - MARGIN - 40 - CORNER_MARKER_SIZE, CornerPosition.bottomRight);
+//
+//     // Timing tracks around the edges
+//     _drawTimingTrack(canvas, MARGIN + 60, MARGIN + 30, A4_WIDTH - 2 * MARGIN - 120, true); // Top
+//     _drawTimingTrack(canvas, MARGIN + 60, A4_HEIGHT - MARGIN - 30, A4_WIDTH - 2 * MARGIN - 120, true); // Bottom
+//     _drawTimingTrack(canvas, MARGIN + 30, MARGIN + 60, A4_HEIGHT - 2 * MARGIN - 120, false); // Left
+//     _drawTimingTrack(canvas, A4_WIDTH - MARGIN - 30, MARGIN + 60, A4_HEIGHT - 2 * MARGIN - 120, false); // Right
+//
+//     // Add scanner instruction text
+//     _drawText(
+//       canvas,
+//       "OMR SCANNER AREA - KEEP CLEAR",
+//       A4_WIDTH / 2,
+//       MARGIN + 20,
+//       TextStyle(
+//         fontSize: 8,
+//         color: Colors.grey,
+//         fontWeight: FontWeight.bold,
+//       ),
+//       TextAlign.center,
+//     );
+//   }
+//
+//   // ===========================================================
+//   // SAVE TO GALLERY + PERMANENT STORAGE
+//   // ===========================================================
+//   static Future<File> _saveOMRSheetWithGal(
+//       Uint8List bytes,
+//       OMRExamConfig config,
+//       ) async {
+//     await _requestGalleryPermissions();
+//
+//     try {
+//       // 1️⃣ Attempt to save using Gal (safest)
+//       final tempDir = await getTemporaryDirectory();
+//       final tempFile = File(
+//         '${tempDir.path}/_WafiSphere_omr_${DateTime.now().millisecondsSinceEpoch}.png',
+//       );
+//       await tempFile.writeAsBytes(bytes);
+//       await Gal.putImage(tempFile.path, album: 'OMR Sheets');
+//
+//       // 2️⃣ Save a permanent copy to Pictures/OMR_Sheets
+//       final permanentFile = await _saveToPublicPictures(bytes, config);
+//
+//       // Cleanup temp file
+//       await tempFile.delete();
+//
+//       print('✅ Saved to gallery & Pictures folder');
+//       return permanentFile;
+//     } catch (e) {
+//       print('⚠️ Gal save failed: $e');
+//       // fallback: save manually
+//       return await _saveToPublicPictures(bytes, config);
+//     }
+//   }
+//
+//   // ===========================================================
+//   // SAVE TO PUBLIC PICTURES DIRECTORY (VISIBLE IN GALLERY)
+//   // ===========================================================
+//   static Future<File> _saveToPublicPictures(
+//       Uint8List bytes,
+//       OMRExamConfig config,
+//       ) async {
+//     final timestamp = DateTime.now().millisecondsSinceEpoch;
+//     final fileName =
+//         'OMR_${_sanitizeFileName(config.examName)}_${config.studentName}_$timestamp.png';
+//
+//     Directory? publicDir;
+//     if (Platform.isAndroid) {
+//       publicDir = Directory('/storage/emulated/0/Pictures/OMR_Sheets');
+//     } else {
+//       publicDir = await getApplicationDocumentsDirectory();
+//     }
+//
+//     await publicDir.create(recursive: true);
+//     final file = File('${publicDir.path}/$fileName');
+//     await file.writeAsBytes(bytes);
+//
+//     // ✅ Trigger Android media scanner
+//     if (Platform.isAndroid) {
+//       try {
+//         await Process.run('am', [
+//           'broadcast',
+//           '-a',
+//           'android.intent.action.MEDIA_SCANNER_SCAN_FILE',
+//           '-d',
+//           'file://${file.path}',
+//         ]);
+//       } catch (_) {
+//         // Ignore if unavailable
+//       }
+//     }
+//
+//     return file;
+//   }
+//
+//   // ===========================================================
+//   // PRINTING SUPPORT (PDF/Direct Print)
+//   // ===========================================================
+//   static Future<void> printOMRSheet(Uint8List imageBytes) async {
+//     try {
+//       await Printing.layoutPdf(onLayout: (format) async => imageBytes);
+//     } catch (e) {
+//       print('❌ Error printing OMR sheet: $e');
+//     }
+//   }
+//
+//   // ===========================================================
+//   // PERMISSION HANDLER
+//   // ===========================================================
+//   static Future<void> _requestGalleryPermissions() async {
+//     if (Platform.isAndroid) {
+//       final storageStatus = await Permission.manageExternalStorage.status;
+//       if (!storageStatus.isGranted) {
+//         await Permission.manageExternalStorage.request();
+//       }
+//       final photosStatus = await Permission.photos.status;
+//       if (!photosStatus.isGranted) {
+//         await Permission.photos.request();
+//       }
+//     } else if (Platform.isIOS) {
+//       final photosStatus = await Permission.photos.status;
+//       if (!photosStatus.isGranted) {
+//         await Permission.photos.request();
+//       }
+//     }
+//   }
+//
+//   // ===========================================================
+//   // HELPERS
+//   // ===========================================================
+//   static String _sanitizeFileName(String name) {
+//     final sanitized = name
+//         .replaceAll(RegExp(r'[<>:"/\\|?*]'), '_')
+//         .replaceAll(RegExp(r'\s+'), '_');
+//     return sanitized.length > 50 ? sanitized.substring(0, 50) : sanitized;
+//   }
+//
+//   static void _drawWatermark(Canvas canvas, String text) {
+//     final watermarkPaint = TextPainter(
+//       text: TextSpan(
+//         text: text,
+//         style: TextStyle(
+//           fontSize: 60,
+//           color: Colors.grey.withOpacity(0.1),
+//           fontWeight: FontWeight.bold,
+//         ),
+//       ),
+//       textDirection: TextDirection.ltr,
+//     );
+//
+//     watermarkPaint.layout();
+//
+//     // Draw diagonally
+//     canvas.save();
+//     canvas.translate(A4_WIDTH / 2, A4_HEIGHT / 2);
+//     canvas.rotate(-0.5); // Rotate 45 degrees
+//     watermarkPaint.paint(
+//       canvas,
+//       Offset(-watermarkPaint.width / 2, -watermarkPaint.height / 2),
+//     );
+//     canvas.restore();
+//   }
+//
+//   static Future<void> _drawTextWithCustomFont(
+//       Canvas canvas,
+//       String text,
+//       double x,
+//       double y,
+//       TextStyle style,
+//       String? fontFamily,
+//       ) async {
+//     final textStyle = style.copyWith(fontFamily: fontFamily);
+//     // ... existing text drawing code ...
+//   }
+//
+//   static Stream<File> generateBatchOMRSheetsStream(
+//       List<OMRExamConfig> configs,
+//       ) async* {
+//     for (final config in configs) {
+//       try {
+//         final file = await generateOMRSheet(config);
+//         yield file;
+//       } catch (e) {
+//         print('Error generating OMR for ${config.studentName}: $e');
+//       }
+//     }
+//   }
+//
+//   static void _drawHeaderSection(Canvas canvas, OMRExamConfig config) {
+//     final centerX = A4_WIDTH / 2;
+//
+//     // Institution name - Main title
+//     _drawText(
+//       canvas,
+//       config.examName.toUpperCase(),
+//       centerX,
+//       MARGIN + 45, // Adjusted for scanner symbols
+//       TextStyle(
+//         fontSize: 15,
+//         fontWeight: FontWeight.bold,
+//         color: primaryColor,
+//         letterSpacing: 1.2,
+//       ),
+//       TextAlign.center,
+//     );
+//
+//     // Exam type subtitle
+//     _drawText(
+//       canvas,
+//       "MULTIPLE CHOICE ANSWER SHEET",
+//       centerX,
+//       MARGIN + 57,
+//       TextStyle(
+//         fontSize: 9,
+//         fontWeight: FontWeight.w600,
+//         color: secondaryColor,
+//         letterSpacing: 1.0,
+//       ),
+//       TextAlign.center,
+//     );
+//
+//     // Decorative line
+//     final linePaint = Paint()
+//       ..color = accentColor
+//       ..strokeWidth = 1.5
+//       ..style = PaintingStyle.stroke;
+//
+//     canvas.drawLine(
+//       Offset(centerX - 100, MARGIN + 63),
+//       Offset(centerX + 100, MARGIN + 63),
+//       linePaint,
+//     );
+//   }
+//
+//   static void _drawStudentInfoSection(Canvas canvas, OMRExamConfig config) {
+//     final startY = MARGIN + 70; // Adjusted for scanner symbols
+//     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
+//
+//     // Section background
+//     final bgPaint = Paint()..color = lightBgColor;
+//     canvas.drawRect(
+//       Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 53),
+//       bgPaint,
+//     );
+//
+//     // Section border
+//     _drawRoundedRect(
+//       canvas,
+//       Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 53),
+//       4.0,
+//       borderColor,
+//       false,
+//     );
+//
+//     // Fill the title background
+//     final titleBgPaint = Paint()..color = primaryColor;
+//     canvas.drawRect(
+//       Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 20),
+//       titleBgPaint,
+//     );
+//
+//     // Section title
+//     _drawText(
+//       canvas,
+//       "STUDENT INFORMATION",
+//       MARGIN + 20,
+//       startY + 10,
+//       TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: lightBgColor),
+//       TextAlign.left,
+//     );
+//
+//     // Student Name field
+//     _drawLabeledField(
+//       canvas,
+//       MARGIN + 20,
+//       startY + 30,
+//       "Student Name:",
+//       config.studentName,
+//       200,
+//     );
+//
+//     // Class field
+//     _drawLabeledField(
+//       canvas,
+//       MARGIN + 250,
+//       startY + 30,
+//       "Class:",
+//       config.className,
+//       120,
+//     );
+//
+//     // Date field
+//     final dateStr =
+//         "${config.examDate.day}/${config.examDate.month}/${config.examDate.year}";
+//     _drawLabeledField(canvas, MARGIN + 400, startY + 30, "Date:", dateStr, 120);
+//   }
+//
+//   static void _drawSetSelectionSection(Canvas canvas, OMRExamConfig config) {
+//     final startY = MARGIN + 135; // Adjusted for scanner symbols
+//
+//     _drawText(
+//       canvas,
+//       "SET NUMBER:",
+//       MARGIN + 300,
+//       startY + 2,
+//       TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor),
+//       TextAlign.left,
+//     );
+//
+//     // Set number bubbles (1-4)
+//     final setNumbers = ["1", "2", "3", "4"];
+//     for (int i = 0; i < setNumbers.length; i++) {
+//       final x = MARGIN + 400 + (i * 50);
+//       _drawBubbleWithLabel(
+//         canvas,
+//         x,
+//         startY - 5,
+//         setNumbers[i],
+//         config.setNumber == i + 1,
+//       );
+//     }
+//   }
+//
+//   static void _drawIdNumberSection(Canvas canvas, OMRExamConfig config) {
+//     final startY = MARGIN + 162; // Adjusted for scanner symbols
+//
+//     // ==== Titles ====
+//     _drawText(
+//       canvas,
+//       "STUDENT ID NUMBER:",
+//       MARGIN + 20,
+//       startY,
+//       TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor),
+//       TextAlign.left,
+//     );
+//
+//     _drawText(
+//       canvas,
+//       "MOBILE NUMBER:",
+//       MARGIN + 300,
+//       startY,
+//       TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor),
+//       TextAlign.left,
+//     );
+//
+//     // ==== Draw Student ID section (10 digits) ====
+//     _drawDigitEntrySection(
+//       canvas,
+//       offsetX: MARGIN + 20,
+//       offsetY: startY + 10,
+//       totalDigits: 10,
+//       userValue: config.studentId.padLeft(10, ' '),
+//       label: "Student ID",
+//     );
+//
+//     // ==== Draw Mobile number section (11 digits) ====
+//     _drawDigitEntrySection(
+//       canvas,
+//       offsetX: MARGIN + 300,
+//       offsetY: startY + 10,
+//       totalDigits: 11,
+//       userValue: config.mobileNumber.padLeft(11, ' '),
+//       label: "Mobile Number",
+//     );
+//   }
+//
+//   /// Draws a full digit entry section with boxes and bubbles
+//   static void _drawDigitEntrySection(
+//       Canvas canvas, {
+//         required double offsetX,
+//         required double offsetY,
+//         required int totalDigits,
+//         required String userValue,
+//         required String label,
+//       }) {
+//     const double digitBoxSize = 20.0;
+//     const double bubbleRadius = 6.5;
+//     const double bubbleSpacing = 18.0;
+//     const double columnSpacing = 25.0;
+//     const double leftIndexOffset = 15.0;
+//
+//     final Paint boxPaint = Paint()
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 1.0
+//       ..color = Colors.black;
+//
+//     // === Draw header boxes for digits (for writing) ===
+//     for (int i = 0; i < totalDigits; i++) {
+//       final double x = offsetX + i * columnSpacing;
+//       final double y = offsetY;
+//
+//       final Rect rect = Rect.fromLTWH(x, y, digitBoxSize, digitBoxSize);
+//       canvas.drawRect(rect, boxPaint);
+//
+//       // Draw digit from userValue (if any)
+//       _drawText(
+//         canvas,
+//         userValue[i],
+//         x + digitBoxSize / 2,
+//         y + digitBoxSize / 2 - 0,
+//         TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: textColor),
+//         TextAlign.center,
+//       );
+//     }
+//
+//     // === Draw vertical bubbles (0–9) for each column ===
+//     for (int row = 0; row < 10; row++) {
+//       final double bubbleY = offsetY + digitBoxSize + 15 + row * bubbleSpacing;
+//
+//       // Draw row index (0–9) on left side
+//       _drawText(
+//         canvas,
+//         row.toString(),
+//         offsetX - leftIndexOffset,
+//         bubbleY,
+//         TextStyle(fontSize: 8, color: textColor),
+//         TextAlign.center,
+//       );
+//
+//       // Draw bubbles for each column
+//       for (int col = 0; col < totalDigits; col++) {
+//         final double bubbleX = offsetX + col * columnSpacing + digitBoxSize / 2;
+//         canvas.drawCircle(Offset(bubbleX, bubbleY), bubbleRadius, boxPaint);
+//
+//         // Draw digit inside bubble
+//         _drawText(
+//           canvas,
+//           row.toString(),
+//           bubbleX,
+//           bubbleY - 0,
+//           TextStyle(fontSize: 7, color: textColor),
+//           TextAlign.center,
+//         );
+//         // Fill the correct bubble (if matches)
+//         if (int.tryParse(userValue[col]) == row) {
+//           final Paint fillPaint = Paint()
+//             ..style = PaintingStyle.fill
+//             ..color = Colors.black;
+//           canvas.drawCircle(
+//             Offset(bubbleX, bubbleY),
+//             bubbleRadius - 1.5,
+//             fillPaint,
+//           );
+//         }
+//       }
+//     }
+//   }
+//
+//   static void _drawAnswerGridSection(Canvas canvas, OMRExamConfig config) {
+//     final startY = MARGIN + 403; // Adjusted for scanner symbols
+//     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
+//     final sectionHeight = 363;
+//
+//     // Section background
+//     final bgPaint = Paint()..color = lightBgColor;
+//     canvas.drawRect(
+//       Rect.fromLTWH(
+//         MARGIN + 10,
+//         startY,
+//         sectionWidth,
+//         sectionHeight.toDouble(),
+//       ),
+//       bgPaint,
+//     );
+//
+//     // Section border
+//     _drawRoundedRect(
+//       canvas,
+//       Rect.fromLTWH(
+//         MARGIN + 10,
+//         startY,
+//         sectionWidth,
+//         sectionHeight.toDouble(),
+//       ),
+//       4.0,
+//       borderColor,
+//       false,
+//     );
+//
+//     // Fill the title background
+//     final titleBgPaint = Paint()..color = primaryColor;
+//     canvas.drawRect(
+//       Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 20),
+//       titleBgPaint,
+//     );
+//
+//     // Section title
+//     _drawText(
+//       canvas,
+//       "ANSWER GRID - MARK YOUR ANSWERS CLEARLY",
+//       A4_WIDTH / 2,
+//       startY + 10,
+//       TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: lightBgColor),
+//       TextAlign.center,
+//     );
+//
+//     // Draw answer grid with 3 columns
+//     _drawAnswerGrid(canvas, startY + 28, config.numberOfQuestions);
+//   }
+//
+//   static void _drawAnswerGrid(
+//       Canvas canvas,
+//       double startY,
+//       int totalQuestions,
+//       ) {
+//     final questionsPerColumn = (totalQuestions / 3).ceil();
+//     final columnWidth = (A4_WIDTH - 2 * MARGIN - 40) / 3;
+//
+//     // Column headers
+//     final options = ["A", "B", "C", "D"];
+//     for (int col = 0; col < 3; col++) {
+//       final colX = MARGIN + 20 + (col * columnWidth);
+//
+//       // Column header background
+//       final headerPaint = Paint()..color = secondaryColor.withOpacity(0.8);
+//       canvas.drawRect(
+//         Rect.fromLTWH(colX, startY - 5, columnWidth - 10, 20),
+//         headerPaint,
+//       );
+//
+//       // Question number and options header
+//       _drawText(
+//         canvas,
+//         "Q.No",
+//         colX + 25,
+//         startY + 5,
+//         TextStyle(
+//           fontSize: 10,
+//           fontWeight: FontWeight.bold,
+//           color: Colors.white,
+//         ),
+//         TextAlign.left,
+//       );
+//
+//       for (int opt = 0; opt < 4; opt++) {
+//         _drawText(
+//           canvas,
+//           options[opt],
+//           colX + 65 + (opt * 25),
+//           startY + 5,
+//           TextStyle(
+//             fontSize: 10,
+//             fontWeight: FontWeight.bold,
+//             color: Colors.white,
+//           ),
+//           TextAlign.center,
+//         );
+//       }
+//
+//       // Questions and bubbles
+//       for (int i = 0; i < questionsPerColumn; i++) {
+//         final questionNum = col * questionsPerColumn + i + 1;
+//         if (questionNum > totalQuestions) break;
+//
+//         final y = startY + 25 + (i * 22);
+//
+//         // Alternate row background
+//         if (i % 2 == 0) {
+//           final rowBgPaint = Paint()..color = Colors.grey.withOpacity(0.05);
+//           canvas.drawRect(
+//             Rect.fromLTWH(colX, y - 5, columnWidth - 10, 20),
+//             rowBgPaint,
+//           );
+//         }
+//
+//         // Question number
+//         _drawText(
+//           canvas,
+//           questionNum.toString().padLeft(2, '0'),
+//           colX + 25,
+//           y + 4,
+//           TextStyle(
+//             fontSize: 10,
+//             fontWeight: FontWeight.w600,
+//             color: textColor,
+//           ),
+//           TextAlign.left,
+//         );
+//
+//         // Answer bubbles
+//         for (int opt = 0; opt < 4; opt++) {
+//           final x = colX + 60 + (opt * 25);
+//           _drawBubble(canvas, x, y, false);
+//
+//           // Draw option letter inside bubble
+//           _drawText(
+//             canvas,
+//             options[opt],
+//             x + BUBBLE_RADIUS,
+//             y + BUBBLE_RADIUS - 1,
+//             TextStyle(fontSize: 8, color: textColor.withOpacity(0.6)),
+//             TextAlign.center,
+//           );
+//         }
+//       }
+//     }
+//
+//     // Instructions
+//     _drawText(
+//       canvas,
+//       "INSTRUCTIONS: Use HB pencil only. Completely darken the bubble. Erase completely to change.",
+//       A4_WIDTH / 2,
+//       startY + 367,
+//       TextStyle(
+//         fontSize: 9,
+//         fontWeight: FontWeight.w500,
+//         color: accentColor,
+//         fontStyle: FontStyle.italic,
+//       ),
+//       TextAlign.center,
+//     );
+//   }
+//
+//   static void _drawFooterSection(Canvas canvas) {
+//     final startY = A4_HEIGHT - MARGIN - 75;
+//     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
+//
+//     // Section border
+//     _drawRoundedRect(
+//       canvas,
+//       Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 65),
+//       4.0,
+//       borderColor,
+//       false,
+//     );
+//
+//     // Signature fields
+//     final signatures = [
+//       "Student's Signature",
+//       "Invigilator's Signature",
+//       "Examiner's Signature",
+//     ];
+//
+//     final fieldWidth = (sectionWidth - 40) / 3;
+//     for (int i = 0; i < signatures.length; i++) {
+//       final x = MARGIN + 20 + (i * fieldWidth);
+//
+//       _drawText(
+//         canvas,
+//         signatures[i],
+//         x + fieldWidth / 2,
+//         startY + 19,
+//         TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: textColor),
+//         TextAlign.center,
+//       );
+//
+//       // Signature line
+//       final linePaint = Paint()
+//         ..color = borderColor
+//         ..strokeWidth = 0.8;
+//
+//       canvas.drawLine(
+//         Offset(x + 10, startY + 50),
+//         Offset(x + fieldWidth - 10, startY + 50),
+//         linePaint,
+//       );
+//
+//       // Date label
+//       _drawText(
+//         canvas,
+//         "Date:",
+//         x + 15,
+//         startY + 57,
+//         TextStyle(fontSize: 9, color: textColor),
+//         TextAlign.left,
+//       );
+//
+//       // Date line
+//       canvas.drawLine(
+//         Offset(x + 45, startY + 60),
+//         Offset(x + fieldWidth - 20, startY + 60),
+//         linePaint,
+//       );
+//     }
+//
+//     // Add barcode/QR code area (optional)
+//     // _drawBarcodeArea(canvas, MARGIN + 10, A4_HEIGHT - MARGIN - 30);
+//   }
+//
+//   static void _drawBarcodeArea(Canvas canvas, double x, double y) {
+//     final width = 100.0;
+//     final height = 20.0;
+//
+//     // Draw barcode placeholder
+//     final barcodePaint = Paint()
+//       ..color = Colors.black
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 0.5;
+//
+//     // Draw vertical lines to simulate barcode
+//     for (int i = 0; i < 30; i++) {
+//       final lineX = x + (i * 3.0) + 10;
+//       final lineWidth = (i % 2 == 0) ? 1.0 : 2.0;
+//
+//       canvas.drawRect(
+//         Rect.fromLTWH(lineX, y, lineWidth, height),
+//         Paint()..color = Colors.black,
+//       );
+//     }
+//
+//     // Draw border
+//     canvas.drawRect(Rect.fromLTWH(x, y, width, height), barcodePaint);
+//   }
+//
+//   // Helper Methods
+//   static void _drawText(
+//       Canvas canvas,
+//       String text,
+//       double x,
+//       double y,
+//       TextStyle style,
+//       TextAlign align,
+//       ) {
+//     final textPainter = TextPainter(
+//       text: TextSpan(text: text, style: style),
+//       textDirection: TextDirection.ltr,
+//       textAlign: align,
+//     );
+//     textPainter.layout();
+//
+//     double offsetX = x;
+//     double offsetY = y;
+//
+//     if (align == TextAlign.center) {
+//       offsetX -= textPainter.width / 2;
+//     } else if (align == TextAlign.right) {
+//       offsetX -= textPainter.width;
+//     }
+//
+//     textPainter.paint(
+//       canvas,
+//       Offset(offsetX, offsetY - textPainter.height / 2),
+//     );
+//   }
+//
+//   static void _drawRoundedRect(
+//       Canvas canvas,
+//       Rect rect,
+//       double radius,
+//       Color color,
+//       bool fill,
+//       ) {
+//     final paint = Paint()
+//       ..color = color
+//       ..style = fill ? PaintingStyle.fill : PaintingStyle.stroke
+//       ..strokeWidth = 1.5;
+//
+//     final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+//     canvas.drawRRect(rrect, paint);
+//   }
+//
+//   static void _drawBubble(Canvas canvas, double x, double y, bool filled) {
+//     final borderPaint = Paint()
+//       ..color = borderColor
+//       ..style = PaintingStyle.stroke
+//       ..strokeWidth = 1.2;
+//
+//     final fillPaint = Paint()
+//       ..color = primaryColor
+//       ..style = PaintingStyle.fill;
+//
+//     canvas.drawCircle(
+//       Offset(x + BUBBLE_RADIUS, y + BUBBLE_RADIUS),
+//       BUBBLE_RADIUS,
+//       borderPaint,
+//     );
+//
+//     if (filled) {
+//       canvas.drawCircle(
+//         Offset(x + BUBBLE_RADIUS, y + BUBBLE_RADIUS),
+//         BUBBLE_RADIUS - 1.5,
+//         fillPaint,
+//       );
+//     }
+//   }
+//
+//   static void _drawBubbleWithLabel(
+//       Canvas canvas,
+//       double x,
+//       double y,
+//       String label,
+//       bool filled,
+//       ) {
+//     _drawBubble(canvas, x, y, filled);
+//
+//     _drawText(
+//       canvas,
+//       label,
+//       x + BUBBLE_RADIUS,
+//       y + BUBBLE_RADIUS * 2 + 8,
+//       TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: textColor),
+//       TextAlign.center,
+//     );
+//   }
+//
+//   static void _drawLabeledField(
+//       Canvas canvas,
+//       double x,
+//       double y,
+//       String label,
+//       String value,
+//       double width,
+//       ) {
+//     _drawText(
+//       canvas,
+//       label,
+//       x,
+//       y,
+//       TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: textColor),
+//       TextAlign.left,
+//     );
+//
+//     // Underline for value
+//     final linePaint = Paint()
+//       ..color = borderColor
+//       ..strokeWidth = 0.8;
+//
+//     canvas.drawLine(Offset(x, y + 19), Offset(x + width, y + 19), linePaint);
+//
+//     if (value.isNotEmpty) {
+//       _drawText(
+//         canvas,
+//         value,
+//         x + 5,
+//         y + 11,
+//         TextStyle(fontSize: 10, color: textColor),
+//         TextAlign.left,
+//       );
+//     }
+//   }
+//
+//   // Additional utility methods for enhanced functionality
+//   static Future<List<File>> generateBatchOMRSheets(
+//       List<OMRExamConfig> configs,
+//       ) async {
+//     final List<File> generatedFiles = [];
+//
+//     for (final config in configs) {
+//       try {
+//         final file = await generateOMRSheet(config);
+//         generatedFiles.add(file);
+//       } catch (e) {
+//         print('Error generating OMR for ${config.studentName}: $e');
+//       }
+//     }
+//
+//     return generatedFiles;
+//   }
+//
+//   static Future<Uint8List> generateOMRPDF(OMRExamConfig config) async {
+//     final imageBytes = await _generateOMRImage(config);
+//     // Convert to PDF using the printing package
+//     final pdf = await Printing.convertHtml(
+//       format: PdfPageFormat.a4,
+//       html:
+//       '<img src="data:image/png;base64,${base64Encode(imageBytes)}" style="width: 100%; height: auto;"/>',
+//     );
+//     return pdf;
+//   }
+// }
+
+
 
 // import 'dart:ui';
 // import 'package:flutter/material.dart';

@@ -7,6 +7,13 @@ import 'package:gal/gal.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:printing/printing.dart';
 
+enum CornerPosition {
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+}
+
 class BlankOMRConfig {
   final String examName;
   final String subjectName;
@@ -40,6 +47,151 @@ class BlankOMRGenerator {
   static final Color borderColor = const Color(0xFF2C3E50);
   static final Color textColor = const Color(0xFF2C3E50);
 
+  // OMR Scanner Symbols
+  static const double SCANNER_SYMBOL_SIZE = 25.0;
+  static const double CORNER_MARKER_SIZE = 15.0;
+
+
+  // ===========================================================
+  // ADVANCED OMR SCANNER SYMBOLS
+  // ===========================================================
+
+  /// Draws the main OMR scanner detection symbol (concentric pattern)
+  static void _drawOMRScannerSymbol(Canvas canvas, double x, double y) {
+    final center = Offset(x + SCANNER_SYMBOL_SIZE / 2, y + SCANNER_SYMBOL_SIZE / 2);
+
+    // Outer filled square (black)
+    final outerSquarePaint = Paint()..color = Colors.black;
+    canvas.drawRect(
+      Rect.fromCenter(
+        center: center,
+        width: SCANNER_SYMBOL_SIZE,
+        height: SCANNER_SYMBOL_SIZE,
+      ),
+      outerSquarePaint,
+    );
+
+    // Middle white circle
+    final middleCirclePaint = Paint()..color = Colors.white;
+    canvas.drawCircle(center, SCANNER_SYMBOL_SIZE * 0.4, middleCirclePaint);
+
+    // Inner black circle (unfilled - just border)
+    final innerCirclePaint = Paint()
+      ..color = Colors.black
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawCircle(center, SCANNER_SYMBOL_SIZE * 0.25, innerCirclePaint);
+
+    // Crosshair lines for precise alignment
+    final crosshairPaint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 1.0;
+
+    // Horizontal line
+    canvas.drawLine(
+      Offset(center.dx - SCANNER_SYMBOL_SIZE * 0.2, center.dy),
+      Offset(center.dx + SCANNER_SYMBOL_SIZE * 0.2, center.dy),
+      crosshairPaint,
+    );
+
+    // Vertical line
+    canvas.drawLine(
+      Offset(center.dx, center.dy - SCANNER_SYMBOL_SIZE * 0.2),
+      Offset(center.dx, center.dy + SCANNER_SYMBOL_SIZE * 0.2),
+      crosshairPaint,
+    );
+  }
+
+  /// Draws corner alignment markers for scanner
+  static void _drawCornerAlignmentMarker(Canvas canvas, double x, double y, CornerPosition position) {
+    final center = Offset(x + CORNER_MARKER_SIZE / 2, y + CORNER_MARKER_SIZE / 2);
+    final paint = Paint()..color = Colors.black;
+
+    switch (position) {
+      case CornerPosition.topLeft:
+      // Draw L-shape
+        canvas.drawRect(Rect.fromLTWH(x, y, CORNER_MARKER_SIZE * 0.3, CORNER_MARKER_SIZE), paint);
+        canvas.drawRect(Rect.fromLTWH(x, y, CORNER_MARKER_SIZE, CORNER_MARKER_SIZE * 0.3), paint);
+        break;
+      case CornerPosition.topRight:
+        canvas.drawRect(Rect.fromLTWH(x + CORNER_MARKER_SIZE * 0.7, y, CORNER_MARKER_SIZE * 0.3, CORNER_MARKER_SIZE), paint);
+        canvas.drawRect(Rect.fromLTWH(x, y, CORNER_MARKER_SIZE, CORNER_MARKER_SIZE * 0.3), paint);
+        break;
+      case CornerPosition.bottomLeft:
+        canvas.drawRect(Rect.fromLTWH(x, y, CORNER_MARKER_SIZE * 0.3, CORNER_MARKER_SIZE), paint);
+        canvas.drawRect(Rect.fromLTWH(x, y + CORNER_MARKER_SIZE * 0.7, CORNER_MARKER_SIZE, CORNER_MARKER_SIZE * 0.3), paint);
+        break;
+      case CornerPosition.bottomRight:
+        canvas.drawRect(Rect.fromLTWH(x + CORNER_MARKER_SIZE * 0.7, y, CORNER_MARKER_SIZE * 0.3, CORNER_MARKER_SIZE), paint);
+        canvas.drawRect(Rect.fromLTWH(x, y + CORNER_MARKER_SIZE * 0.7, CORNER_MARKER_SIZE, CORNER_MARKER_SIZE * 0.3), paint);
+        break;
+    }
+  }
+
+  /// Draws timing track for scanner synchronization
+  static void _drawTimingTrack(Canvas canvas, double startX, double startY, double length, bool horizontal) {
+    final paint = Paint()..color = Colors.black;
+    const double trackWidth = 2.0;
+    const double segmentLength = 8.0;
+    const double gapLength = 4.0;
+
+    double position = 0;
+    bool drawSegment = true;
+
+    while (position < length) {
+      if (drawSegment) {
+        if (horizontal) {
+          canvas.drawRect(
+            Rect.fromLTWH(startX + position, startY, segmentLength, trackWidth),
+            paint,
+          );
+        } else {
+          canvas.drawRect(
+            Rect.fromLTWH(startX, startY + position, trackWidth, segmentLength),
+            paint,
+          );
+        }
+      }
+      position += drawSegment ? segmentLength : gapLength;
+      drawSegment = !drawSegment;
+    }
+  }
+
+  /// Draws all OMR scanner detection symbols
+  static void _drawScannerSymbols(Canvas canvas) {
+    // Main scanner symbols in corners
+    _drawOMRScannerSymbol(canvas, MARGIN - 6, MARGIN - 6); // Top-left
+    _drawOMRScannerSymbol(canvas, A4_WIDTH - MARGIN + 6 - SCANNER_SYMBOL_SIZE, MARGIN - 6); // Top-right
+    _drawOMRScannerSymbol(canvas, MARGIN - 6, A4_HEIGHT - MARGIN + 6 - SCANNER_SYMBOL_SIZE); // Bottom-left
+    _drawOMRScannerSymbol(canvas, A4_WIDTH - MARGIN + 6 - SCANNER_SYMBOL_SIZE, A4_HEIGHT - MARGIN + 6 - SCANNER_SYMBOL_SIZE); // Bottom-right
+
+    // Corner alignment markers
+    _drawCornerAlignmentMarker(canvas, MARGIN + 0, MARGIN + 110, CornerPosition.topLeft);
+    _drawCornerAlignmentMarker(canvas, A4_WIDTH - MARGIN - 0 - CORNER_MARKER_SIZE, MARGIN + 110, CornerPosition.topRight);
+    _drawCornerAlignmentMarker(canvas, MARGIN + 0, A4_HEIGHT - MARGIN - 80 - CORNER_MARKER_SIZE, CornerPosition.bottomLeft);
+    _drawCornerAlignmentMarker(canvas, A4_WIDTH - MARGIN - 0 - CORNER_MARKER_SIZE, A4_HEIGHT - MARGIN - 80 - CORNER_MARKER_SIZE, CornerPosition.bottomRight);
+
+    // Timing tracks around the edges
+    _drawTimingTrack(canvas, MARGIN + 60, MARGIN + 110, A4_WIDTH - 2 * MARGIN - 120, true); // Top
+    _drawTimingTrack(canvas, MARGIN + 60, A4_HEIGHT - MARGIN - 85, A4_WIDTH - 2 * MARGIN - 120, true); // Bottom
+    _drawTimingTrack(canvas, MARGIN + 0, MARGIN + 140, A4_HEIGHT - 3 * MARGIN - 240, false); // Left
+    _drawTimingTrack(canvas, A4_WIDTH - MARGIN - 0, MARGIN + 140, A4_HEIGHT - 3 * MARGIN - 240, false); // Right
+
+    // Add scanner instruction text
+    _drawText(
+      canvas,
+      "OMR SCANNER AREA - KEEP CLEAR",
+      A4_WIDTH / 2,
+      MARGIN + 115,
+      TextStyle(
+        fontSize: 8,
+        color: Colors.grey,
+        fontWeight: FontWeight.bold,
+      ),
+      TextAlign.center,
+    );
+  }
+
   static Future<File> generateBlankOMRSheet(BlankOMRConfig config) async {
     try {
       final Uint8List imageBytes = await _generateOMRImage(config);
@@ -64,13 +216,16 @@ class BlankOMRGenerator {
     );
 
     // Main border
-    _drawRoundedRect(
-      canvas,
-      Rect.fromLTWH(MARGIN, MARGIN, A4_WIDTH - 2 * MARGIN, A4_HEIGHT - 2 * MARGIN),
-      8.0,
-      borderColor,
-      false,
-    );
+    // _drawRoundedRect(
+    //   canvas,
+    //   Rect.fromLTWH(MARGIN, MARGIN, A4_WIDTH - 2 * MARGIN, A4_HEIGHT - 2 * MARGIN),
+    //   8.0,
+    //   borderColor,
+    //   false,
+    // );
+
+    // Draw OMR scanner symbols FIRST (so they're underneath other content)
+    _drawScannerSymbols(canvas);
 
     // Draw sections
     _drawHeaderSection(canvas, config);
@@ -153,14 +308,14 @@ class BlankOMRGenerator {
     // Section background
     final bgPaint = Paint()..color = lightBgColor;
     canvas.drawRect(
-      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 60),
+      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 57),
       bgPaint,
     );
 
     // Section border
     _drawRoundedRect(
       canvas,
-      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 60),
+      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 57),
       4.0,
       borderColor,
       false,
@@ -196,7 +351,7 @@ class BlankOMRGenerator {
 
   // New method for Set Selection Section
   static void _drawSetSelectionSection(Canvas canvas) {
-    final startY = MARGIN + 119;
+    final startY = MARGIN + 130;
 
     _drawText(
       canvas,
@@ -221,7 +376,7 @@ class BlankOMRGenerator {
 
   // New method for ID Number Section
   static void _drawIdNumberSection(Canvas canvas) {
-    final startY = MARGIN + 150;
+    final startY = MARGIN + 160;
 
     // ==== Titles ====
     _drawText(
@@ -245,7 +400,7 @@ class BlankOMRGenerator {
     // ==== Draw Student ID section (10 digits) ====
     _drawBlankDigitEntrySection(
       canvas,
-      offsetX: MARGIN + 20,
+      offsetX: MARGIN + 25,
       offsetY: startY + 10,
       totalDigits: 10,
       label: "Student ID",
@@ -322,9 +477,9 @@ class BlankOMRGenerator {
   }
 
   static void _drawAnswerGridSection(Canvas canvas, BlankOMRConfig config) {
-    final startY = MARGIN + 372;
+    final startY = MARGIN + 390;
     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
-    final sectionHeight = 355;
+    final sectionHeight = 337;
 
     // Section background
     final bgPaint = Paint()..color = lightBgColor;
@@ -436,7 +591,7 @@ class BlankOMRGenerator {
       canvas,
       "INSTRUCTIONS: Use HB pencil only • Fill the bubble completely • Erase cleanly to change answer",
       A4_WIDTH / 2,
-      startY + 320,
+      startY + 340,
       TextStyle(
         fontSize: 9,
         fontWeight: FontWeight.w500,
@@ -447,7 +602,7 @@ class BlankOMRGenerator {
   }
 
   static void _drawFooterSection(Canvas canvas) {
-    final startY = A4_HEIGHT - MARGIN - 90;
+    final startY = A4_HEIGHT - MARGIN - 70;
     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
 
     // Section border
@@ -462,7 +617,7 @@ class BlankOMRGenerator {
     // Important note section (continued)
     final noteBgPaint = Paint()..color = accentColor.withOpacity(0.1);
     canvas.drawRect(
-      Rect.fromLTWH(MARGIN + 20, startY + 55, sectionWidth - 20, 30),
+      Rect.fromLTWH(MARGIN + 20, startY + 55, sectionWidth - 20, 15),
       noteBgPaint,
     );
 
@@ -470,7 +625,7 @@ class BlankOMRGenerator {
       canvas,
       "IMPORTANT: Do not fold or damage this sheet • Ensure all marks are within the bubbles",
       A4_WIDTH / 2,
-      startY + 72,
+      startY + 65,
       TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.w600,
@@ -634,7 +789,7 @@ class BlankOMRGenerator {
     try {
       // Create temporary file for gal package
       final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/_WafiShpere_blank_omr_${DateTime.now().millisecondsSinceEpoch}.png');
+      final tempFile = File('${tempDir.path}/_WafiSphere_blank_omr_${DateTime.now().millisecondsSinceEpoch}.png');
       await tempFile.writeAsBytes(bytes);
 
       // Save to gallery using gal package
