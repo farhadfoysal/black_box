@@ -30,7 +30,7 @@ class BlankOMRGenerator {
   static const double A4_HEIGHT = 842.0;
   static const double MARGIN = 10.0;
   static const double BUBBLE_RADIUS = 7;
-  static const double SMALL_BUBBLE_RADIUS = 6;
+  static const double SMALL_BUBBLE_RADIUS = 7;
 
   // Professional color scheme
   static final Color primaryColor = const Color(0xFF2C3E50);
@@ -94,9 +94,9 @@ class BlankOMRGenerator {
       canvas,
       config.examName.toUpperCase(),
       centerX,
-      MARGIN + 20,
+      MARGIN + 10,
       TextStyle(
-        fontSize: 18,
+        fontSize: 15,
         fontWeight: FontWeight.bold,
         color: primaryColor,
         letterSpacing: 1.2,
@@ -109,9 +109,9 @@ class BlankOMRGenerator {
       canvas,
       config.subjectName,
       centerX,
-      MARGIN + 40,
+      MARGIN + 23,
       TextStyle(
-        fontSize: 14,
+        fontSize: 10,
         fontWeight: FontWeight.w600,
         color: secondaryColor,
       ),
@@ -123,9 +123,9 @@ class BlankOMRGenerator {
       canvas,
       "MULTIPLE CHOICE ANSWER SHEET",
       centerX,
-      MARGIN + 58,
+      MARGIN + 35,
       TextStyle(
-        fontSize: 12,
+        fontSize: 9,
         fontWeight: FontWeight.w600,
         color: secondaryColor,
         letterSpacing: 1.0,
@@ -140,14 +140,14 @@ class BlankOMRGenerator {
       ..style = PaintingStyle.stroke;
 
     canvas.drawLine(
-      Offset(centerX - 120, MARGIN + 70),
-      Offset(centerX + 120, MARGIN + 70),
+      Offset(centerX - 120, MARGIN + 42),
+      Offset(centerX + 120, MARGIN + 42),
       linePaint,
     );
   }
 
   static void _drawStudentInfoSection(Canvas canvas, BlankOMRConfig config) {
-    final startY = MARGIN + 80;
+    final startY = MARGIN + 46;
     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
 
     // Section background
@@ -191,17 +191,18 @@ class BlankOMRGenerator {
     _drawBlankField(canvas, MARGIN + 20, startY + 30, "Name:", 200);
     _drawBlankField(canvas, MARGIN + 240, startY + 30, "Roll No:", 100);
     _drawBlankField(canvas, MARGIN + 360, startY + 30, "Class:", 80);
+    _drawBlankField(canvas, MARGIN + 460, startY + 30, "Date:", 90);
   }
 
   // New method for Set Selection Section
   static void _drawSetSelectionSection(Canvas canvas) {
-    final startY = MARGIN + 150;
+    final startY = MARGIN + 119;
 
     _drawText(
       canvas,
       "SET NUMBER:",
-      MARGIN + 20,
-      startY,
+      MARGIN + 300,
+      startY + 2,
       TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.bold,
@@ -213,14 +214,14 @@ class BlankOMRGenerator {
     // Set number bubbles (1-4)
     final setNumbers = ["1", "2", "3", "4"];
     for (int i = 0; i < setNumbers.length; i++) {
-      final x = MARGIN + 120 + (i * 80);
+      final x = MARGIN + 400 + (i * 50);
       _drawBubbleWithLabel(canvas, x, startY - 5, setNumbers[i], false); // All bubbles empty
     }
   }
 
   // New method for ID Number Section
   static void _drawIdNumberSection(Canvas canvas) {
-    final startY = MARGIN + 180;
+    final startY = MARGIN + 150;
 
     // ==== Titles ====
     _drawText(
@@ -269,7 +270,7 @@ class BlankOMRGenerator {
         required String label,
       }) {
     const double digitBoxSize = 20.0;
-    const double bubbleRadius = 5.0;
+    const double bubbleRadius = 6.5;
     const double bubbleSpacing = 18.0;
     const double columnSpacing = 25.0;
     const double leftIndexOffset = 15.0;
@@ -312,7 +313,7 @@ class BlankOMRGenerator {
           canvas,
           row.toString(),
           bubbleX,
-          bubbleY - 1,
+          bubbleY - 0,
           TextStyle(fontSize: 7, color: textColor),
           TextAlign.center,
         );
@@ -321,9 +322,9 @@ class BlankOMRGenerator {
   }
 
   static void _drawAnswerGridSection(Canvas canvas, BlankOMRConfig config) {
-    final startY = MARGIN + 400;
+    final startY = MARGIN + 372;
     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
-    final sectionHeight = 320;
+    final sectionHeight = 355;
 
     // Section background
     final bgPaint = Paint()..color = lightBgColor;
@@ -379,7 +380,7 @@ class BlankOMRGenerator {
     }
 
     // Draw answer grid
-    _drawAnswerGrid(canvas, startY + 10, config.numberOfQuestions);
+    _drawAnswerGrid(canvas, startY + 30, config.numberOfQuestions);
   }
 
   static void _drawAnswerGrid(Canvas canvas, double startY, int totalQuestions) {
@@ -446,7 +447,7 @@ class BlankOMRGenerator {
   }
 
   static void _drawFooterSection(Canvas canvas) {
-    final startY = A4_HEIGHT - MARGIN - 80;
+    final startY = A4_HEIGHT - MARGIN - 90;
     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
 
     // Section border
@@ -469,7 +470,7 @@ class BlankOMRGenerator {
       canvas,
       "IMPORTANT: Do not fold or damage this sheet • Ensure all marks are within the bubbles",
       A4_WIDTH / 2,
-      startY + 70,
+      startY + 72,
       TextStyle(
         fontSize: 10,
         fontWeight: FontWeight.w600,
@@ -617,8 +618,8 @@ class BlankOMRGenerator {
       ..strokeWidth = 0.8;
 
     canvas.drawLine(
-      Offset(x + 5, y + 12),
-      Offset(x + width, y + 12),
+      Offset(x + 5, y + 22),
+      Offset(x + width, y + 22),
       linePaint,
     );
   }
@@ -633,7 +634,7 @@ class BlankOMRGenerator {
     try {
       // Create temporary file for gal package
       final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/_temp_blank_omr_${DateTime.now().millisecondsSinceEpoch}.png');
+      final tempFile = File('${tempDir.path}/_WafiShpere_blank_omr_${DateTime.now().millisecondsSinceEpoch}.png');
       await tempFile.writeAsBytes(bytes);
 
       // Save to gallery using gal package

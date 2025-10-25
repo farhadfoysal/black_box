@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import '../../model/course/teacher.dart';
 import '../../model/school/school.dart';
 import '../../model/user/user.dart';
+import 'omr_fv/services/omr_scanner_service_v1.dart';
 import 'omr_fv/utils/omr_generator_fv.dart';
 import 'omr_v1/omr_home_page.dart';
 import 'omr_v2/omr_dashboard.dart';
@@ -374,7 +375,7 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => DetailCourseScreen(course: widget.course)));
+              builder: (context) => OMRScannerScreen()));
     } else if (pageName == 'scanner') {
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => HomeScreen()));
@@ -387,7 +388,7 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => DetailCourseScreen(course: widget.course)));
+              builder: (context) => OMRScannerScreen()));
     } else if (pageName == 'courses') {
       Navigator.push(
           context,

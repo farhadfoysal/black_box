@@ -11,6 +11,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   firebase_core
   flutter_inappwebview_windows
   gal
+  pdfx
   permission_handler_windows
   printing
   share_plus
@@ -18,6 +19,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  opencv_dart
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

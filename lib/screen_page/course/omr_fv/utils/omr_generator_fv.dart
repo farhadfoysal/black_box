@@ -42,8 +42,8 @@ class ProfessionalOMRGenerator {
   static const double A4_WIDTH = 595.0; // 8.27 inches at 72 DPI
   static const double A4_HEIGHT = 842.0; // 11.69 inches at 72 DPI
   static const double MARGIN = 8.0;
-  static const double BUBBLE_RADIUS = 6;
-  static const double SMALL_BUBBLE_RADIUS = 5;
+  static const double BUBBLE_RADIUS = 7;
+  static const double SMALL_BUBBLE_RADIUS = 7;
 
   // Professional color scheme
   static final Color primaryColor = const Color(0xFF2C3E50); // Dark blue-gray
@@ -346,9 +346,9 @@ class ProfessionalOMRGenerator {
       canvas,
       config.examName.toUpperCase(),
       centerX,
-      MARGIN + 10,
+      MARGIN + 9,
       TextStyle(
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: FontWeight.bold,
         color: primaryColor,
         letterSpacing: 1.2,
@@ -361,9 +361,9 @@ class ProfessionalOMRGenerator {
       canvas,
       "MULTIPLE CHOICE ANSWER SHEET",
       centerX,
-      MARGIN + 25,
+      MARGIN + 21,
       TextStyle(
-        fontSize: 12,
+        fontSize: 9,
         fontWeight: FontWeight.w600,
         color: secondaryColor,
         letterSpacing: 1.0,
@@ -378,27 +378,27 @@ class ProfessionalOMRGenerator {
       ..style = PaintingStyle.stroke;
 
     canvas.drawLine(
-      Offset(centerX - 100, MARGIN + 35),
-      Offset(centerX + 100, MARGIN + 35),
+      Offset(centerX - 100, MARGIN + 27),
+      Offset(centerX + 100, MARGIN + 27),
       linePaint,
     );
   }
 
   static void _drawStudentInfoSection(Canvas canvas, OMRExamConfig config) {
-    final startY = MARGIN + 40;
+    final startY = MARGIN + 30;
     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
 
     // Section background
     final bgPaint = Paint()..color = lightBgColor;
     canvas.drawRect(
-      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 60),
+      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 53),
       bgPaint,
     );
 
     // Section border
     _drawRoundedRect(
       canvas,
-      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 60),
+      Rect.fromLTWH(MARGIN + 10, startY, sectionWidth, 53),
       4.0,
       borderColor,
       false,
@@ -448,13 +448,13 @@ class ProfessionalOMRGenerator {
   }
 
   static void _drawSetSelectionSection(Canvas canvas, OMRExamConfig config) {
-    final startY = MARGIN + 110;
+    final startY = MARGIN + 95;
 
     _drawText(
       canvas,
       "SET NUMBER:",
-      MARGIN + 20,
-      startY,
+      MARGIN + 300,
+      startY + 2,
       TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textColor),
       TextAlign.left,
     );
@@ -462,7 +462,7 @@ class ProfessionalOMRGenerator {
     // Set number bubbles (1-4)
     final setNumbers = ["1", "2", "3", "4"];
     for (int i = 0; i < setNumbers.length; i++) {
-      final x = MARGIN + 120 + (i * 80);
+      final x = MARGIN + 400 + (i * 50);
       _drawBubbleWithLabel(
         canvas,
         x,
@@ -474,7 +474,7 @@ class ProfessionalOMRGenerator {
   }
 
   static void _drawIdNumberSection(Canvas canvas, OMRExamConfig config) {
-    final startY = MARGIN + 140;
+    final startY = MARGIN + 122;
 
     // ==== Titles ====
     _drawText(
@@ -501,7 +501,7 @@ class ProfessionalOMRGenerator {
       offsetX: MARGIN + 20,
       offsetY: startY + 10,
       totalDigits: 10,
-      userValue: config.studentId.padLeft(10, '0'),
+      userValue: config.studentId.padLeft(10, ' '),
       label: "Student ID",
     );
 
@@ -511,7 +511,7 @@ class ProfessionalOMRGenerator {
       offsetX: MARGIN + 300,
       offsetY: startY + 10,
       totalDigits: 11,
-      userValue: config.mobileNumber.padLeft(11, '0'),
+      userValue: config.mobileNumber.padLeft(11, ' '),
       label: "Mobile Number",
     );
   }
@@ -526,7 +526,7 @@ class ProfessionalOMRGenerator {
     required String label,
   }) {
     const double digitBoxSize = 20.0;
-    const double bubbleRadius = 6.0;
+    const double bubbleRadius = 6.5;
     const double bubbleSpacing = 18.0;
     const double columnSpacing = 25.0;
     const double leftIndexOffset = 15.0;
@@ -549,7 +549,7 @@ class ProfessionalOMRGenerator {
         canvas,
         userValue[i],
         x + digitBoxSize / 2,
-        y + digitBoxSize / 2 - 2,
+        y + digitBoxSize / 2 - 0,
         TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: textColor),
         TextAlign.center,
       );
@@ -579,7 +579,7 @@ class ProfessionalOMRGenerator {
           canvas,
           row.toString(),
           bubbleX,
-          bubbleY - 1,
+          bubbleY - 0,
           TextStyle(fontSize: 7, color: textColor),
           TextAlign.center,
         );
@@ -599,7 +599,7 @@ class ProfessionalOMRGenerator {
   }
 
   static void _drawAnswerGridSection(Canvas canvas, OMRExamConfig config) {
-    final startY = MARGIN + 362;
+    final startY = MARGIN + 345;
     final sectionWidth = A4_WIDTH - 2 * MARGIN - 20;
     final sectionHeight = 365;
 
@@ -647,7 +647,7 @@ class ProfessionalOMRGenerator {
     );
 
     // Draw answer grid with 3 columns
-    _drawAnswerGrid(canvas, startY + 35, config.numberOfQuestions);
+    _drawAnswerGrid(canvas, startY + 28, config.numberOfQuestions);
   }
 
   static void _drawAnswerGrid(
@@ -752,7 +752,7 @@ class ProfessionalOMRGenerator {
       canvas,
       "INSTRUCTIONS: Use HB pencil only. Completely darken the bubble. Erase completely to change.",
       A4_WIDTH / 2,
-      startY + 340,
+      startY + 345,
       TextStyle(
         fontSize: 9,
         fontWeight: FontWeight.w500,
@@ -967,7 +967,7 @@ class ProfessionalOMRGenerator {
       ..color = borderColor
       ..strokeWidth = 0.8;
 
-    canvas.drawLine(Offset(x, y + 17), Offset(x + width, y + 17), linePaint);
+    canvas.drawLine(Offset(x, y + 19), Offset(x + width, y + 19), linePaint);
 
     if (value.isNotEmpty) {
       _drawText(

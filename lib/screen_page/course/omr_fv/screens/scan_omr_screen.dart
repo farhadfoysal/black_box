@@ -2,10 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:pdfx/pdfx.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/omr_sheet_model.dart';
 import '../models/exam_result_model.dart';
+import '../models/scan_result.dart';
 import '../models/student_model.dart';
 import '../services/database_service.dart';
 import '../services/omr_scanner_service.dart';
@@ -457,13 +459,25 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
   }
 
   Future<void> _processPDF(File pdfFile) async {
-    // TODO: Implement PDF to image conversion and batch processing
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('PDF processing will be implemented soon'),
-        backgroundColor: Colors.orange,
-      ),
-    );
+    setState(() => _isProcessing = true);
+    try {
+      final document = await PdfDocument.openFile(pdfFile.path);
+      for (int page = 1; page <= document.pagesCount; page++) {
+        final pdfPage = await document.getPage(page);
+        final image = await pdfPage.render(width: pdfPage.width * 2, height: pdfPage.height * 2);
+        final file = File('${pdfFile.path}_page_$page.png');
+        await file.writeAsBytes(image!.bytes);
+        // Process each page as image
+        final result = await _scannerService.scanOMRSheet(file, _selectedOMRSheet!);
+        // Save or batch results
+        await _saveResult(); // Custom method to handle batch
+      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('PDF processed!')));
+    } catch (e) {
+      // Error handling
+    } finally {
+      setState(() => _isProcessing = false);
+    }
   }
 
   Future<void> _processSelectedImage() async {
@@ -472,10 +486,12 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
     setState(() => _isProcessing = true);
 
     try {
-      _scanResult = await _scannerService.scanOMRSheet(
-        _selectedImage!,
-        _selectedOMRSheet!,
-      );
+      _scanResult = await _scannerService.scanOMRSheet(_selectedImage!, _selectedOMRSheet!);
+
+      // _scanResult = await _scannerService.scanOMRSheet(
+      //   _selectedImage!,
+      //   _selectedOMRSheet!,
+      // );
 
       if (_scanResult!.studentId != null) {
         _detectedStudent = await _databaseService.getStudentById(
@@ -514,6 +530,7 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
 
       for (int i = 0; i < _scanResult!.detectedAnswers.length; i++) {
         final studentAnswer = _scanResult!.detectedAnswers[i];
+        // final correctAnswers = _selectedOMRSheet!.answerKeys[scanResult.setNumber] ?? _selectedOMRSheet!.correctAnswers;
         final correctAnswer = i < _selectedOMRSheet!.correctAnswers.length
             ? _selectedOMRSheet!.correctAnswers[i]
             : '';
@@ -623,7 +640,7 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
   void dispose() {
     _tabController.dispose();
     _mobileScannerController?.dispose();
-    _scannerService.dispose();
+    // _scannerService.dispose();
     super.dispose();
   }
 }
