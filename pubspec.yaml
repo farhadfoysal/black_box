@@ -119,8 +119,15 @@ dependencies:
 #  google_mlkit_commons: ^0.11.0
   google_mlkit_text_recognition: ^0.15.0
   google_mlkit_document_scanner: ^0.4.0
-  opencv_dart: ^1.4.3
+#  opencv_dart: ^1.4.3
   pdfx: ^2.9.2
+#  tflite_flutter: ^0.11.0
+  tflite_flutter: ^0.10.4
+#  tensorflow_lite_flutter: ^3.0.0
+  google_ml_kit: ^0.20.0
+  google_mlkit_digital_ink_recognition: ^0.14.1
+
+
 
 #  image_gallery_saver: ^2.0.3
 

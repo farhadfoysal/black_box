@@ -6,13 +6,18 @@ import 'package:black_box/screen_page/course/detail_course_screen.dart';
 import 'package:black_box/screen_page/course/omr_fv/screens/home_screen.dart';
 import 'package:black_box/screen_page/course/omr_v3/omr_config_page.dart';
 import 'package:black_box/screen_page/course/screen/course_omr_page.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../model/course/teacher.dart';
 import '../../model/school/school.dart';
 import '../../model/user/user.dart';
+import 'OMR_FV.dart';
 import 'omr_fv/services/omr_scanner_service_v1.dart';
+import 'omr_v4/omr_scanner_app.dart';
+import 'omr_v4/omr_scanner_screen_v4.dart';
+import 'omr_v4/omr_scanner_service_v4.dart';
 import 'omr_fv/utils/omr_generator_fv.dart';
 import 'omr_v1/omr_home_page.dart';
 import 'omr_v2/omr_dashboard.dart';
@@ -360,17 +365,18 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
     );
   }
 
-  void _navigateToPage(BuildContext context, String pageName) {
+  Future<void> _navigateToPage(BuildContext context, String pageName) async {
     if (pageName == 'programs') {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => DetailCourseScreen(course: widget.course)));
+              builder: (context) => OMRScannerScreen()));
     } else if (pageName == 'students') {
+        final cameras = await availableCameras();
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => DetailCourseScreen(course: widget.course)));
+              builder: (context) => HomeeScreen(cameras: cameras)));
     } else if (pageName == 'departments') {
       Navigator.push(
           context,
@@ -393,7 +399,7 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => DetailCourseScreen(course: widget.course)));
+              builder: (context) => OMRScannerScreen()));
     } else if (pageName == 'routines') {
       Navigator.push(
           context,

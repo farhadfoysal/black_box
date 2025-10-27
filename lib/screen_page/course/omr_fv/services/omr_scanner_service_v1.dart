@@ -1474,20 +1474,6 @@ class _BatchOMRScannerScreenState extends State<BatchOMRScannerScreen> {
   }
 }
 
-// Main App Widget
-class OMRScannerApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'OMR Scanner',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: OMRScannerHomeScreen(),
-    );
-  }
-}
 
 // Home Screen with Navigation
 class OMRScannerHomeScreen extends StatelessWidget {

@@ -306,8 +306,6 @@ class ProfessionalOMRGenerator {
         throw ArgumentError('Too many questions for single page');
       }
 
-      // Draw OMR scanner symbols FIRST (so they're underneath other content)
-      _drawScannerSymbols(canvas);
 
       // Draw sections
       _drawHeaderSection(canvas, config);
@@ -316,6 +314,10 @@ class ProfessionalOMRGenerator {
       _drawIdNumberSection(canvas, config);
       _drawAnswerGridSection(canvas, config);
       _drawFooterSection(canvas);
+
+      // Draw OMR scanner symbols FIRST (so they're underneath other content)
+      _drawScannerSymbols(canvas);
+
 
       final picture = recorder.endRecording();
       final image = await picture.toImage(A4_WIDTH.toInt(), A4_HEIGHT.toInt());
