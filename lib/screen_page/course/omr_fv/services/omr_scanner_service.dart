@@ -2072,3 +2072,318 @@ class OMRScanResultWidget extends StatelessWidget {
 //
 //   LineSegment({required this.pt1, required this.pt2});
 // }
+
+
+
+
+
+/// omr_scanner_service.dart
+///
+/// Advanced, production-ready OMR (Optical Mark Recognition) scanner service
+/// for Flutter. 100 % Dart; relies on the “opencv_4” plugin (Android / iOS),
+/// isolates for heavy CPU work, and a highly configurable sheet description.
+///
+/// pubspec.yaml (excerpt):
+/// ---------------------------------------------------------------------------
+/// dependencies:
+///   flutter:
+///     sdk: flutter
+///   image_picker: ^1.0.7
+///   opencv_4: ^1.3.0            # https://pub.dev/packages/opencv_4
+///   path_provider: ^2.1.1
+///
+/// ---------------------------------------------------------------------------
+
+// import 'dart:async';
+// import 'dart:io';
+// import 'dart:isolate';
+// import 'dart:math';
+//
+// import 'package:flutter/foundation.dart' show compute;
+// import 'package:opencv_4/opencv_4.dart';
+// import 'package:opencv_4/factory/path_factory.dart';
+//
+// /// Holds the final interpretation of an OMR sheet.
+// class OMRResult {
+//   /// Map<questionIndex, chosenOptionLetter>
+//   final Map<int, String> answers;
+//
+//   /// Confidence per question (0–1).
+//   final Map<int, double> confidences;
+//
+//   /// Aligned monochrome sheet for optional review/debugging.
+//   final File? debugAlignedSheet;
+//
+//   OMRResult({
+//     required this.answers,
+//     required this.confidences,
+//     this.debugAlignedSheet,
+//   });
+// }
+//
+// /// Describes a specific OMR sheet layout.
+// /// Extend / customise for your templates.
+// class OMRSheetConfig {
+//   /// e.g. 100 questions.
+//   final int questionCount;
+//
+//   /// e.g. 4 options ⇒ A, B, C, D.
+//   final int optionsPerQuestion;
+//
+//   /// Pixel padding around each bubble ROI after perspective warp.
+//   final int roiPadding;
+//
+//   /// Physical size of sheet in mm after warp (used for robust scaling).
+//   final Size warpedSize;
+//
+//   /// Pre-computed bubble centres in percentage coordinates (0–1).
+//   ///
+//   /// Length must equal questionCount × optionsPerQuestion.
+//   /// Order: q1-A, q1-B… q2-A…
+//   final List<Offset> bubbleLayout;
+//
+//   const OMRSheetConfig({
+//     required this.questionCount,
+//     required this.optionsPerQuestion,
+//     required this.bubbleLayout,
+//     this.roiPadding = 4,
+//     this.warpedSize = const Size(210, 297), // A4 portrait
+//   });
+// }
+//
+// /// Entry-point façade – call `scan()` with the path returned by
+// /// ImagePicker.  Heavy-lifting is off-loaded to an isolate.
+// class OMRScannerService {
+//   OMRScannerService._();
+//
+//   static final OMRScannerService instance = OMRScannerService._();
+//
+//   /// Main API.
+//   Future<OMRResult> scan({
+//     required String imagePath,
+//     required OMRSheetConfig config,
+//     bool produceDebugImage = true,
+//   }) async {
+//     final _IsolateParams params = _IsolateParams(
+//       imagePath: imagePath,
+//       config: config,
+//       produceDebugImage: produceDebugImage,
+//     );
+//
+//     // `compute` spawns a background isolate.
+//     final _IsolateResult result = await compute<_IsolateParams, _IsolateResult>(
+//       _isolateEntry,
+//       params,
+//     );
+//
+//     return OMRResult(
+//       answers: result.answers,
+//       confidences: result.confidences,
+//       debugAlignedSheet:
+//       result.debugPath != null ? File(result.debugPath!) : null,
+//     );
+//   }
+// }
+//
+// /* ------------------------------------------------------------------------- */
+// /* -----------------------------  ISOLATE SIDE  ---------------------------- */
+// /* ------------------------------------------------------------------------- */
+//
+// class _IsolateParams {
+//   final String imagePath;
+//   final OMRSheetConfig config;
+//   final bool produceDebugImage;
+//
+//   const _IsolateParams({
+//     required this.imagePath,
+//     required this.config,
+//     required this.produceDebugImage,
+//   });
+// }
+//
+// class _IsolateResult {
+//   final Map<int, String> answers;
+//   final Map<int, double> confidences;
+//   final String? debugPath;
+//
+//   const _IsolateResult({
+//     required this.answers,
+//     required this.confidences,
+//     this.debugPath,
+//   });
+// }
+//
+// Future<_IsolateResult> _isolateEntry(_IsolateParams p) async {
+//   final String imgPath = p.imagePath;
+//   final OMRSheetConfig cfg = p.config;
+//
+//   /* --------------------------- 1. LOAD & PRE-PROCESS -------------------- */
+//
+//   final Mat rgba = await ImgProc.imread(imgPath);
+//   final Mat gray = await ImgProc.cvtColor(rgba, ImgProc.colorBGR2GRAY);
+//   final Mat blurred = await ImgProc.gaussianBlur(gray, [5, 5], 0);
+//   final Mat thresh =
+//   await ImgProc.adaptiveThreshold(blurred, 255, ImgProc.adaptiveThreshMeanC,
+//       ImgProc.threshBinaryInv, 25, 10);
+//
+//   /* --------------------------- 2. FIND SHEET CONTOUR -------------------- */
+//
+//   final List<MatOfPoint> contours = await ImgProc.findContours(
+//       thresh, ImgProc.retrExternal, ImgProc.chainApproxSimple);
+//
+//   contours.sort((a, b) => ImgProc.contourArea(b).compareTo(
+//     ImgProc.contourArea(a),
+//   ));
+//
+//   MatOfPoint? sheetContour;
+//   for (final MatOfPoint c in contours) {
+//     final double peri = await ImgProc.arcLength(c, true);
+//     final MatOfPoint2f approx =
+//     await ImgProc.approxPolyDP(c, 0.02 * peri, true);
+//     if (approx.rows == 4) {
+//       sheetContour = MatOfPoint.fromList(approx.toList());
+//       break;
+//     }
+//   }
+//
+//   if (sheetContour == null) {
+//     throw Exception('Unable to detect OMR sheet boundary.');
+//   }
+//
+//   /* --------------------------- 3. PERSPECTIVE WARP ---------------------- */
+//
+//   final _Quad quad = _toOrderedQuad(sheetContour);
+//   final Size dstSizePx = _mmToPixels(cfg.warpedSize);
+//
+//   final Mat perspectiveM = await ImgProc.getPerspectiveTransform(
+//     quad.src,
+//     quad.dst(dstSizePx),
+//   );
+//
+//   final Mat warped = await ImgProc.warpPerspective(
+//     rgba,
+//     perspectiveM,
+//     dstSizePx,
+//   );
+//
+//   // Monochrome for bubble analysis
+//   final Mat warpedGray = await ImgProc.cvtColor(warped, ImgProc.colorBGR2GRAY);
+//   final Mat warpedThresh =
+//   await ImgProc.adaptiveThreshold(warpedGray, 255, ImgProc.adaptiveThreshMeanC,
+//       ImgProc.threshBinaryInv, 19, 5);
+//
+//   /* --------------------------- 4. ANALYSE BUBBLES ----------------------- */
+//
+//   final List<String> optionLetters =
+//   List.generate(cfg.optionsPerQuestion, (i) => String.fromCharCode(65 + i));
+//
+//   final Map<int, String> answers = {};
+//   final Map<int, double> confidences = {};
+//
+//   for (int q = 0; q < cfg.questionCount; q++) {
+//     double highestFill = 0;
+//     int? chosenOption;
+//
+//     for (int o = 0; o < cfg.optionsPerQuestion; o++) {
+//       final int idx = q * cfg.optionsPerQuestion + o;
+//       final Offset pct = cfg.bubbleLayout[idx];
+//
+//       final Rect roi = _pctRectToPixelRect(
+//         pct,
+//         warpedThresh.width,
+//         warpedThresh.height,
+//         cfg.roiPadding,
+//       );
+//
+//       final Mat bubbleROI =
+//       await ImgProc.crop(warpedThresh, roi.top, roi.left, roi.height.toInt(),
+//           roi.width.toInt());
+//
+//       final double fillRatio =
+//           Core.countNonZero(bubbleROI) / (bubbleROI.rows * bubbleROI.cols);
+//
+//       if (fillRatio > highestFill) {
+//         highestFill = fillRatio;
+//         chosenOption = o;
+//       }
+//     }
+//
+//     // Simple confidence heuristic
+//     answers[q + 1] = optionLetters[chosenOption ?? 0];
+//     confidences[q + 1] = highestFill;
+//   }
+//
+//   /* --------------------------- 5. OPTIONAL DEBUG ------------------------ */
+//
+//   String? savedDebugPath;
+//   if (p.produceDebugImage) {
+//     final Directory dir = await PathFactory.tempDirectory();
+//     final String debugName =
+//         'omr_aligned_${DateTime.now().millisecondsSinceEpoch}.jpg';
+//     final String full = '${dir.path}/$debugName';
+//     await ImgProc.imwrite(full, warped);
+//     savedDebugPath = full;
+//   }
+//
+//   /* --------------------------------------------------------------------- */
+//
+//   return _IsolateResult(
+//     answers: answers,
+//     confidences: confidences,
+//     debugPath: savedDebugPath,
+//   );
+// }
+//
+// /* ------------------------------------------------------------------------- */
+// /* -----------------------------  HELPERS  --------------------------------- */
+// /* ------------------------------------------------------------------------- */
+//
+// class _Quad {
+//   final List<Point<double>> src;
+//
+//   _Quad(this.src);
+//
+//   List<Point<double>> dst(Size sz) => [
+//     Point(0, 0),
+//     Point(sz.width - 1, 0),
+//     Point(sz.width - 1, sz.height - 1),
+//     Point(0, sz.height - 1),
+//   ];
+// }
+//
+// /// Orders contour points TL-TR-BR-BL.
+// _Quad _toOrderedQuad(MatOfPoint contour) {
+//   final List<Point<double>> pts =
+//   contour.toList().map((pt) => Point(pt.x.toDouble(), pt.y.toDouble())).toList();
+//
+//   pts.sort((a, b) => (a.x + a.y).compareTo(b.x + b.y));
+//   final Point<double> tl = pts.first;
+//   final Point<double> br = pts.last;
+//
+//   pts.sort((a, b) => (a.y - a.x).compareTo(b.y - b.x));
+//   final Point<double> tr = pts.first;
+//   final Point<double> bl = pts.last;
+//
+//   return _Quad([tl, tr, br, bl]);
+// }
+//
+// Size _mmToPixels(Size mm, {double dpi = 300}) {
+//   const double inchPerMm = 0.0393701;
+//   return Size(
+//     mm.width * inchPerMm * dpi,
+//     mm.height * inchPerMm * dpi,
+//   );
+// }
+//
+// Rect _pctRectToPixelRect(
+//     Offset pct, int imgW, int imgH, int pad) {
+//   final double cx = pct.dx * imgW;
+//   final double cy = pct.dy * imgH;
+//   const int bubbleDiamPx = 40; // customise
+//
+//   return Rect.fromCenter(
+//     center: Offset(cx, cy),
+//     width: bubbleDiamPx.toDouble() + pad * 2,
+//     height: bubbleDiamPx.toDouble() + pad * 2,
+//   );
+// }
