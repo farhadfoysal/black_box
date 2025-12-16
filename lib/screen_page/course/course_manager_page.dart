@@ -5,7 +5,10 @@ import 'package:black_box/model/course/tools_model.dart';
 import 'package:black_box/screen_page/course/detail_course_screen.dart';
 import 'package:black_box/screen_page/course/omr_fv/screens/home_screen.dart';
 import 'package:black_box/screen_page/course/omr_v3/omr_config_page.dart';
+import 'package:black_box/screen_page/course/omr_v4/omr_scanner_widget.dart';
+import 'package:black_box/screen_page/course/omr_v4/omr_screen.dart';
 import 'package:black_box/screen_page/course/screen/course_omr_page.dart';
+import 'package:black_box/screen_page/course/screen/course_students.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -15,12 +18,14 @@ import '../../model/school/school.dart';
 import '../../model/user/user.dart';
 import 'OMR_FV.dart';
 import 'omr_fv/services/omr_scanner_service_v1.dart';
+import 'omr_v4/omr_page.dart';
 import 'omr_v4/omr_scanner_app.dart';
 import 'omr_v4/omr_scanner_screen_v4.dart';
 import 'omr_v4/omr_scanner_service_v4.dart';
 import 'omr_fv/utils/omr_generator_fv.dart';
 import 'omr_v1/omr_home_page.dart';
 import 'omr_v2/omr_dashboard.dart';
+import 'omr_v4/screen_omr.dart';
 // import 'omr_v3/omr_v4.dart';
 
 class CourseManagerScreen extends StatefulWidget {
@@ -370,13 +375,14 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => OMRScannerScreen()));
+              builder: (context) => OMRScannerWidget()));
     } else if (pageName == 'students') {
         final cameras = await availableCameras();
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => HomeeScreen(cameras: cameras)));
+              // builder: (context) => HomeeScreen(cameras: cameras)));
+              builder: (context) => StudentsListScreen(schoolId: '${widget.course.uniqueId}', userId: '${widget.user.userid}', userType: '${widget.user.utype}',)));
     } else if (pageName == 'departments') {
       Navigator.push(
           context,
@@ -395,11 +401,12 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
           context,
           MaterialPageRoute(
               builder: (context) => OMRScannerScreen()));
-    } else if (pageName == 'courses') {
+    } else if (pageName == 'StatisticsPage') {
+      final cameras = await availableCameras();
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => OMRScannerScreen()));
+              builder: (context) => CameraOMRPage()));
     } else if (pageName == 'routines') {
       Navigator.push(
           context,
@@ -414,7 +421,7 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => DetailCourseScreen(course: widget.course)));
+              builder: (context) => OMRScannerrScreen()));
     } else if (pageName == 'bus') {
       Navigator.push(
           context,

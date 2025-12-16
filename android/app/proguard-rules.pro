@@ -14,5 +14,18 @@
     @org.tensorflow.lite.support.annotation.* <methods>;
 }
 
-# Optional (to prevent stripping metadata)
--keepattributes *Annotation*
+## Optional (to prevent stripping metadata)
+#-keepattributes *Annotation*
+#
+## Keep TensorFlow Lite classes
+#-keep class org.tensorflow.lite.** { *; }
+#
+## Keep Flutter tflite_flutter classes
+#-keep class org.tensorflow.** { *; }
+#-keep class org.tensorflow.lite.support.** { *; }
+#-keep class org.tensorflow.lite.Interpreter** { *; }
+#
+## Keep all JNI methods (required for native libs)
+#-keepclasseswithmembernames class * {
+#    native <methods>;
+#}
