@@ -219,7 +219,7 @@ class _ExamStartState extends State<ExamStart> {
 
                 _isLoading
                     ? Center(
-                  child: Lottie.asset('animation/ (1).json', height: 120),
+                  child: Lottie.asset('animation/hello1.json', height: 120),
                 )
                     : ElevatedButton(
                   onPressed: _isExamPerformed ? null : widget.switchScreen,

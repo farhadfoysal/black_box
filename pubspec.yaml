@@ -123,6 +123,13 @@ dependencies:
 #  opencv_dart: ^1.4.3
   pdfx: ^2.9.2
   tflite_flutter: ^0.11.0
+  flutter_reactive_ble: ^5.1.0
+  flutter_blue_plus: ^1.10.4
+  pull_to_refresh: ^2.0.0
+  flutter_bluetooth_serial_plus: ^0.5.1
+
+
+
 #  tflite_flutter: ^0.10.4
 #  tensorflow_lite_flutter: ^3.0.0
 #  google_ml_kit: ^0.20.0

@@ -129,7 +129,7 @@ class _SignInOrRegisterState extends State<SignInOrRegister> {
       body: isLoading
           ? Center(
               child: Lottie.asset(
-                'animation/ (1).json',
+                'animation/(1).json',
                 height: 300,
                 reverse: true,
                 repeat: true,

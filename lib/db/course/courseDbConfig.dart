@@ -97,9 +97,20 @@ class StudentDatabase {
         where: 'id = ?', whereArgs: [id]);
   }
 
+  static Future<int> updateStudentByUniqueId(String id, Map<String, dynamic> student) async {
+    final db = await database;
+    return await db.update('students', student,
+        where: 'uniqueId = ?', whereArgs: [id]);
+  }
+
   static Future<int> deleteStudent(int id) async {
     final db = await database;
     return await db.delete('students', where: 'id = ?', whereArgs: [id]);
+  }
+
+  static Future<int> deleteStudentByUniqueId(String id) async {
+    final db = await database;
+    return await db.delete('students', where: 'uniqueId = ?', whereArgs: [id]);
   }
 
   static Future<int> updateSyncStatus(int id, int status) async {

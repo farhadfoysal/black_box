@@ -57,7 +57,7 @@ class _ExamLeaderBoardState extends State<ExamLeaderBoard> {
         backgroundColor: Colors.teal[600],
       ),
       body: _isLoading
-          ? Center(child: Lottie.asset('animation/ (1).json', height: 120))
+          ? Center(child: Lottie.asset('animation/(1).json', height: 120))
           : SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

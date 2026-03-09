@@ -257,7 +257,7 @@ class _StudentsListScreenState extends State<StudentsListScreen>
       student.syncStatus = _isOnline ? 1 : 0;
 
       // Update local database
-      await StudentDatabase.updateStudent(student.id!, student.toMap());
+      await StudentDatabase.updateStudentByUniqueId(student.uniqueId!, student.toMap());
 
       // Update Firebase if online
       if (_isOnline) {
@@ -294,7 +294,7 @@ class _StudentsListScreenState extends State<StudentsListScreen>
       }
 
       // Delete from local database
-      await StudentDatabase.deleteStudent(student.id!);
+      await StudentDatabase.deleteStudentByUniqueId(student.uniqueId!);
 
       // Delete from Firebase if online
       if (_isOnline) {
@@ -451,7 +451,7 @@ class _StudentsListScreenState extends State<StudentsListScreen>
 
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(2),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [_primaryColor, _secondaryColor],
@@ -484,7 +484,7 @@ class _StudentsListScreenState extends State<StudentsListScreen>
                       'Students Management',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -492,7 +492,7 @@ class _StudentsListScreenState extends State<StudentsListScreen>
                       '${_filteredStudents.length} Students',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
+                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -568,11 +568,12 @@ class _StudentsListScreenState extends State<StudentsListScreen>
           gradient: LinearGradient(
             colors: [_primaryColor, _secondaryColor],
           ),
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(10),
         ),
         labelColor: Colors.white,
         unselectedLabelColor: Colors.grey,
         labelStyle: TextStyle(fontWeight: FontWeight.bold),
+        // padding: EdgeInsets.symmetric(vertical: 1),
         onTap: (index) {
           setState(() {
             _selectedFilter = ['All', 'Active', 'Inactive'][index];
@@ -701,7 +702,7 @@ class _StudentsListScreenState extends State<StudentsListScreen>
               children: [
                 // Avatar
                 Hero(
-                  tag: 'student_${student.id}',
+                  tag: 'student_${student.uniqueId}',
                   child: Container(
                     width: 70,
                     height: 70,
@@ -911,7 +912,7 @@ class _StudentsListScreenState extends State<StudentsListScreen>
       backgroundColor: _primaryColor,
       icon: Icon(Icons.add),
       label: Text('Add Student'),
-      elevation: 8,
+      elevation: 4,
     );
   }
 

@@ -303,7 +303,7 @@ class _QuizStartState extends State<QuizStart> {
                   _isLoading
                       ? Center(
                     child: Lottie.asset(
-                      'animation/ (1).json', // Your Lottie loading animation
+                      'animation/hello1.json', // Your Lottie loading animation
                       height: 120,
                     ),
                   ) : ElevatedButton(

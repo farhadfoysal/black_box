@@ -249,7 +249,7 @@ class _QuestionManagementDetailPageState
                       // Lottie Animation
                       SizedBox(
                         height: 150,
-                        child: Lottie.asset('animation/ (1).json'), // <-- Your lottie file here
+                        child: Lottie.asset('animation/hello1.json'), // <-- Your lottie file here
                       ),
                       const SizedBox(height: 16),
 

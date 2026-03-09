@@ -90,7 +90,7 @@ class _QuizzesResultPageState extends State<QuizzesResultPage> {
       body: _isLoading
           ? Center(
               child: Lottie.asset(
-                'animation/ (1).json', // Your Lottie loading animation
+                'animation/(1).json', // Your Lottie loading animation
                 height: 120,
               ),
             )

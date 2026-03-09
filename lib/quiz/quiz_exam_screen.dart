@@ -479,7 +479,7 @@ class _QuestionManagementPageState extends State<QuizExamScreen> {
       body: _isLoading
           ? Center(
         child: Lottie.asset(
-          'animation/ (1).json', // Your Lottie loading animation
+          'animation/hello1.json', // Your Lottie loading animation
           height: 120,
         ),
       )
@@ -614,7 +614,7 @@ class _QuestionManagementPageState extends State<QuizExamScreen> {
                       _Loading
                           ? Center(
                         child: Lottie.asset(
-                          'animation/ (1).json', // Your Lottie loading animation
+                          'animation/hello1.json', // Your Lottie loading animation
                           height: 120,
                         ),
                       ) : Icon(Icons.arrow_forward_ios_rounded, color: Colors.deepPurple, size: 20),

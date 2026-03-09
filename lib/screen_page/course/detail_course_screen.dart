@@ -772,7 +772,7 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                 builder: (context) {
                   if (_isQuizLoading) {
                     return Center(
-                      child: Lottie.asset('animation/ (1).json', height: 120),
+                      child: Lottie.asset('animation/hello1.json', height: 120),
                     );
                   }
 
@@ -1543,7 +1543,7 @@ Widget _buildComboTextDropdownField({
 //           // Quiz Tab (no Builder - direct access to state)
 //           if (_isQuizLoading)
 //             Center(
-//               child: Lottie.asset('animation/ (1).json', height: 120),
+//               child: Lottie.asset('animation/(1).json', height: 120),
 //             )
 //           else if (_quizzes.isEmpty)
 //             Center(
@@ -1965,7 +1965,7 @@ Widget _buildComboTextDropdownField({
 //                 if (_isQuizLoading) {
 //                   return Center(
 //                     child: Lottie.asset(
-//                       'animation/ (1).json',
+//                       'animation/(1).json',
 //                       height: 120,
 //                     ),
 //                   );

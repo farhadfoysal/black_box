@@ -403,10 +403,10 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
               builder: (context) => OMRScannerScreen()));
     } else if (pageName == 'StatisticsPage') {
       final cameras = await availableCameras();
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => CameraOMRPage()));
+      // Navigator.push(
+      //     context,
+      //     MaterialPageRoute(
+      //         builder: (context) => CameraOMRPage()));
     } else if (pageName == 'routines') {
       Navigator.push(
           context,

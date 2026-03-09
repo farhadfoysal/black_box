@@ -22,6 +22,10 @@ import '../../model/school/school.dart';
 import '../../model/user/user.dart';
 import '../../preference/logout.dart';
 import '../../screen_page/mess/mess_manager_page.dart';
+import '../../utility/bluetooth/b_page.dart';
+import '../../utility/bluetooth/ble_page.dart';
+import '../../utility/bluetooth/ble_page_v1.dart';
+import '../../utility/bluetooth/bluetooth_page.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -46,10 +50,11 @@ class HomeView extends StatelessWidget {
         '/bazar-list': (context) =>  ExamAttemptPagee(),
         '/course-finder': (context) => const TuitionFinderPage(),
         '/exam-management': (context) => ExamListPage(),
-        '/seba-manager': (context) => const TuitionFinderPage(),
-        '/hisab-manager': (context) => const TuitionFinderPage(),
-        '/vocabulary-manager': (context) => const TuitionFinderPage(),
+        '/seba-manager': (context) => const HC05BluetoothControllerPage(),
+        '/hisab-manager': (context) => const BluetoothControllerPage(),
+        '/vocabulary-manager': (context) => const HC05BluetoothControllerA(),
         '/calculation-manager': (context) => const TuitionFinderPage(),
+        '/iot-manager': (context) => const ScrollableBluetoothController(),
       },
     );
   }
@@ -189,6 +194,13 @@ class _HomeViewState extends State<HomePage> with TickerProviderStateMixin{
       icon: MdiIcons.magnify,
       color: Colors.yellow,
       route: '/vocabulary-manager',
+      subtitle: 'Discover Learning Centers',
+    ),
+    DashboardItem(
+      title: 'IoT',
+      icon: MdiIcons.devices,
+      color: Colors.deepPurpleAccent,
+      route: '/iot-manager',
       subtitle: 'Discover Learning Centers',
     ),
   ];
