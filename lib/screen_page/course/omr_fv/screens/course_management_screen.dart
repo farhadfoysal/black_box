@@ -317,15 +317,17 @@ class _CourseManagementScreenState extends State<CourseManagementScreen> {
                 return;
               }
 
-              // Delete the course
-              final courses = await _databaseService.getAllCourses();
-              courses.removeWhere((c) => c.id == course.id);
+              await _databaseService.deleteCourse(course.id);
 
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString(
-                'courses',
-                courses.map((c) => c.toJson()).toList().toString(),
-              );
+              // // Delete the course
+              // final courses = await _databaseService.getAllCourses();
+              // courses.removeWhere((c) => c.id == course.id);
+              //
+              // final prefs = await SharedPreferences.getInstance();
+              // await prefs.setString(
+              //   'courses',
+              //   courses.map((c) => c.toJson()).toList().toString(),
+              // );
 
               Navigator.pop(context);
               _loadCourses();

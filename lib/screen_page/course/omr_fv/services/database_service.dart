@@ -142,11 +142,28 @@ class DatabaseService {
     final String? data = _prefs.getString(_coursesKey);
     if (data == null) return _getDefaultCourses();
 
-    final List<dynamic> jsonList = json.decode(data);
+    // final List<dynamic> jsonList = json.decode(data);
+    final List<dynamic> jsonList = _safeDecode(data);
     return jsonList.map((json) => Course.fromJson(json)).toList();
   }
 
+  // Future<void> saveCourse(Course course) async {
+  //
+  //   final courses = await getAllCourses();
+  //   final index = courses.indexWhere((c) => c.id == course.id);
+  //
+  //   if (index != -1) {
+  //     courses[index] = course;
+  //   } else {
+  //     courses.add(course);
+  //   }
+  //
+  //   await _prefs.setString(_coursesKey, json.encode(courses.map((c) => c.toJson()).toList()));
+  //   await _prefs.remove('courses');
+  // }
+
   Future<void> saveCourse(Course course) async {
+    // await _prefs.remove('courses');
     final courses = await getAllCourses();
     final index = courses.indexWhere((c) => c.id == course.id);
 
@@ -156,30 +173,10 @@ class DatabaseService {
       courses.add(course);
     }
 
-    await _prefs.setString(_coursesKey, json.encode(courses.map((c) => c.toJson()).toList()));
-  }
-
-  List<Course> _getDefaultCourses() {
-    return [
-      Course(
-        id: '1',
-        name: 'Science',
-        code: 'SCI',
-        subjects: ['Physics', 'Chemistry', 'Biology', 'Mathematics'],
-      ),
-      Course(
-        id: '2',
-        name: 'Commerce',
-        code: 'COM',
-        subjects: ['Accounting', 'Business Studies', 'Economics', 'Mathematics'],
-      ),
-      Course(
-        id: '3',
-        name: 'Arts',
-        code: 'ART',
-        subjects: ['History', 'Geography', 'Political Science', 'Sociology'],
-      ),
-    ];
+    await _prefs.setString(
+      _coursesKey,
+      json.encode(courses.map((c) => c.toJson()).toList()),
+    );
   }
 
   List<dynamic> _safeDecode(String? data) {
@@ -192,6 +189,48 @@ class DatabaseService {
     }
   }
 
+  List<Course> _getDefaultCourses() {
+    return [
+      Course(
+        id: '0',
+        name: 'Science',
+        code: 'SCI',
+        subjects: ['Physics', 'Chemistry', 'Biology', 'Mathematics'],
+      ),
+      Course(
+        id: '1',
+        name: 'Commerce',
+        code: 'COM',
+        subjects: ['Accounting', 'Business Studies', 'Economics', 'Mathematics'],
+      ),
+      Course(
+        id: '2',
+        name: 'Arts',
+        code: 'ART',
+        subjects: ['History', 'Geography', 'Political Science', 'Sociology'],
+      ),
+    ];
+  }
+
+  // List<dynamic> _safeDecode(String? data) {
+  //   if (data == null || data.isEmpty) return [];
+  //   try {
+  //     return json.decode(data);
+  //   } catch (e) {
+  //     print('JSON decode error: $e');
+  //     return [];
+  //   }
+  // }
+
+  Future<void> deleteCourse(String id) async {
+    final courses = await getAllCourses();
+    courses.removeWhere((c) => c.id == id);
+
+    await _prefs.setString(
+      _coursesKey,
+      json.encode(courses.map((c) => c.toJson()).toList()),
+    );
+  }
 
   Future<void> clearAllData() async {
     await _prefs.remove(_omrSheetsKey);

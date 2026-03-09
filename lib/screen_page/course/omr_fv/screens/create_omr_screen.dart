@@ -30,7 +30,7 @@ class _CreateOMRScreenState extends State<CreateOMRScreen> {
 
   // Form values
   Course? _selectedCourse;
-  int _numberOfQuestions = 40;
+  int _numberOfQuestions = 30;
   int _setNumber = 1;
   DateTime _examDate = DateTime.now();
   List<String> _correctAnswers = [];
@@ -46,6 +46,7 @@ class _CreateOMRScreenState extends State<CreateOMRScreen> {
   @override
   void initState() {
     super.initState();
+    // _correctAnswers = List.generate(_numberOfQuestions, (_) => '');
     _initializeForm();
   }
 
@@ -58,8 +59,11 @@ class _CreateOMRScreenState extends State<CreateOMRScreen> {
 
     if (widget.editingSheet != null) {
       _populateFormWithExistingData();
+      // print("farhadfoysal1");
     } else {
+      // print("farhadfoysal2");
       _correctAnswers = List.generate(_numberOfQuestions, (index) => 'A');
+      // _correctAnswers = List.generate(_numberOfQuestions, (_) => 'A');
     }
   }
 
@@ -421,7 +425,10 @@ class _CreateOMRScreenState extends State<CreateOMRScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: options.map((option) {
-              final isSelected = _correctAnswers[questionIndex] == option;
+              // final isSelected = _correctAnswers[questionIndex] == option;
+              final isSelected = questionIndex < _correctAnswers.length
+                  ? _correctAnswers[questionIndex] == option
+                  : false;
               return GestureDetector(
                 onTap: () {
                   setState(() {
