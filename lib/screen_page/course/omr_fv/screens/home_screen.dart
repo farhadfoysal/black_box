@@ -11,6 +11,17 @@ import 'omr_list_screen.dart';
 import 'results_screen.dart';
 
 class HomeScreen extends StatefulWidget {
+  final String schoolId;
+  final String userId;
+  final String userType; // 'admin' or 'teacher'
+
+  const HomeScreen({
+    Key? key,
+    required this.schoolId,
+    required this.userId,
+    required this.userType,
+  }) : super(key: key);
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -101,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () async {
                   await Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => CreateOMRScreen()),
+                    MaterialPageRoute(builder: (_) => CreateOMRScreen(schoolId: '${widget.schoolId}', userId: '${widget.userId}', userType: '${widget.userType}',)),
                   );
                   _loadData();
                 },

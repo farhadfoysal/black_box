@@ -1,6 +1,9 @@
 import 'package:black_box/screen_page/course/omr_fv/screens/results_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../db/course/courseDbConfig.dart';
 import '../models/omr_sheet_model.dart';
 import '../models/student_model.dart';
 import '../services/database_service.dart';
@@ -8,21 +11,68 @@ import '../utils/omr_generator_fv.dart';
 import 'create_omr_screen.dart';
 
 class OMRListScreen extends StatefulWidget {
+
+  final String? schoolId;
+  final String? userId;
+  final String? userType; // 'admin' or 'teacher'
+
+  const OMRListScreen({
+    Key? key,
+    this.schoolId,
+    this.userId,
+    this.userType,
+  }) : super(key: key);
+
   @override
   _OMRListScreenState createState() => _OMRListScreenState();
 }
 
 class _OMRListScreenState extends State<OMRListScreen> {
   late DatabaseService _databaseService;
+  // Firestore
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+
   List<OMRSheet> _omrSheets = [];
   List<OMRSheet> _filteredSheets = [];
   String _searchQuery = '';
   bool _isLoading = true;
+  bool _isOnline = true;
+
+  // Colors
+  final Color _primaryColor = const Color(0xFF667eea);
+  final Color _secondaryColor = const Color(0xFF764ba2);
+  final Color _accentColor = const Color(0xFFf093fb);
+  final Color _successColor = const Color(0xFF10b981);
+  final Color _warningColor = const Color(0xFFf59e0b);
+  final Color _errorColor = const Color(0xFFef4444);
 
   @override
   void initState() {
     super.initState();
     _initializeDatabase();
+    _checkConnectivity();
+    // _loadStudents();
+
+    // Listen to connectivity changes
+    Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      // Pick the first result as the current connectivity status
+      final result = results.first;
+      setState(() {
+        _isOnline = result != ConnectivityResult.none;
+      });
+      if (_isOnline) {
+        _syncWithFirebase();
+      }
+    });
+
+  }
+
+  Future<void> _checkConnectivity() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    setState(() {
+      _isOnline = connectivityResult != ConnectivityResult.none;
+    });
   }
 
   Future<void> _initializeDatabase() async {
@@ -52,6 +102,199 @@ class _OMRListScreenState extends State<OMRListScreen> {
     });
   }
 
+  // ============= DATA LOADING =============
+  Future<void> _loadOMR() async {
+    setState(() => _isLoading = true);
+
+    try {
+      if (_isOnline) {
+        await _loadFromFirebase();
+      } else {
+        await _loadFromLocalDatabase();
+      }
+    } catch (e) {
+      print('Error loading OMR Sheets: $e');
+      _showErrorSnackBar('Error loading Sheets: $e');
+      await _loadFromLocalDatabase();
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadFromFirebase() async {
+    final snapshot = await _firestore
+        .collection('courses')
+        .doc(widget.schoolId)
+        .collection('sheets')
+        .orderBy('examName')
+        .get();
+
+    _omrSheets = snapshot.docs
+        .map((doc) => OMRSheet.fromMap({...doc.data(), 'uniqueId': doc.id}))
+        .toList();
+
+    // Save to local database
+    for (var sheet in _omrSheets) {
+      await StudentDatabase.insertOMRSheet(sheet);
+    }
+
+    // _applyFilters();
+  }
+
+  Future<void> _loadFromLocalDatabase() async {
+    final List<OMRSheet> sheets =
+    await StudentDatabase.getAllOMRSheets();
+
+    setState(() {
+      _omrSheets = sheets;
+    });
+
+    // _applyFilters();
+  }
+
+  Future<void> _syncWithFirebase() async {
+    if (!_isOnline) return;
+
+    final List<OMRSheet> unsyncedSheets =
+    await StudentDatabase.getUnsyncedOMRSheets();
+
+    for (var sheet in unsyncedSheets) {
+      try {
+        final docRef = _firestore
+            .collection('courses')
+            .doc(widget.schoolId)
+            .collection('sheets')
+            .doc(sheet.uniqueId ?? sheet.id);
+
+        await docRef.set(sheet.toJson());
+
+        // Update sync status
+        await StudentDatabase.updateOMRSheetSyncStatus(sheet.id, 1);
+      } catch (e) {
+        print('Error syncing OMR Sheet ${sheet.examName}: $e');
+      }
+    }
+
+    _loadOMRSheets();
+  }
+
+  Future<void> _updateOMR(OMRSheet sheet) async {
+    try {
+      sheet.syncStatus = _isOnline ? 1 : 0;
+
+      // Update local database
+      await StudentDatabase.updateStudentByUniqueId(sheet.uniqueId!, sheet.toMap());
+
+      // Update Firebase if online
+      if (_isOnline) {
+        await _firestore
+            .collection('courses')
+            .doc(widget.schoolId)
+            .collection('sheets')
+            .doc(sheet.uniqueId)
+            .update(sheet.toMap());
+      }
+
+      _showSuccessSnackBar('Student updated successfully');
+      _loadOMR();
+    } catch (e) {
+      _showErrorSnackBar('Error updating student: $e');
+    }
+  }
+
+  Future<void> _deleteOMR(OMRSheet sheet) async {
+    final confirmed = await _showConfirmDialog(
+      'Delete Student',
+      'Are you sure you want to delete ${sheet.examName}?',
+    );
+
+    if (confirmed != true) return;
+
+    try {
+
+      // Delete from local database
+      await StudentDatabase.deleteStudentByUniqueId(sheet.uniqueId!);
+
+      // Delete from Firebase if online
+      if (_isOnline) {
+        await _firestore
+            .collection('courses')
+            .doc(widget.schoolId)
+            .collection('sheets')
+            .doc(sheet.uniqueId)
+            .delete();
+      }
+
+      _showSuccessSnackBar('Student deleted successfully');
+      _loadOMR();
+    } catch (e) {
+      _showErrorSnackBar('Error deleting student: $e');
+    }
+  }
+
+  // ============= UI HELPERS =============
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: _successColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.error, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: _errorColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  Future<bool?> _showConfirmDialog(String title, String message) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _errorColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,7 +308,7 @@ class _OMRListScreenState extends State<OMRListScreen> {
             onPressed: () async {
               final result = await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => CreateOMRScreen()),
+                MaterialPageRoute(builder: (_) => CreateOMRScreen(schoolId: '${widget.schoolId}', userId: '${widget.userId}', userType: '${widget.userType}',)),
               );
               if (result == true) {
                 _loadOMRSheets();

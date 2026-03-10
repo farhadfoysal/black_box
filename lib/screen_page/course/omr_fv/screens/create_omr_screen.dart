@@ -1,5 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../db/course/courseDbConfig.dart';
 import '../models/omr_sheet_model.dart';
 import '../models/course_model.dart';
 import '../models/student_model.dart';
@@ -11,8 +15,18 @@ import '../widgets/omr_preview_widget.dart';
 
 class CreateOMRScreen extends StatefulWidget {
   final OMRSheet? editingSheet;
+  final String? schoolId;
+  final String? userId;
+  final String? userType; // 'admin' or 'teacher'
 
-  CreateOMRScreen({this.editingSheet});
+  const CreateOMRScreen({
+    Key? key,
+    this.editingSheet,
+    this.schoolId,
+    this.userId,
+    this.userType,
+  }) : super(key: key);
+
 
   @override
   _CreateOMRScreenState createState() => _CreateOMRScreenState();
@@ -21,12 +35,22 @@ class CreateOMRScreen extends StatefulWidget {
 class _CreateOMRScreenState extends State<CreateOMRScreen> {
   final _formKey = GlobalKey<FormState>();
   late DatabaseService _databaseService;
+  // Firestore
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Form controllers
   final _examNameController = TextEditingController();
   final _subjectController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _instructionsController = TextEditingController();
+
+  // Colors
+  final Color _primaryColor = const Color(0xFF667eea);
+  final Color _secondaryColor = const Color(0xFF764ba2);
+  final Color _accentColor = const Color(0xFFf093fb);
+  final Color _successColor = const Color(0xFF10b981);
+  final Color _warningColor = const Color(0xFFf59e0b);
+  final Color _errorColor = const Color(0xFFef4444);
 
   // Form values
   Course? _selectedCourse;
@@ -36,6 +60,7 @@ class _CreateOMRScreenState extends State<CreateOMRScreen> {
   List<String> _correctAnswers = [];
   List<Course> _courses = [];
   bool _isLoading = false;
+  bool _isOnline = true;
 
   // Generation options
   bool _generateBlankOMR = false;
@@ -46,8 +71,29 @@ class _CreateOMRScreenState extends State<CreateOMRScreen> {
   @override
   void initState() {
     super.initState();
+    _checkConnectivity();
+
+    // Listen to connectivity changes
+    Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      // Pick the first result as the current connectivity status
+      final result = results.first;
+      setState(() {
+        _isOnline = result != ConnectivityResult.none;
+      });
+      if (_isOnline) {
+
+      }
+    });
+
     // _correctAnswers = List.generate(_numberOfQuestions, (_) => '');
     _initializeForm();
+  }
+
+  Future<void> _checkConnectivity() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    setState(() {
+      _isOnline = connectivityResult != ConnectivityResult.none;
+    });
   }
 
   Future<void> _initializeForm() async {
@@ -77,12 +123,75 @@ class _CreateOMRScreenState extends State<CreateOMRScreen> {
     });
   }
 
+  // Future<void> _loadCourses() async {
+  //   try {
+  //     final courses = await _databaseService.getAllCourses();
+  //
+  //     if (!mounted) return;
+  //
+  //     setState(() {
+  //       _courses = courses;
+  //
+  //       if (_courses.isNotEmpty && _selectedCourse == null) {
+  //         _selectedCourse = _courses.first;
+  //       }
+  //     });
+  //   } catch (e) {
+  //     debugPrint("Error loading courses: $e");
+  //   }
+  // }
+
   Future<void> _loadStudents() async {
     final students = await _databaseService.getAllStudents();
     setState(() {
       _allStudents = students;
     });
   }
+
+  // ============= DATA LOADING =============
+  // Future<void> _loadStudents() async {
+  //   setState(() => _isLoading = true);
+  //
+  //   try {
+  //     if (_isOnline) {
+  //       await _loadFromFirebase();
+  //     } else {
+  //       await _loadFromLocalDatabase();
+  //     }
+  //   } catch (e) {
+  //     print('Error loading students: $e');
+  //     _showErrorSnackBar('Error loading students: $e');
+  //     await _loadFromLocalDatabase();
+  //   } finally {
+  //     setState(() => _isLoading = false);
+  //   }
+  // }
+  //
+  // Future<void> _loadFromFirebase() async {
+  //   final snapshot = await _firestore
+  //       .collection('courses')
+  //       .doc(widget.schoolId)
+  //       .collection('students')
+  //       .orderBy('stdName')
+  //       .get();
+  //
+  //   _students = snapshot.docs
+  //       .map((doc) => Student.fromMap({...doc.data(), 'uniqueId': doc.id}))
+  //       .toList();
+  //
+  //   // Save to local database
+  //   for (var student in _students) {
+  //     await StudentDatabase.insertStudent(student.toMap());
+  //   }
+  //
+  // }
+  //
+  // Future<void> _loadFromLocalDatabase() async {
+  //   final List<Map<String, dynamic>> maps =
+  //   await StudentDatabase.getAllStudents();
+  //
+  //   _students = maps.map((map) => Student.fromMap(map)).toList();
+  // }
 
   void _populateFormWithExistingData() {
     final sheet = widget.editingSheet!;
@@ -853,39 +962,128 @@ class _CreateOMRScreenState extends State<CreateOMRScreen> {
     }
   }
 
-  Future<void> _saveOMRSheet() async {
-    final sheet = OMRSheet(
-      id: widget.editingSheet?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      examName: _examNameController.text,
-      courseId: _selectedCourse!.id,
-      subjectName: _subjectController.text,
-      setNumber: _setNumber,
-      numberOfQuestions: _numberOfQuestions,
-      correctAnswers: _correctAnswers,
-      createdAt: widget.editingSheet?.createdAt ?? DateTime.now(),
-      examDate: _examDate,
-      description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
-    );
+  // Future<void> _saveOMRSheet() async {
+  //   final sheet = OMRSheet(
+  //     id: widget.editingSheet?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+  //     examName: _examNameController.text,
+  //     courseId: _selectedCourse!.id,
+  //     subjectName: _subjectController.text,
+  //     setNumber: _setNumber,
+  //     numberOfQuestions: _numberOfQuestions,
+  //     correctAnswers: _correctAnswers,
+  //     createdAt: widget.editingSheet?.createdAt ?? DateTime.now(),
+  //     examDate: _examDate,
+  //     description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
+  //   );
+  //
+  //   await _databaseService.saveOMRSheet(sheet);
+  //
+  //   if (_generateForAllStudents && _selectedStudents.isNotEmpty) {
+  //     await _generateOMRsForStudents(sheet);
+  //   }
+  //
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text(
+  //         widget.editingSheet != null
+  //             ? 'OMR Sheet updated successfully'
+  //             : 'OMR Sheet created successfully',
+  //       ),
+  //       backgroundColor: Colors.green,
+  //     ),
+  //   );
+  //
+  //   Navigator.pop(context, true);
+  // }
 
-    await _databaseService.saveOMRSheet(sheet);
+  Future<void> _deleteOMR(String id) async {
+    try {
+      await _databaseService.deleteOMRSheet(id);
 
-    if (_generateForAllStudents && _selectedStudents.isNotEmpty) {
-      await _generateOMRsForStudents(sheet);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("OMR deleted")),
+      );
+    } catch (e) {
+      debugPrint("Delete error: $e");
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          widget.editingSheet != null
-              ? 'OMR Sheet updated successfully'
-              : 'OMR Sheet created successfully',
-        ),
-        backgroundColor: Colors.green,
-      ),
-    );
-
-    Navigator.pop(context, true);
   }
+
+  Future<void> _saveOMRSheet() async {
+    try {
+      final sheet = OMRSheet(
+        id: widget.editingSheet?.id ??
+            DateTime.now().millisecondsSinceEpoch.toString(),
+        examName: _examNameController.text,
+        courseId: _selectedCourse!.id,
+        subjectName: _subjectController.text,
+        setNumber: _setNumber,
+        numberOfQuestions: _numberOfQuestions,
+        correctAnswers: _correctAnswers,
+        createdAt: widget.editingSheet?.createdAt ?? DateTime.now(),
+        examDate: _examDate,
+        description: _descriptionController.text.isEmpty
+            ? null
+            : _descriptionController.text,
+          // createdAt : DateFormat('yyyy-MM-dd').format(DateTime.now()),
+        uniqueId : DateTime.now().millisecondsSinceEpoch.toString(),
+        syncStatus : _isOnline ? 1 : 0,
+      );
+
+      await _databaseService.saveOMRSheet(sheet);
+      await _createOMRSheet(sheet);
+
+      if (_generateForAllStudents && _selectedStudents.isNotEmpty) {
+        await _generateOMRsForStudents(sheet);
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(widget.editingSheet != null
+              ? 'OMR Sheet Updated'
+              : 'OMR Sheet Created'),
+        ),
+      );
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      debugPrint("Save error: $e");
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to save OMR sheet"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _createOMRSheet(OMRSheet sheet) async {
+    try {
+
+      // Save to local database
+      // await StudentDatabase.insertOMRSheet(sheet.toMap());
+      await StudentDatabase.insertOMRSheet(sheet);
+
+      // Save to Firebase if online
+      if (_isOnline) {
+        await _firestore
+            .collection('courses')
+            .doc(widget.schoolId)
+            // .doc("20250709_114152_411_71a93a94")
+            .collection('sheets')
+            .doc(sheet.uniqueId)
+            .set(sheet.toMap());
+      }
+
+      _showSuccessSnackBar('OMR Sheet added successfully');
+      _loadStudents();
+    } catch (e) {
+      _showErrorSnackBar('Error adding OMR Sheet: $e');
+    }
+  }
+
 
   Future<void> _generateOMRsForStudents(OMRSheet sheet) async {
     final progress = ValueNotifier<int>(0);
@@ -979,6 +1177,69 @@ class _CreateOMRScreenState extends State<CreateOMRScreen> {
       );
     }
   }
+
+  // ============= UI HELPERS =============
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: _successColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.error, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: _errorColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  Future<bool?> _showConfirmDialog(String title, String message) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _errorColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   @override
   void dispose() {

@@ -6,6 +6,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../screen_page/course/omr_fv/models/omr_sheet_model.dart';
+
 class StudentDatabase {
   static Database? _database;
 
@@ -64,11 +66,58 @@ class StudentDatabase {
             imageSyncStatus INTEGER DEFAULT 0
           )
         ''');
+
+        await db.execute('''
+          CREATE TABLE omr_sheets (
+            id TEXT PRIMARY KEY,
+            examName TEXT,
+            courseId TEXT,
+            subjectName TEXT,
+            setNumber INTEGER,
+            numberOfQuestions INTEGER,
+            correctAnswers TEXT,
+            createdAt TEXT,
+            examDate TEXT,
+            description TEXT,
+            isActive INTEGER,
+            syncKey TEXT,
+            key TEXT,
+            syncStatus INTEGER DEFAULT 0,
+            uniqueId TEXT,
+            uId TEXT,
+            sId TEXT
+          )
+          ''');
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         if (oldVersion < 2) {
           await db.execute('ALTER TABLE students ADD COLUMN imagePath TEXT');
-          await db.execute('ALTER TABLE students ADD COLUMN imageSyncStatus INTEGER DEFAULT 0');
+          await db.execute(
+            'ALTER TABLE students ADD COLUMN imageSyncStatus INTEGER DEFAULT 0',
+          );
+        }
+        if (oldVersion < 3) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS omr_sheets (
+              id TEXT PRIMARY KEY,
+              examName TEXT,
+              courseId TEXT,
+              subjectName TEXT,
+              setNumber INTEGER,
+              numberOfQuestions INTEGER,
+              correctAnswers TEXT,
+              createdAt TEXT,
+              examDate TEXT,
+              description TEXT,
+              isActive INTEGER,
+              syncKey TEXT,
+              key TEXT,
+              syncStatus INTEGER DEFAULT 0,
+              uniqueId TEXT,
+              uId TEXT,
+              sId TEXT
+            )
+            ''');
         }
       },
     );
@@ -77,8 +126,11 @@ class StudentDatabase {
   // Student CRUD operations
   static Future<int> insertStudent(Map<String, dynamic> student) async {
     final db = await database;
-    return await db.insert('students', student,
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert(
+      'students',
+      student,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   static Future<List<Map<String, dynamic>>> getAllStudents() async {
@@ -93,14 +145,25 @@ class StudentDatabase {
 
   static Future<int> updateStudent(int id, Map<String, dynamic> student) async {
     final db = await database;
-    return await db.update('students', student,
-        where: 'id = ?', whereArgs: [id]);
+    return await db.update(
+      'students',
+      student,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
-  static Future<int> updateStudentByUniqueId(String id, Map<String, dynamic> student) async {
+  static Future<int> updateStudentByUniqueId(
+    String id,
+    Map<String, dynamic> student,
+  ) async {
     final db = await database;
-    return await db.update('students', student,
-        where: 'uniqueId = ?', whereArgs: [id]);
+    return await db.update(
+      'students',
+      student,
+      where: 'uniqueId = ?',
+      whereArgs: [id],
+    );
   }
 
   static Future<int> deleteStudent(int id) async {
@@ -115,15 +178,184 @@ class StudentDatabase {
 
   static Future<int> updateSyncStatus(int id, int status) async {
     final db = await database;
-    return await db.update('students', {'syncStatus': status},
-        where: 'id = ?', whereArgs: [id]);
+    return await db.update(
+      'students',
+      {'syncStatus': status},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   static Future<int> updateImageSyncStatus(int id, int status) async {
     final db = await database;
-    return await db.update('students', {'imageSyncStatus': status},
-        where: 'id = ?', whereArgs: [id]);
+    return await db.update(
+      'students',
+      {'imageSyncStatus': status},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
+
+
+
+
+  static Future<int> insertOMRSheet(OMRSheet sheet) async {
+    final db = await database;
+
+    return await db.insert(
+      'omr_sheets',
+      {
+        'id': sheet.id,
+        'examName': sheet.examName,
+        'courseId': sheet.courseId,
+        'subjectName': sheet.subjectName,
+        'setNumber': sheet.setNumber,
+        'numberOfQuestions': sheet.numberOfQuestions,
+        'correctAnswers': jsonEncode(sheet.correctAnswers),
+        'createdAt': sheet.createdAt.toIso8601String(),
+        'examDate': sheet.examDate.toIso8601String(),
+        'description': sheet.description,
+        'isActive': sheet.isActive ? 1 : 0,
+        'syncKey': sheet.syncKey,
+        'key': sheet.key,
+        'syncStatus': sheet.syncStatus ?? 0,
+        'uniqueId': sheet.uniqueId,
+        'uId': sheet.uId,
+        'sId': sheet.sId,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+
+  static Future<List<OMRSheet>> getAllOMRSheets() async {
+    final db = await database;
+
+    final result = await db.query(
+      'omr_sheets',
+      orderBy: 'createdAt DESC',
+    );
+
+    return result.map((map) {
+      return OMRSheet(
+        id: map['id'] as String,
+        examName: map['examName'] as String,
+        courseId: map['courseId'] as String,
+        subjectName: map['subjectName'] as String,
+        setNumber: map['setNumber'] as int,
+        numberOfQuestions: map['numberOfQuestions'] as int,
+        correctAnswers:
+        List<String>.from(jsonDecode(map['correctAnswers'] as String)),
+        createdAt: DateTime.parse(map['createdAt'] as String),
+        examDate: DateTime.parse(map['examDate'] as String),
+        description: map['description'] as String?,
+        isActive: (map['isActive'] as int) == 1,
+        syncKey: map['syncKey'] as String?,
+        key: map['key'] as String?,
+        syncStatus: map['syncStatus'] as int?,
+        uniqueId: map['uniqueId'] as String?,
+        uId: map['uId'] as String?,
+        sId: map['sId'] as String?,
+      );
+    }).toList();
+  }
+
+  static Future<List<OMRSheet>> getUnsyncedOMRSheets() async {
+    final db = await database;
+
+    final result = await db.query(
+      'omr_sheets',
+      where: 'syncStatus = ?',
+      whereArgs: [0],
+    );
+
+    return result.map((map) {
+      return OMRSheet.fromJson({
+        ...map,
+        'correctAnswers': jsonDecode(map['correctAnswers'] as String),
+      });
+    }).toList();
+  }
+
+
+  static Future<int> updateOMRSheet(String id, OMRSheet sheet) async {
+    final db = await database;
+
+    return await db.update(
+      'omr_sheets',
+      {
+        'examName': sheet.examName,
+        'courseId': sheet.courseId,
+        'subjectName': sheet.subjectName,
+        'setNumber': sheet.setNumber,
+        'numberOfQuestions': sheet.numberOfQuestions,
+        'correctAnswers': jsonEncode(sheet.correctAnswers),
+        'examDate': sheet.examDate.toIso8601String(),
+        'description': sheet.description,
+        'isActive': sheet.isActive ? 1 : 0,
+        'syncKey': sheet.syncKey,
+        'key': sheet.key,
+        'syncStatus': sheet.syncStatus,
+        'uniqueId': sheet.uniqueId,
+        'uId': sheet.uId,
+        'sId': sheet.sId,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+
+  static Future<int> deleteOMRSheet(String id) async {
+    final db = await database;
+
+    return await db.delete(
+      'omr_sheets',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  static Future<int> updateOMRSheetSyncStatus(String id, int status) async {
+    final db = await database;
+
+    return await db.update(
+      'omr_sheets',
+      {'syncStatus': status},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  static Future<int> updateOMRSyncStatus(String id, int status) async {
+    final db = await database;
+
+    return await db.update(
+      'omr_sheets',
+      {'syncStatus': status},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+
+  static Future<List<OMRSheet>> getOMRByCourse(String courseId) async {
+    final db = await database;
+
+    final result = await db.query(
+      'omr_sheets',
+      where: 'courseId = ?',
+      whereArgs: [courseId],
+    );
+
+    return result.map((map) {
+      return OMRSheet.fromJson({
+        ...map,
+        'correctAnswers': jsonDecode(map['correctAnswers'] as String),
+      });
+    }).toList();
+  }
+
 
   // Close database
   static Future<void> close() async {
@@ -136,7 +368,10 @@ class StudentDatabase {
 
 // Image handling utilities
 class ImageHandler {
-  static Future<String> saveImageLocally(File imageFile, String studentId) async {
+  static Future<String> saveImageLocally(
+    File imageFile,
+    String studentId,
+  ) async {
     try {
       final directory = await getApplicationDocumentsDirectory();
       final imagesDir = Directory('${directory.path}/student_images');

@@ -390,7 +390,7 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
               builder: (context) => OMRScannerScreen()));
     } else if (pageName == 'scanner') {
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => HomeScreen()));
+          context, MaterialPageRoute(builder: (context) => HomeScreen(schoolId: '${widget.course.uniqueId}', userId: '${widget.user.userid}', userType: '${widget.user.utype}',)));
           // context, MaterialPageRoute(builder: (context) => OMRDashboard()));
           // context, MaterialPageRoute(builder: (context) => ProfessionalOMRGeneratorExample())); // completed
           // context, MaterialPageRoute(builder: (context) => OMRConfigPage()));
