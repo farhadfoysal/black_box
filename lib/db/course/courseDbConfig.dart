@@ -7,6 +7,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../screen_page/course/omr_fv/models/omr_sheet_model.dart';
+import '../../screen_page/course/omr_fv/models/scanned_result.dart';
 
 class StudentDatabase {
   static Database? _database;
@@ -88,6 +89,25 @@ class StudentDatabase {
             sId TEXT
           )
           ''');
+
+        await db.execute('''
+          CREATE TABLE scanned_results (
+            id TEXT PRIMARY KEY,
+            studentId TEXT,
+            mobileNumber TEXT,
+            setNumber INTEGER,
+            detectedAnswers TEXT,
+            confidence REAL,
+            errorMessage TEXT,
+            sheetId TEXT,
+            syncKey TEXT,
+            key TEXT,
+            syncStatus INTEGER DEFAULT 0,
+            uniqueId TEXT,
+            sId TEXT,
+            createdAt TEXT
+          )
+          ''');
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         if (oldVersion < 2) {
@@ -119,6 +139,26 @@ class StudentDatabase {
             )
             ''');
         }
+        if (oldVersion < 4) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS scanned_results (
+              id TEXT PRIMARY KEY,
+              studentId TEXT,
+              mobileNumber TEXT,
+              setNumber INTEGER,
+              detectedAnswers TEXT,
+              confidence REAL,
+              errorMessage TEXT,
+              sheetId TEXT,
+              syncKey TEXT,
+              key TEXT,
+              syncStatus INTEGER DEFAULT 0,
+              uniqueId TEXT,
+              sId TEXT,
+              createdAt TEXT
+            )
+            ''');
+                  }
       },
     );
   }
@@ -355,6 +395,136 @@ class StudentDatabase {
       });
     }).toList();
   }
+
+
+  static Future<int> insertScannedResult(ScannedResult result) async {
+    final db = await database;
+
+    return await db.insert(
+      'scanned_results',
+      {
+        'id': result.id,
+        'studentId': result.studentId,
+        'mobileNumber': result.mobileNumber,
+        'setNumber': result.setNumber,
+        'detectedAnswers': jsonEncode(result.detectedAnswers),
+        'confidence': result.confidence,
+        'errorMessage': result.errorMessage,
+        'sheetId': result.sheetId,
+        'syncKey': result.syncKey,
+        'key': result.key,
+        'syncStatus': result.syncStatus ?? 0,
+        'uniqueId': result.uniqueId,
+        'sId': result.sId,
+        'createdAt': result.createdAt.toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+
+  static Future<List<ScannedResult>> getAllScannedResults() async {
+    final db = await database;
+
+    final result = await db.query(
+      'scanned_results',
+      orderBy: 'createdAt DESC',
+    );
+
+    return result.map((map) {
+      return ScannedResult.fromMap({
+        ...map,
+        'detectedAnswers': jsonDecode(map['detectedAnswers'] as String),
+      });
+    }).toList();
+  }
+
+
+  static Future<List<ScannedResult>> getResultsBySheet(String sheetId) async {
+    final db = await database;
+
+    final result = await db.query(
+      'scanned_results',
+      where: 'sheetId = ?',
+      whereArgs: [sheetId],
+    );
+
+    return result.map((map) {
+      return ScannedResult.fromMap({
+        ...map,
+        'detectedAnswers': jsonDecode(map['detectedAnswers'] as String),
+      });
+    }).toList();
+  }
+
+
+  static Future<List<ScannedResult>> getUnsyncedResults() async {
+    final db = await database;
+
+    final result = await db.query(
+      'scanned_results',
+      where: 'syncStatus = ?',
+      whereArgs: [0],
+    );
+
+    return result.map((map) {
+      return ScannedResult.fromMap({
+        ...map,
+        'detectedAnswers': jsonDecode(map['detectedAnswers'] as String),
+      });
+    }).toList();
+  }
+
+
+  static Future<int> updateResultSyncStatus(String id, int status) async {
+    final db = await database;
+
+    return await db.update(
+      'scanned_results',
+      {'syncStatus': status},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+
+  static Future<int> deleteScannedResult(String id) async {
+    final db = await database;
+
+    return await db.delete(
+      'scanned_results',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  static Future<int> updateScannedResult(
+      String id,
+      ScannedResult result,
+      ) async {
+    final db = await database;
+
+    return await db.update(
+      'scanned_results',
+      {
+        'studentId': result.studentId,
+        'mobileNumber': result.mobileNumber,
+        'setNumber': result.setNumber,
+        'detectedAnswers': jsonEncode(result.detectedAnswers),
+        'confidence': result.confidence,
+        'errorMessage': result.errorMessage,
+        'sheetId': result.sheetId,
+        'syncKey': result.syncKey,
+        'key': result.key,
+        'syncStatus': result.syncStatus,
+        'uniqueId': result.uniqueId,
+        'sId': result.sId,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
 
 
   // Close database

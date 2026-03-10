@@ -17,6 +17,7 @@ import '../../model/course/teacher.dart';
 import '../../model/school/school.dart';
 import '../../model/user/user.dart';
 import 'OMR_FV.dart';
+import 'omr_fv/screens/search_omr_sheet_page.dart';
 import 'omr_fv/services/omr_scanner_service_v1.dart';
 import 'omr_v4/omr_page.dart';
 import 'omr_v4/omr_scanner_app.dart';
@@ -403,6 +404,14 @@ class _CourseManagerScreenState extends State<CourseManagerScreen> {
               builder: (context) => OMRScannerScreen()));
     } else if (pageName == 'StatisticsPage') {
       final cameras = await availableCameras();
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SearchOMRSheetPage(
+            schoolId: '${widget.course.uniqueId}',
+          ),
+        ),
+      );
       // Navigator.push(
       //     context,
       //     MaterialPageRoute(
