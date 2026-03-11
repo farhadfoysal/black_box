@@ -87,8 +87,65 @@ class _SearchOMRSheetState extends State<SearchOMRSheet> {
   //
   // }
 
-  Future<void> _searchSheet() async {
+  // Future<void> _searchSheet() async {
+  //
+  //   final sheetId = _sheetIdController.text.trim();
+  //
+  //   if (sheetId.isEmpty) {
+  //     setState(() {
+  //       _error = "Please enter Sheet ID";
+  //     });
+  //     return;
+  //   }
+  //
+  //   setState(() {
+  //     _loading = true;
+  //     _error = null;
+  //     _sheet = null;
+  //   });
+  //
+  //   try {
+  //
+  //     final query = await _firestore
+  //         .collectionGroup('sheets')
+  //         .where('uniqueId', isEqualTo: sheetId)
+  //         .limit(1)
+  //         .get();
+  //     print('farhad foysal ${query}');
+  //
+  //     if (query.docs.isEmpty) {
+  //
+  //       setState(() {
+  //         _error = "Sheet not found";
+  //       });
+  //
+  //     } else {
+  //
+  //       final data = query.docs.first.data();
+  //
+  //       final sheet = OMRSheet.fromMap(data);
+  //
+  //       setState(() {
+  //         _sheet = sheet;
+  //       });
+  //
+  //     }
+  //
+  //   } catch (e) {
+  //     print('farhad foysal ${e}');
+  //     setState(() {
+  //       _error = "Error loading sheet";
+  //     });
+  //
+  //   }
+  //
+  //   setState(() {
+  //     _loading = false;
+  //   });
+  //
+  // }
 
+  Future<void> _searchSheet() async {
     final sheetId = _sheetIdController.text.trim();
 
     if (sheetId.isEmpty) {
@@ -106,11 +163,13 @@ class _SearchOMRSheetState extends State<SearchOMRSheet> {
 
     try {
 
-      final query = await _firestore
-          .collectionGroup('sheets')
-          .where('uniqueId', isEqualTo: sheetId)
-          .limit(1)
-          .get();
+      final query = await _firestore.collectionGroup('sheets').get();
+
+      for (var doc in query.docs) {
+        if (doc.id == sheetId) {
+           _sheet = OMRSheet.fromMap(doc.data());
+        }
+      }
 
       if (query.docs.isEmpty) {
 
@@ -120,28 +179,30 @@ class _SearchOMRSheetState extends State<SearchOMRSheet> {
 
       } else {
 
-        final data = query.docs.first.data();
-
-        final sheet = OMRSheet.fromMap(data);
-
-        setState(() {
-          _sheet = sheet;
-        });
+        // final doc = query.docs.first;
+        //
+        // final data = doc.data();
+        //
+        // final sheet = OMRSheet.fromMap({
+        //   ...data,
+        //   'uniqueId': doc.id,
+        // });
+        //
+        // setState(() {
+        //   _sheet = sheet;
+        // });
 
       }
 
     } catch (e) {
-
       setState(() {
         _error = "Error loading sheet";
       });
-
     }
 
     setState(() {
       _loading = false;
     });
-
   }
 
   /// Navigate to marking page
