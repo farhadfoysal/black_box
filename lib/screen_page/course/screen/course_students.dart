@@ -8,6 +8,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import '../../../db/course/courseDbConfig.dart';
 import '../../../model/school/student.dart';
+import '../../../model/tutor/tutor_student.dart';
+import '../../tutor/tutor_student_month.dart';
 
 class StudentsListScreen extends StatefulWidget {
   final String schoolId;
@@ -678,6 +680,9 @@ class _StudentsListScreenState extends State<StudentsListScreen>
   }
 
   Widget _buildStudentCard(Student student) {
+
+    TutorStudent tutorStudent = student.toTutorStudent();
+
     return Container(
       margin: EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -789,6 +794,21 @@ class _StudentsListScreenState extends State<StudentsListScreen>
                   ),
                   onSelected: (value) {
                     switch (value) {
+                      case 'attendance':
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                TutorStudentMonth(student: tutorStudent),
+                          ),
+                        );
+                        break;
+                      case 'performance':
+                        _addOrUpdateStudent(student);
+                        break;
+                      case 'result':
+                        _addOrUpdateStudent(student);
+                        break;
                       case 'edit':
                         _addOrUpdateStudent(student);
                         break;
@@ -801,6 +821,36 @@ class _StudentsListScreenState extends State<StudentsListScreen>
                     }
                   },
                   itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'attendance',
+                      child: Row(
+                        children: [
+                          Icon(Icons.visibility, color: _primaryColor),
+                          SizedBox(width: 12),
+                          Text('Attendance'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'performance',
+                      child: Row(
+                        children: [
+                          Icon(Icons.visibility, color: _primaryColor),
+                          SizedBox(width: 12),
+                          Text('View Performance'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'result',
+                      child: Row(
+                        children: [
+                          Icon(Icons.visibility, color: _primaryColor),
+                          SizedBox(width: 12),
+                          Text('View Result'),
+                        ],
+                      ),
+                    ),
                     PopupMenuItem(
                       value: 'view',
                       child: Row(

@@ -1,5 +1,7 @@
 import 'package:black_box/model/tutor/tutor_week_day.dart';
 
+import '../school/student.dart';
+
 class TutorStudent {
   int? _id;
   String? _uniqueId;
@@ -202,5 +204,23 @@ class TutorStudent {
     );
   }
 
+  // Student student = Student(...);
+  //
+  // TutorStudent tutorStudent = student.toTutorStudent();
 
 }
+class StudentMapper {
+  static TutorStudent toTutorStudent(Student s) {
+    return TutorStudent(
+      id: s.id,
+      uniqueId: s.uniqueId,
+      userId: s.uId,
+      name: s.stdName,
+      phone: s.stdPhone,
+      gaurdianPhone: s.gPhone,
+      address: s.address,
+    );
+  }
+}
+
+// TutorStudent tutor = StudentMapper.toTutorStudent(student);

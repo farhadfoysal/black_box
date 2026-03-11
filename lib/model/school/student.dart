@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:intl/intl.dart';
 
+import '../tutor/tutor_student.dart';
+
 /// Student model with advanced professional features
 class Student {
   // Fields
@@ -403,6 +405,44 @@ class Student {
     final now = DateTime.now();
     return DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
   }
+
+  TutorStudent toTutorStudent() {
+    return TutorStudent(
+      id: _id,
+      uniqueId: _uniqueId,
+      userId: _uId,
+      name: _stdName,
+      phone: _stdPhone,
+      gaurdianPhone: _gPhone,
+      phonePass: _stdPass,
+      dob: _dob,
+      education: _major ?? _sMajor,
+      address: _address,
+      activeStatus: _aStatus,
+      admittedDate: _addDate != null ? DateTime.tryParse(_addDate!) : null,
+      img: _stdImg ?? _imagePath,
+      days: [], // default empty, later you can assign TutorWeekDay list
+    );
+  }
+
+  factory Student.fromTutorStudent(TutorStudent t) {
+    return Student(
+      id: t.id,
+      uniqueId: t.uniqueId,
+      uId: t.userId,
+      stdName: t.name,
+      stdPhone: t.phone,
+      gPhone: t.gaurdianPhone,
+      stdPass: t.phonePass,
+      dob: t.dob,
+      major: t.education,
+      address: t.address,
+      aStatus: t.activeStatus,
+      addDate: t.admittedDate?.toIso8601String(),
+      stdImg: t.img,
+    );
+  }
+
 
   @override
   String toString() => _stdName ?? '';
