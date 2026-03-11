@@ -1,7 +1,9 @@
+import 'package:barcode_widget/barcode_widget.dart';
 import 'package:black_box/screen_page/course/omr_fv/screens/results_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../db/course/courseDbConfig.dart';
 import '../models/omr_sheet_model.dart';
@@ -52,7 +54,7 @@ class _OMRListScreenState extends State<OMRListScreen> {
     super.initState();
     _initializeDatabase();
     _checkConnectivity();
-    // _loadStudents();
+    _loadOMR();
 
     // Listen to connectivity changes
     Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
@@ -121,24 +123,60 @@ class _OMRListScreenState extends State<OMRListScreen> {
     }
   }
 
+  // Future<void> _loadFromFirebase() async {
+  //   final snapshot = await _firestore
+  //       .collection('courses')
+  //       .doc(widget.schoolId)
+  //       .collection('sheets')
+  //       .orderBy('examName')
+  //       .get();
+  //
+  //   _omrSheets = snapshot.docs
+  //       .map((doc) => OMRSheet.fromMap({...doc.data(), 'uniqueId': doc.id}))
+  //       .toList();
+  //
+  //   print(_omrSheets);
+  //
+  //   // Save to local database
+  //   for (var sheet in _omrSheets) {
+  //     await StudentDatabase.insertOMRSheet(sheet);
+  //   }
+  //
+  //   // _applyFilters();
+  // }
+
   Future<void> _loadFromFirebase() async {
-    final snapshot = await _firestore
-        .collection('courses')
-        .doc(widget.schoolId)
-        .collection('sheets')
-        .orderBy('examName')
-        .get();
+    try {
 
-    _omrSheets = snapshot.docs
-        .map((doc) => OMRSheet.fromMap({...doc.data(), 'uniqueId': doc.id}))
-        .toList();
+      print("Loading sheets for school: ${widget.schoolId}");
 
-    // Save to local database
-    for (var sheet in _omrSheets) {
-      await StudentDatabase.insertOMRSheet(sheet);
+      final snapshot = await _firestore
+          .collection('courses')
+          .doc(widget.schoolId)
+          .collection('sheets')
+          .orderBy('examName')
+          .get();
+
+      print("Docs found: ${snapshot.docs.length}");
+
+      final sheets = snapshot.docs
+          .map((doc) => OMRSheet.fromMap({...doc.data(), 'uniqueId': doc.id}))
+          .toList();
+
+      setState(() {
+        _omrSheets = sheets;
+        _filteredSheets = sheets;
+        _isLoading = false;
+      });
+
+      for (var sheet in sheets) {
+        // print("Docs found: ${sheet.examName}");
+        await StudentDatabase.insertOMRSheet(sheet);
+      }
+
+    } catch (e) {
+      print("Firebase load error: $e");
     }
-
-    // _applyFilters();
   }
 
   Future<void> _loadFromLocalDatabase() async {
@@ -147,6 +185,8 @@ class _OMRListScreenState extends State<OMRListScreen> {
 
     setState(() {
       _omrSheets = sheets;
+      _filteredSheets = sheets;
+      _isLoading = false;
     });
 
     // _applyFilters();
@@ -408,7 +448,7 @@ class _OMRListScreenState extends State<OMRListScreen> {
         onTap: () => _showSheetOptions(sheet),
         borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: EdgeInsets.all(16),
+          padding: EdgeInsets.all(8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -485,8 +525,16 @@ class _OMRListScreenState extends State<OMRListScreen> {
               ],
               SizedBox(height: 12),
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
+                  TextButton.icon(
+                    onPressed: () => shareSheet(sheet),
+                    icon: Icon(Icons.more, size: 16),
+                    label: Text(''),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Color(0xFF2ECC71),
+                    ),
+                  ),
                   TextButton.icon(
                     onPressed: () => _generateOMR(sheet),
                     icon: Icon(Icons.download, size: 16),
@@ -520,6 +568,76 @@ class _OMRListScreenState extends State<OMRListScreen> {
     );
   }
 
+  void shareSheet(OMRSheet sheet) {
+    String? tempNum = sheet.uniqueId;
+    String? tempCode = sheet.sId;
+
+    if (tempNum != null && tempCode != null) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Share OMR Exam'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Exam ID:'),
+                SizedBox(height: 10),
+                BarcodeWidget(
+                  barcode: Barcode.code128(), // Choose the barcode format
+                  data: tempNum,
+                  width: 200,
+                  height: 100,
+                ),
+                SizedBox(height: 20),
+                Text('Course Code:'),
+                SizedBox(height: 10),
+                BarcodeWidget(
+                  barcode: Barcode.qrCode(), // QR code format
+                  data: tempCode,
+                  width: 200,
+                  height: 200,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                child: Text('COPY EXAM ID'),
+                onPressed: () {
+                  if (tempNum.isNotEmpty) {
+                    Clipboard.setData(ClipboardData(text: tempNum)).then((_) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Course Code copied: $tempNum')),
+                      );
+                    }).catchError((error) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to copy: $error')),
+                      );
+                    });
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('No Course Code to copy')),
+                    );
+                  }
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text('Close'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Course data is incomplete to share')),
+      );
+    }
+  }
 
   void _showSheetOptions(OMRSheet sheet) {
     showModalBottomSheet(

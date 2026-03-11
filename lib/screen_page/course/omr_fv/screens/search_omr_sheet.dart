@@ -4,16 +4,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/omr_sheet_model.dart';
 import 'student_omr_marking_page.dart';
 
-class SearchOMRSheetPage extends StatefulWidget {
-  final String schoolId;
-
-  const SearchOMRSheetPage({super.key, required this.schoolId});
+class SearchOMRSheet extends StatefulWidget {
+  // final String schoolId;
+  //
+  // const SearchOMRSheet({super.key, required this.schoolId});
 
   @override
-  State<SearchOMRSheetPage> createState() => _SearchOMRSheetPageState();
+  State<SearchOMRSheet> createState() => _SearchOMRSheetState();
 }
 
-class _SearchOMRSheetPageState extends State<SearchOMRSheetPage> {
+class _SearchOMRSheetState extends State<SearchOMRSheet> {
 
   final TextEditingController _sheetIdController = TextEditingController();
 
@@ -26,16 +26,75 @@ class _SearchOMRSheetPageState extends State<SearchOMRSheetPage> {
   String? _error;
 
   /// Search OMR Sheet
+  // Future<void> _searchSheet() async {
+  //
+  //   final sheetId = _sheetIdController.text.trim();
+  //
+  //   if(sheetId.isEmpty){
+  //
+  //     setState(() {
+  //       _error = "Please enter Sheet ID";
+  //     });
+  //
+  //     return;
+  //   }
+  //
+  //   setState(() {
+  //     _loading = true;
+  //     _error = null;
+  //     _sheet = null;
+  //   });
+  //
+  //   try{
+  //
+  //     final doc = await _firestore
+  //         .collection('courses')
+  //         .doc(widget.schoolId)
+  //         .collection('sheets')
+  //         .doc(sheetId)
+  //         .get();
+  //
+  //     if(!doc.exists){
+  //
+  //       setState(() {
+  //         _error = "Sheet not found";
+  //       });
+  //
+  //     }else{
+  //
+  //       final data = doc.data()!;
+  //
+  //       final sheet = OMRSheet.fromMap(data);
+  //
+  //       setState(() {
+  //         _sheet = sheet;
+  //       });
+  //
+  //     }
+  //
+  //   }catch(e){
+  //
+  //     // print('farhad foysal ${e}');
+  //     setState(() {
+  //       _error = "Error loading sheet";
+  //     });
+  //
+  //   }
+  //
+  //   setState(() {
+  //     _loading = false;
+  //   });
+  //
+  // }
+
   Future<void> _searchSheet() async {
 
     final sheetId = _sheetIdController.text.trim();
 
-    if(sheetId.isEmpty){
-
+    if (sheetId.isEmpty) {
       setState(() {
         _error = "Please enter Sheet ID";
       });
-
       return;
     }
 
@@ -45,24 +104,23 @@ class _SearchOMRSheetPageState extends State<SearchOMRSheetPage> {
       _sheet = null;
     });
 
-    try{
+    try {
 
-      final doc = await _firestore
-          .collection('courses')
-          .doc(widget.schoolId)
-          .collection('sheets')
-          .doc(sheetId)
+      final query = await _firestore
+          .collectionGroup('sheets')
+          .where('uniqueId', isEqualTo: sheetId)
+          .limit(1)
           .get();
 
-      if(!doc.exists){
+      if (query.docs.isEmpty) {
 
         setState(() {
           _error = "Sheet not found";
         });
 
-      }else{
+      } else {
 
-        final data = doc.data()!;
+        final data = query.docs.first.data();
 
         final sheet = OMRSheet.fromMap(data);
 
@@ -72,9 +130,8 @@ class _SearchOMRSheetPageState extends State<SearchOMRSheetPage> {
 
       }
 
-    }catch(e){
+    } catch (e) {
 
-      // print('farhad foysal ${e}');
       setState(() {
         _error = "Error loading sheet";
       });

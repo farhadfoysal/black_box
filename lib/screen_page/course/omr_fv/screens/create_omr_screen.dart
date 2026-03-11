@@ -1027,6 +1027,8 @@ class _CreateOMRScreenState extends State<CreateOMRScreen> {
           // createdAt : DateFormat('yyyy-MM-dd').format(DateTime.now()),
         uniqueId : DateTime.now().millisecondsSinceEpoch.toString(),
         syncStatus : _isOnline ? 1 : 0,
+        sId: widget.schoolId,
+        uId: widget.userId,
       );
 
       await _databaseService.saveOMRSheet(sheet);

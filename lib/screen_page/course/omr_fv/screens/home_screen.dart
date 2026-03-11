@@ -147,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () async {
                   await Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => OMRListScreen()),
+                    MaterialPageRoute(builder: (_) => OMRListScreen(schoolId: '${widget.schoolId}', userId: '${widget.userId}', userType: '${widget.userType}',)),
                   );
                   _loadData();
                 },

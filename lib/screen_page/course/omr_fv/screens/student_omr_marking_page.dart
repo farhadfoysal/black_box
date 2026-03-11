@@ -53,9 +53,21 @@ class _StudentOMRMarkingPageState extends State<StudentOMRMarkingPage> {
   /// -----------------------------
   /// Select Answer
   /// -----------------------------
+  // void _selectAnswer(int index, String option) {
+  //   setState(() {
+  //     _answers[index] = option;
+  //   });
+  // }
+
   void _selectAnswer(int index, String option) {
     setState(() {
-      _answers[index] = option;
+      if (_answers[index] == option) {
+        // If already selected → unmark
+        _answers[index] = '';
+      } else {
+        // Otherwise select
+        _answers[index] = option;
+      }
     });
   }
 
@@ -117,7 +129,8 @@ class _StudentOMRMarkingPageState extends State<StudentOMRMarkingPage> {
       setNumber: widget.sheet.setNumber,
       detectedAnswers: _answers,
       confidence: 1.0,
-      sheetId: widget.sheet.id,
+      // sheetId: widget.sheet.id,
+      sheetId: widget.sheet.uniqueId,
       createdAt: DateTime.now(),
       syncStatus: 0,
       uniqueId: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -153,42 +166,45 @@ class _StudentOMRMarkingPageState extends State<StudentOMRMarkingPage> {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(6),
         child: Column(
           children: [
             Text(
-              "Q${index + 1}",
+              "Q.${index + 1}",
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: options.map((op) {
-                final isSelected = _answers[index] == op;
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: options.map((op) {
+                  final isSelected = _answers[index] == op;
 
-                return GestureDetector(
-                  onTap: () => _selectAnswer(index, op),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.blue : Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey),
-                    ),
-                    child: Center(
-                      child: Text(
-                        op,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black,
-                          fontWeight: FontWeight.bold,
+                  return GestureDetector(
+                    onTap: () => _selectAnswer(index, op),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.blue : Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: Center(
+                        child: Text(
+                          op,
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             )
           ],
         ),
@@ -243,10 +259,10 @@ class _StudentOMRMarkingPageState extends State<StudentOMRMarkingPage> {
                 padding: const EdgeInsets.all(10),
                 gridDelegate:
                 const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
+                  crossAxisCount: 2,
                   mainAxisSpacing: 8,
                   crossAxisSpacing: 8,
-                  childAspectRatio: 1.5,
+                  childAspectRatio: 2,
                 ),
                 itemCount: widget.sheet.numberOfQuestions,
                 itemBuilder: (context, index) => _buildQuestion(index),

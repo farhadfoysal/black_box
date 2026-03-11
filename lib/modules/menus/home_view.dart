@@ -8,6 +8,7 @@ import 'package:black_box/extra/quiz/quiz_four.dart';
 import 'package:black_box/extra/quiz/quiz_three.dart';
 import 'package:black_box/extra/quiz/quiz_two.dart';
 import 'package:black_box/quiz/quiz_screen.dart';
+import 'package:black_box/screen_page/course/omr_fv/screens/search_omr_sheet.dart';
 import 'package:black_box/screen_page/exam/exam_list.dart';
 import 'package:black_box/screen_page/tutor/tutor_main_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -48,7 +49,7 @@ class HomeView extends StatelessWidget {
         '/tuition-finder': (context) => const TuitionFinderPage(),
         '/budget-tracker': (context) =>  ExamAttemptPage(),
         '/bazar-list': (context) =>  ExamAttemptPagee(),
-        '/course-finder': (context) => const TuitionFinderPage(),
+        '/course-finder': (context) => SearchOMRSheet(),
         '/exam-management': (context) => ExamListPage(),
         '/seba-manager': (context) => const HC05BluetoothControllerPage(),
         '/hisab-manager': (context) => const BluetoothControllerPage(),
