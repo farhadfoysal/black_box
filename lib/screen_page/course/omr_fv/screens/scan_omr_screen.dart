@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:black_box/screen_page/course/omr_fv/screens/student_omr_marking_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -68,7 +69,7 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _scannerService = OMRScannerService();
     _initializeDatabase();
     _initializeCamera();
@@ -507,8 +508,8 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
 
                 _gotoOMRPage();
               },
-              icon: Icon(Icons.camera),
-              label: Text('GO To OMR'),
+              icon: Icon(Icons.edit),
+              label: Text('Start Marking'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF2C3E50),
                 padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
@@ -754,6 +755,30 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
   }
 
   Future<void> _gotoOMRPage() async{
+    if (_studentIdController.text.isEmpty) {
+      _showErrorSnackBar("Enter Student ID");
+      return;
+    }
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StudentOMRMarkingPage(
+          sheet: _selectedOMRSheet!,
+          studentId: _studentIdController.text,
+          phone: _phoneController.text,
+        ),
+      ),
+    );
+
+    if (result != null && result is ExamResult) {
+
+      print(result.studentId);
+      print(result.percentage);
+
+      _showResultDialog(result);
+
+    }
 
   }
 
@@ -939,54 +964,221 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
   }
 
   void _showResultDialog(ExamResult result) {
+
+    Color resultColor;
+
+    if (result.percentage >= 80) {
+      resultColor = Colors.green;
+    } else if (result.percentage >= 50) {
+      resultColor = Colors.orange;
+    } else {
+      resultColor = Colors.red;
+    }
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Scan Complete'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Student: ${result.studentName}'),
-            Text('Score: ${result.correctCount}/${result.totalQuestions}'),
-            Text('Percentage: ${result.percentage.toStringAsFixed(1)}%'),
-            SizedBox(height: 16),
-            LinearProgressIndicator(
-              value: result.percentage / 100,
-              backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                result.percentage >= 80
-                    ? Color(0xFF2ECC71)
-                    : result.percentage >= 60
-                    ? Color(0xFFF39C12)
-                    : Color(0xFFE74C3C),
-              ),
-            ),
-          ],
+      builder: (_) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() {
-                _scanResult = null;
-                _selectedImage = null;
-                _detectedStudent = null;
-              });
-            },
-            child: Text('Scan Another'),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+
+              /// Title
+              Row(
+                children: [
+                  Icon(Icons.check_circle, color: resultColor, size: 32),
+                  SizedBox(width: 10),
+                  Text(
+                    "Exam Result",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                ],
+              ),
+
+              SizedBox(height: 20),
+
+              /// Student Info
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  children: [
+
+                    _resultRow("Student ID", result.studentId),
+                    _resultRow("Student Name", result.studentName.isEmpty ? "Unknown" : result.studentName),
+                    _resultRow("Exam", result.examName),
+
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 16),
+
+              /// Score Summary
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  children: [
+
+                    _resultRow("Total Questions", result.totalQuestions.toString()),
+                    _resultRow("Correct", result.correctCount.toString()),
+                    _resultRow("Wrong", result.wrongCount.toString()),
+                    _resultRow("Unanswered", result.unansweredCount.toString()),
+
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 20),
+
+              /// Percentage
+              Text(
+                "${result.percentage.toStringAsFixed(2)} %",
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: resultColor,
+                ),
+              ),
+
+              SizedBox(height: 8),
+
+              /// Progress bar
+              LinearProgressIndicator(
+                value: result.percentage / 100,
+                minHeight: 10,
+                backgroundColor: Colors.grey.shade300,
+                valueColor: AlwaysStoppedAnimation(resultColor),
+              ),
+
+              SizedBox(height: 20),
+
+              /// Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: Icon(Icons.close),
+                    label: Text("Close"),
+                  ),
+
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: resultColor,
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pop(context);
+                    },
+                    icon: Icon(Icons.done),
+                    label: Text("Done"),
+                  ),
+
+                ],
+              )
+
+            ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: Text('Done'),
+        ),
+      ),
+    );
+  }
+
+  Widget _resultRow(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+
+          Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w500,
+            ),
           ),
+
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
         ],
       ),
     );
   }
+
+  // void _showResultDialog(ExamResult result) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) => AlertDialog(
+  //       title: Text('Scan Complete'),
+  //       content: Column(
+  //         mainAxisSize: MainAxisSize.min,
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Text('Student: ${result.studentName}'),
+  //           Text('Score: ${result.correctCount}/${result.totalQuestions}'),
+  //           Text('Percentage: ${result.percentage.toStringAsFixed(1)}%'),
+  //           SizedBox(height: 16),
+  //           LinearProgressIndicator(
+  //             value: result.percentage / 100,
+  //             backgroundColor: Colors.grey.shade300,
+  //             valueColor: AlwaysStoppedAnimation<Color>(
+  //               result.percentage >= 80
+  //                   ? Color(0xFF2ECC71)
+  //                   : result.percentage >= 60
+  //                   ? Color(0xFFF39C12)
+  //                   : Color(0xFFE74C3C),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () {
+  //             Navigator.pop(context);
+  //             setState(() {
+  //               _scanResult = null;
+  //               _selectedImage = null;
+  //               _detectedStudent = null;
+  //             });
+  //           },
+  //           child: Text('Scan Another'),
+  //         ),
+  //         ElevatedButton(
+  //           onPressed: () {
+  //             Navigator.pop(context);
+  //             Navigator.pop(context);
+  //           },
+  //           child: Text('Done'),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+
 
   @override
   void dispose() {

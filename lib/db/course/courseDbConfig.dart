@@ -6,6 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../screen_page/course/omr_fv/models/exam_result_model.dart';
 import '../../screen_page/course/omr_fv/models/omr_sheet_model.dart';
 import '../../screen_page/course/omr_fv/models/scanned_result.dart';
 
@@ -108,6 +109,25 @@ class StudentDatabase {
             createdAt TEXT
           )
           ''');
+        await db.execute('''
+          CREATE TABLE exam_results (
+            id TEXT PRIMARY KEY,
+            studentId TEXT,
+            omrSheetId TEXT,
+            studentName TEXT,
+            examName TEXT,
+            studentAnswers TEXT,
+            correctAnswers TEXT,
+            totalQuestions INTEGER,
+            correctCount INTEGER,
+            wrongCount INTEGER,
+            unansweredCount INTEGER,
+            percentage REAL,
+            scannedAt TEXT,
+            scannedImagePath TEXT,
+            syncStatus INTEGER DEFAULT 0
+          )
+          ''');
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         if (oldVersion < 2) {
@@ -156,6 +176,27 @@ class StudentDatabase {
               uniqueId TEXT,
               sId TEXT,
               createdAt TEXT
+            )
+            ''');
+                  }
+        if (oldVersion < 5) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS exam_results (
+              id TEXT PRIMARY KEY,
+              studentId TEXT,
+              omrSheetId TEXT,
+              studentName TEXT,
+              examName TEXT,
+              studentAnswers TEXT,
+              correctAnswers TEXT,
+              totalQuestions INTEGER,
+              correctCount INTEGER,
+              wrongCount INTEGER,
+              unansweredCount INTEGER,
+              percentage REAL,
+              scannedAt TEXT,
+              scannedImagePath TEXT,
+              syncStatus INTEGER DEFAULT 0
             )
             ''');
                   }
@@ -526,6 +567,190 @@ class StudentDatabase {
   }
 
 
+  static Future<int> insertExamResult(ExamResult result) async {
+
+    final db = await database;
+
+    return await db.insert(
+      'exam_results',
+      {
+        'id': result.id,
+        'studentId': result.studentId,
+        'omrSheetId': result.omrSheetId,
+        'studentName': result.studentName,
+        'examName': result.examName,
+        'studentAnswers': jsonEncode(result.studentAnswers),
+        'correctAnswers': jsonEncode(result.correctAnswers),
+        'totalQuestions': result.totalQuestions,
+        'correctCount': result.correctCount,
+        'wrongCount': result.wrongCount,
+        'unansweredCount': result.unansweredCount,
+        'percentage': result.percentage,
+        'scannedAt': result.scannedAt.toIso8601String(),
+        'scannedImagePath': result.scannedImagePath,
+        'syncStatus': 0
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+
+  static Future<List<ExamResult>> getAllExamResults() async {
+
+    final db = await database;
+
+    final result = await db.query(
+      'exam_results',
+      orderBy: 'scannedAt DESC',
+    );
+
+    return result.map((map) {
+
+      return ExamResult(
+        id: map['id'] as String,
+        studentId: map['studentId'] as String,
+        omrSheetId: map['omrSheetId'] as String,
+        studentName: map['studentName'] as String,
+        examName: map['examName'] as String,
+        studentAnswers:
+        List<String>.from(jsonDecode(map['studentAnswers'] as String)),
+        correctAnswers:
+        List<String>.from(jsonDecode(map['correctAnswers'] as String)),
+        totalQuestions: map['totalQuestions'] as int,
+        correctCount: map['correctCount'] as int,
+        wrongCount: map['wrongCount'] as int,
+        unansweredCount: map['unansweredCount'] as int,
+        percentage: map['percentage'] as double,
+        scannedAt: DateTime.parse(map['scannedAt'] as String),
+        scannedImagePath: map['scannedImagePath'] as String?,
+      );
+
+    }).toList();
+  }
+
+  static Future<List<ExamResult>> getResultsByStudent(String studentId) async {
+
+    final db = await database;
+
+    final result = await db.query(
+      'exam_results',
+      where: 'studentId = ?',
+      whereArgs: [studentId],
+    );
+
+    return result.map((map) {
+
+      return ExamResult(
+        id: map['id'] as String,
+        studentId: map['studentId'] as String,
+        omrSheetId: map['omrSheetId'] as String,
+        studentName: map['studentName'] as String,
+        examName: map['examName'] as String,
+        studentAnswers:
+        List<String>.from(jsonDecode(map['studentAnswers'] as String)),
+        correctAnswers:
+        List<String>.from(jsonDecode(map['correctAnswers'] as String)),
+        totalQuestions: map['totalQuestions'] as int,
+        correctCount: map['correctCount'] as int,
+        wrongCount: map['wrongCount'] as int,
+        unansweredCount: map['unansweredCount'] as int,
+        percentage: map['percentage'] as double,
+        scannedAt: DateTime.parse(map['scannedAt'] as String),
+        scannedImagePath: map['scannedImagePath'] as String?,
+      );
+
+    }).toList();
+  }
+
+
+  static Future<int> deleteExamResult(String id) async {
+
+    final db = await database;
+
+    return await db.delete(
+      'exam_results',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  static Future<int> updateExamResult(
+      String id,
+      ExamResult result,
+      ) async {
+
+    final db = await database;
+
+    return await db.update(
+      'exam_results',
+      {
+        'studentId': result.studentId,
+        'omrSheetId': result.omrSheetId,
+        'studentName': result.studentName,
+        'examName': result.examName,
+        'studentAnswers': jsonEncode(result.studentAnswers),
+        'correctAnswers': jsonEncode(result.correctAnswers),
+        'totalQuestions': result.totalQuestions,
+        'correctCount': result.correctCount,
+        'wrongCount': result.wrongCount,
+        'unansweredCount': result.unansweredCount,
+        'percentage': result.percentage,
+        'scannedAt': result.scannedAt.toIso8601String(),
+        'scannedImagePath': result.scannedImagePath,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  static Future<List<ExamResult>> getUnsyncedExamResults() async {
+
+    final db = await database;
+
+    final result = await db.query(
+      'exam_results',
+      where: 'syncStatus = ?',
+      whereArgs: [0],
+    );
+
+    return result.map((map) {
+
+      return ExamResult(
+        id: map['id'] as String,
+        studentId: map['studentId'] as String,
+        omrSheetId: map['omrSheetId'] as String,
+        studentName: map['studentName'] as String,
+        examName: map['examName'] as String,
+        studentAnswers:
+        List<String>.from(jsonDecode(map['studentAnswers'] as String)),
+        correctAnswers:
+        List<String>.from(jsonDecode(map['correctAnswers'] as String)),
+        totalQuestions: map['totalQuestions'] as int,
+        correctCount: map['correctCount'] as int,
+        wrongCount: map['wrongCount'] as int,
+        unansweredCount: map['unansweredCount'] as int,
+        percentage: map['percentage'] as double,
+        scannedAt: DateTime.parse(map['scannedAt'] as String),
+        scannedImagePath: map['scannedImagePath'] as String?,
+      );
+
+    }).toList();
+  }
+
+  static Future<int> updateExamResultSyncStatus(
+      String id,
+      int status,
+      ) async {
+
+    final db = await database;
+
+    return await db.update(
+      'exam_results',
+      {'syncStatus': status},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 
   // Close database
   static Future<void> close() async {
