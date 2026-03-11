@@ -1,10 +1,13 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../../../db/course/courseDbConfig.dart';
 import '../models/omr_sheet_model.dart';
 import '../models/exam_result_model.dart';
 import '../models/scan_result.dart';
@@ -14,6 +17,17 @@ import '../services/omr_scanner_service.dart';
 import '../widgets/result_card_widget.dart';
 
 class ScanOMRScreen extends StatefulWidget {
+  final String? schoolId;
+  final String? userId;
+  final String? userType; // 'admin' or 'teacher'
+
+  const ScanOMRScreen({
+    Key? key,
+    this.schoolId,
+    this.userId,
+    this.userType,
+  }) : super(key: key);
+
   @override
   _ScanOMRScreenState createState() => _ScanOMRScreenState();
 }
@@ -23,6 +37,9 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
   late TabController _tabController;
   late DatabaseService _databaseService;
   late OMRScannerService _scannerService;
+
+  // Firestore
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Camera scanning
   MobileScannerController? _mobileScannerController;
@@ -40,6 +57,13 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
   Student? _detectedStudent;
   bool _isProcessing = false;
   bool _isLoading = true;
+  bool _isOnline = true;
+  final Color _successColor = const Color(0xFF10b981);
+  final Color _warningColor = const Color(0xFFf59e0b);
+  final Color _errorColor = const Color(0xFFef4444);
+
+  final TextEditingController _studentIdController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   @override
   void initState() {
@@ -48,6 +72,22 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
     _scannerService = OMRScannerService();
     _initializeDatabase();
     _initializeCamera();
+
+    _checkConnectivity();
+    _loadOMR();
+
+    // Listen to connectivity changes
+    Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      // Pick the first result as the current connectivity status
+      final result = results.first;
+      setState(() {
+        _isOnline = result != ConnectivityResult.none;
+      });
+      if (_isOnline) {
+        _syncWithFirebase();
+      }
+    });
+
   }
 
   Future<void> _initializeDatabase() async {
@@ -55,6 +95,118 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
     _databaseService = DatabaseService(prefs);
     await _loadOMRSheets();
   }
+
+  // ============= DATA LOADING =============
+  Future<void> _loadOMR() async {
+    setState(() => _isLoading = true);
+
+    try {
+      if (_isOnline) {
+        await _loadFromFirebase();
+      } else {
+        await _loadFromLocalDatabase();
+      }
+    } catch (e) {
+      print('Error loading OMR Sheets: $e');
+      _showErrorSnackBar('Error loading Sheets: $e');
+      await _loadFromLocalDatabase();
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadFromFirebase() async {
+    try {
+
+      print("Loading sheets for school: ${widget.schoolId}");
+
+      final snapshot = await _firestore
+          .collection('courses')
+          .doc(widget.schoolId)
+          .collection('sheets')
+          .orderBy('examName')
+          .get();
+
+      print("Docs found: ${snapshot.docs.length}");
+
+      final sheets = snapshot.docs
+          .map((doc) => OMRSheet.fromMap({...doc.data(), 'uniqueId': doc.id}))
+          .toList();
+      await _databaseService.setAllOMRSheets(_omrSheets);
+      setState(() {
+        _omrSheets.clear();
+        _omrSheets = sheets;
+        if (sheets.isNotEmpty) {
+          _selectedOMRSheet = sheets.first;
+        }
+        _isLoading = false;
+      });
+
+      for (var sheet in sheets) {
+        // print("Docs found: ${sheet.examName}");
+        await StudentDatabase.insertOMRSheet(sheet);
+      }
+
+
+
+    } catch (e) {
+      print("Firebase load error: $e");
+    }
+  }
+
+  Future<void> _loadFromLocalDatabase() async {
+    final List<OMRSheet> sheets =
+    await StudentDatabase.getAllOMRSheets();
+
+    await _databaseService.setAllOMRSheets(_omrSheets);
+    setState(() {
+      _omrSheets.clear();
+      _omrSheets = sheets;
+      _isLoading = false;
+
+      if (sheets.isNotEmpty) {
+        _selectedOMRSheet = sheets.first;
+      }
+
+    });
+
+
+    // _applyFilters();
+  }
+
+  Future<void> _syncWithFirebase() async {
+    if (!_isOnline) return;
+
+    final List<OMRSheet> unsyncedSheets =
+    await StudentDatabase.getUnsyncedOMRSheets();
+
+    for (var sheet in unsyncedSheets) {
+      try {
+        final docRef = _firestore
+            .collection('courses')
+            .doc(widget.schoolId)
+            .collection('sheets')
+            .doc(sheet.uniqueId ?? sheet.id);
+
+        await docRef.set(sheet.toJson());
+
+        // Update sync status
+        await StudentDatabase.updateOMRSheetSyncStatus(sheet.id, 1);
+      } catch (e) {
+        print('Error syncing OMR Sheet ${sheet.examName}: $e');
+      }
+    }
+
+    _loadOMRSheets();
+  }
+
+  Future<void> _checkConnectivity() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    setState(() {
+      _isOnline = connectivityResult != ConnectivityResult.none;
+    });
+  }
+
 
   Future<void> _loadOMRSheets() async {
     setState(() => _isLoading = true);
@@ -77,6 +229,69 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
     );
   }
 
+  // ============= UI HELPERS =============
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: _successColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.error, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: _errorColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  Future<bool?> _showConfirmDialog(String title, String message) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _errorColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,6 +302,7 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: [
+            Tab(icon: Icon(Icons.keyboard_alt_outlined), text: 'OMR'),
             Tab(icon: Icon(Icons.camera_alt), text: 'Camera'),
             Tab(icon: Icon(Icons.image), text: 'Gallery'),
             Tab(icon: Icon(Icons.picture_as_pdf), text: 'PDF'),
@@ -102,6 +318,7 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
                   child: TabBarView(
                     controller: _tabController,
                     children: [
+                      _buildOMRInputTab(),
                       _buildCameraTab(),
                       _buildGalleryTab(),
                       _buildPDFTab(),
@@ -172,6 +389,137 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
       ),
     );
   }
+
+  Widget _buildOMRInputTab() {
+    return Stack(
+      children: [
+
+        MobileScanner(
+          controller: _mobileScannerController!,
+          onDetect: (capture) {},
+        ),
+
+        /// Student Input Panel
+        Positioned(
+          bottom: 120,
+          left: 16,
+          right: 16,
+          child: Card(
+            elevation: 5,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+
+                  Text(
+                    "Enter Student Info",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+
+                  SizedBox(height: 10),
+
+                  TextField(
+                    controller: _studentIdController,
+                    decoration: InputDecoration(
+                      labelText: "Student ID",
+                      prefixIcon: Icon(Icons.badge),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+
+                  SizedBox(height: 10),
+
+                  TextField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: "Phone Number",
+                      prefixIcon: Icon(Icons.phone),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        /// Camera Controls
+        Positioned(
+          top: 16,
+          right: 16,
+          child: Column(
+            children: [
+              IconButton(
+                icon: Icon(
+                  _isFlashOn ? Icons.flash_on : Icons.flash_off,
+                  color: Colors.white,
+                  size: 32,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isFlashOn = !_isFlashOn;
+                    _mobileScannerController?.toggleTorch();
+                  });
+                },
+              ),
+              SizedBox(height: 16),
+              IconButton(
+                icon: Icon(
+                  Icons.flip_camera_ios,
+                  color: Colors.white,
+                  size: 32,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isFrontCamera = !_isFrontCamera;
+                    _mobileScannerController?.switchCamera();
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+
+        /// Capture Button
+        Positioned(
+          bottom: 32,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: ElevatedButton.icon(
+              onPressed: () {
+
+                if (_studentIdController.text.isEmpty &&
+                    _phoneController.text.isEmpty) {
+
+                  _showErrorSnackBar("Enter Student ID or Phone Number");
+
+                  return;
+                }
+
+                _gotoOMRPage();
+              },
+              icon: Icon(Icons.camera),
+              label: Text('GO To OMR'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF2C3E50),
+                padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
 
   Widget _buildCameraTab() {
     return Stack(
@@ -403,6 +751,10 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
         ],
       ),
     );
+  }
+
+  Future<void> _gotoOMRPage() async{
+
   }
 
   Future<void> _captureImage() async {
@@ -638,9 +990,10 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
 
   @override
   void dispose() {
+    _studentIdController.dispose();
+    _phoneController.dispose();
     _tabController.dispose();
     _mobileScannerController?.dispose();
-    // _scannerService.dispose();
     super.dispose();
   }
 }

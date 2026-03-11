@@ -36,6 +36,28 @@ class DatabaseService {
     }
   }
 
+  // Future<void> setAllOMRSheets(List<OMRSheet> sheets) async {
+  //   await _prefs.setString(
+  //     _omrSheetsKey,
+  //     json.encode(
+  //       sheets.map((sheet) => sheet.toJson()).toList(),
+  //     ),
+  //   );
+  // }
+
+  Future<void> setAllOMRSheets(List<OMRSheet> sheets) async {
+    // Remove old data
+    await _prefs.remove(_omrSheetsKey);
+
+    // Save new list
+    await _prefs.setString(
+      _omrSheetsKey,
+      json.encode(
+        sheets.map((sheet) => sheet.toJson()).toList(),
+      ),
+    );
+  }
+
   Future<void> deleteStudent(String id) async {
     final students = await getAllStudents();
     students.removeWhere((s) => s.id == id);

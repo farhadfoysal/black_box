@@ -94,6 +94,8 @@ class _OMRListScreenState extends State<OMRListScreen> {
     });
   }
 
+
+
   void _filterSheets(String query) {
     setState(() {
       _searchQuery = query;
@@ -174,6 +176,8 @@ class _OMRListScreenState extends State<OMRListScreen> {
         await StudentDatabase.insertOMRSheet(sheet);
       }
 
+      await _databaseService.setAllOMRSheets(_omrSheets);
+
     } catch (e) {
       print("Firebase load error: $e");
     }
@@ -189,6 +193,7 @@ class _OMRListScreenState extends State<OMRListScreen> {
       _isLoading = false;
     });
 
+    await _databaseService.setAllOMRSheets(_omrSheets);
     // _applyFilters();
   }
 

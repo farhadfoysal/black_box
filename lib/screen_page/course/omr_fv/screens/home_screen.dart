@@ -2,6 +2,7 @@ import 'package:black_box/screen_page/course/omr_fv/screens/course_management_sc
 import 'package:black_box/screen_page/course/omr_fv/screens/student_management_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../screen/course_students.dart';
 import '../services/database_service.dart';
 import '../models/omr_sheet_model.dart';
 import '../models/exam_result_model.dart';
@@ -128,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => ScanOMRScreen()),
+                    MaterialPageRoute(builder: (_) => ScanOMRScreen(schoolId: '${widget.schoolId}', userId: '${widget.userId}', userType: '${widget.userType}',)),
                   );
                 },
               ),
@@ -182,8 +183,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () async {
                   await Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => StudentManagementScreen()),
-                  );
+                    // MaterialPageRoute(builder: (_) => StudentManagementScreen()),
+                    MaterialPageRoute(builder: (_) => StudentsListScreen(schoolId: '${widget.schoolId}', userId: '${widget.userId}', userType: '${widget.userType}',)));
                   _loadData();
                 },
               ),
@@ -353,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => OMRListScreen()),
+                  MaterialPageRoute(builder: (_) => OMRListScreen(schoolId: '${widget.schoolId}', userId: '${widget.userId}', userType: '${widget.userType}',)),
                 );
               },
               child: Text('View All'),
