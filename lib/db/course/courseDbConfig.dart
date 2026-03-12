@@ -113,6 +113,7 @@ class StudentDatabase {
           CREATE TABLE exam_results (
             id TEXT PRIMARY KEY,
             studentId TEXT,
+            schoolId TEXT,
             omrSheetId TEXT,
             studentName TEXT,
             examName TEXT,
@@ -184,6 +185,7 @@ class StudentDatabase {
             CREATE TABLE IF NOT EXISTS exam_results (
               id TEXT PRIMARY KEY,
               studentId TEXT,
+              schoolId TEXT,
               omrSheetId TEXT,
               studentName TEXT,
               examName TEXT,
@@ -576,6 +578,7 @@ class StudentDatabase {
       {
         'id': result.id,
         'studentId': result.studentId,
+        'schoolId': result.schoolId,
         'omrSheetId': result.omrSheetId,
         'studentName': result.studentName,
         'examName': result.examName,
@@ -609,6 +612,7 @@ class StudentDatabase {
       return ExamResult(
         id: map['id'] as String,
         studentId: map['studentId'] as String,
+        schoolId: map['schoolId'] as String,
         omrSheetId: map['omrSheetId'] as String,
         studentName: map['studentName'] as String,
         examName: map['examName'] as String,
@@ -643,6 +647,7 @@ class StudentDatabase {
       return ExamResult(
         id: map['id'] as String,
         studentId: map['studentId'] as String,
+        schoolId: map['schoolId'] as String,
         omrSheetId: map['omrSheetId'] as String,
         studentName: map['studentName'] as String,
         examName: map['examName'] as String,
@@ -685,6 +690,7 @@ class StudentDatabase {
       'exam_results',
       {
         'studentId': result.studentId,
+        'schoolId': result.schoolId,
         'omrSheetId': result.omrSheetId,
         'studentName': result.studentName,
         'examName': result.examName,
@@ -718,6 +724,7 @@ class StudentDatabase {
       return ExamResult(
         id: map['id'] as String,
         studentId: map['studentId'] as String,
+        schoolId: map['schoolId'] as String,
         omrSheetId: map['omrSheetId'] as String,
         studentName: map['studentName'] as String,
         examName: map['examName'] as String,
@@ -750,6 +757,21 @@ class StudentDatabase {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  static Future<List<ExamResult>> getResultsBySchool(String schoolId) async {
+
+    final db = await database;
+
+    final maps = await db.query(
+      'exam_results',
+      where: 'schoolId = ?',
+      whereArgs: [schoolId],
+      orderBy: 'scannedAt DESC',
+    );
+
+    return maps.map((e) => ExamResult.fromMap(e)).toList();
+
   }
 
   // Close database

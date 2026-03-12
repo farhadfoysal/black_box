@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../../../db/course/courseDbConfig.dart';
 import '../models/exam_result_model.dart';
 import '../models/omr_sheet_model.dart';
 import '../services/database_service.dart';
@@ -9,8 +12,11 @@ import '../widgets/result_card_widget.dart';
 class ResultsScreen extends StatefulWidget {
   final OMRSheet? omrSheetFilter;
   final List<ExamResult>? initialResults;
+  final String? schoolId;
+  final String? userId;
+  final String? userType; // 'admin' or 'teacher'
 
-  ResultsScreen({this.omrSheetFilter, this.initialResults});
+  ResultsScreen({this.omrSheetFilter, this.initialResults, this.schoolId, this.userId, this.userType});
 
   @override
   _ResultsScreenState createState() => _ResultsScreenState();
@@ -18,11 +24,16 @@ class ResultsScreen extends StatefulWidget {
 
 class _ResultsScreenState extends State<ResultsScreen> {
   late DatabaseService _databaseService;
+  // Firestore
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+
   List<ExamResult> _allResults = [];
   List<ExamResult> _filteredResults = [];
   String _searchQuery = '';
   String _sortBy = 'date';
   bool _isLoading = true;
+  bool _isOnline = true;
 
   // Statistics
   double _averageScore = 0;
@@ -33,8 +44,29 @@ class _ResultsScreenState extends State<ResultsScreen> {
   @override
   void initState() {
     super.initState();
+    _checkConnectivity();
+
+    // Listen to connectivity changes
+    Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      // Pick the first result as the current connectivity status
+      final result = results.first;
+      setState(() {
+        _isOnline = result != ConnectivityResult.none;
+      });
+      if (_isOnline) {
+        // _syncWithFirebase();
+      }
+    });
     _initializeDatabase();
   }
+
+  Future<void> _checkConnectivity() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+    setState(() {
+      _isOnline = connectivityResult != ConnectivityResult.none;
+    });
+  }
+
 
   Future<void> _initializeDatabase() async {
     final prefs = await SharedPreferences.getInstance();
@@ -53,15 +85,153 @@ class _ResultsScreenState extends State<ResultsScreen> {
   }
 
   Future<void> _loadResults() async {
+
     setState(() => _isLoading = true);
 
-    final results = await _databaseService.getAllResults();
+    try {
+
+      if (_isOnline) {
+
+        await _loadResultsFromFirebase();
+        await _syncWithFirebase();
+      } else {
+
+        await _loadResultsFromLocalDatabase();
+
+      }
+
+    } catch (e) {
+
+      print("Result load error: $e");
+
+      /// fallback
+      await _loadResultsFromLocalDatabase();
+
+    } finally {
+
+      setState(() => _isLoading = false);
+
+    }
+
+  }
+  Future<void> _loadResultsFromFirebase() async {
+
+    print("Loading results for school: ${widget.schoolId}");
+
+    final snapshot = await _firestore
+        .collection('courses')
+        .doc(widget.schoolId)
+        .collection('exam_results')
+        .orderBy('scannedAt', descending: true)
+        .get();
+
+    print("Results found: ${snapshot.docs.length}");
+
+    final results = snapshot.docs.map((doc) {
+
+      final data = doc.data();
+
+      return ExamResult.fromMap({
+        ...data,
+        'id': doc.id,
+        'scannedAt': data['scannedAt'].toDate().toIso8601String(),
+      });
+
+    }).toList();
+
     setState(() {
+
       _allResults = results;
       _filteredResults = results;
-      _calculateStatistics();
-      _isLoading = false;
+
     });
+
+    /// Save to SQLite cache
+    for (var result in results) {
+
+      await StudentDatabase.insertExamResult(result);
+
+    }
+
+  }
+
+  Future<void> _loadResultsFromLocalDatabase() async {
+
+    final results =
+    await StudentDatabase.getResultsBySchool(widget.schoolId!);
+
+    setState(() {
+
+      _allResults = results;
+      _filteredResults = results;
+
+    });
+
+  }
+
+  Future<void> _syncWithFirebase() async {
+
+    if (!_isOnline || widget.schoolId == null) return;
+
+    try {
+
+      print("Starting Firebase Sync...");
+
+      /// 1️⃣ Upload local results to Firebase
+      final localResults = await StudentDatabase.getResultsBySchool(widget.schoolId!);
+
+      for (var result in localResults) {
+
+        await _firestore
+            .collection('courses')
+            .doc(widget.schoolId)
+            .collection('exam_results')
+            .doc(result.id)
+            .set(result.toMap(), SetOptions(merge: true));
+
+      }
+
+      print("Local results uploaded");
+
+
+      /// 2️⃣ Download latest results from Firebase
+      final snapshot = await _firestore
+          .collection('courses')
+          .doc(widget.schoolId)
+          .collection('exam_results')
+          .orderBy('scannedAt', descending: true)
+          .get();
+
+
+      final firebaseResults = snapshot.docs.map((doc) {
+
+        final data = doc.data();
+
+        return ExamResult.fromMap({
+          ...data,
+          'id': doc.id,
+          'scannedAt': data['scannedAt'] is String
+              ? data['scannedAt']
+              : data['scannedAt'].toDate().toIso8601String(),
+        });
+
+      }).toList();
+
+
+      /// 3️⃣ Update local SQLite cache
+      for (var result in firebaseResults) {
+
+        await StudentDatabase.insertExamResult(result);
+
+      }
+
+      print("Firebase results synced to SQLite");
+
+    } catch (e) {
+
+      print("Sync error: $e");
+
+    }
   }
 
   void _calculateStatistics() {

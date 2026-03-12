@@ -164,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => ResultsScreen()),
+                    MaterialPageRoute(builder: (_) => ResultsScreen(schoolId: '${widget.schoolId}', userId: '${widget.userId}', userType: '${widget.userType}',)),
                   );
                 },
               ),
@@ -426,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => ResultsScreen()),
+                  MaterialPageRoute(builder: (_) => ResultsScreen(schoolId: '${widget.schoolId}', userId: '${widget.userId}', userType: '${widget.userType}',)),
                 );
               },
               child: Text('View All'),

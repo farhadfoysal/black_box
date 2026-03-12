@@ -939,7 +939,7 @@ class _ScanOMRScreenState extends State<ScanOMRScreen>
         unansweredCount: unansweredCount,
         percentage: percentage,
         scannedAt: DateTime.now(),
-        scannedImagePath: _selectedImage?.path,
+        scannedImagePath: _selectedImage?.path, schoolId: widget.schoolId ?? '',
       );
 
       await _databaseService.saveResult(result);

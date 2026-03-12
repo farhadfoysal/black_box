@@ -260,7 +260,7 @@ class _StudentOMRMarkingPageState extends State<StudentOMRMarkingPage> {
 
       percentage: percentage,
 
-      scannedAt: DateTime.now(),
+      scannedAt: DateTime.now(), schoolId: widget.sheet.sId ?? '',
 
     );
 
