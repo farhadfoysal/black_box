@@ -1,5 +1,6 @@
 import 'package:barcode_widget/barcode_widget.dart';
 import 'package:black_box/screen_page/course/omr_fv/screens/results_screen.dart';
+import 'package:black_box/screen_page/course/omr_fv/screens/sheet_wise_result_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -664,6 +665,16 @@ class _OMRListScreenState extends State<OMRListScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
+                leading: const Icon(Icons.analytics, color: Color(0xFFF39C12)),
+                title: const Text('Sheet Results'),
+                subtitle: const Text('See all scanned results for this sheet'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _sheetResults(sheet);
+                },
+              ),
+              const Divider(),
+              ListTile(
                 leading: const Icon(Icons.download, color: Color(0xFF2ECC71)),
                 title: const Text('Generate OMR Sheet'),
                 subtitle: const Text('Create printable OMR for this template'),
@@ -1053,6 +1064,19 @@ class _OMRListScreenState extends State<OMRListScreen> {
     );
   }
 
+  void _sheetResults(OMRSheet sheet) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SheetWiseResultsPage(
+          schoolId: widget.schoolId ?? '',
+          sheetId: sheet.uniqueId!,
+          examName: sheet.examName,
+        ),
+      ),
+    );
+  }
+
   void _viewResults(OMRSheet sheet) async {
     final results = await _databaseService.getResultsByOMRSheet(sheet.id);
 
@@ -1060,7 +1084,7 @@ class _OMRListScreenState extends State<OMRListScreen> {
       context,
       MaterialPageRoute(
         builder: (_) =>
-            ResultsScreen(omrSheetFilter: sheet, initialResults: results),
+            ResultsScreen(omrSheetFilter: sheet, initialResults: results, schoolId: '${widget.schoolId}', userId: '${widget.userId}', userType: '${widget.userType}',),
       ),
     );
   }

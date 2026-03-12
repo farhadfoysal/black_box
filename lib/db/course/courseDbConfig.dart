@@ -632,6 +632,20 @@ class StudentDatabase {
     }).toList();
   }
 
+  static Future<List<ExamResult>> getExamResultsBySheet(String sheetId) async {
+
+    final db = await database;
+
+    final maps = await db.query(
+      'exam_results',
+      where: 'omrSheetId = ?',
+      whereArgs: [sheetId],
+      orderBy: 'percentage DESC',
+    );
+
+    return maps.map((e) => ExamResult.fromMap(e)).toList();
+  }
+
   static Future<List<ExamResult>> getResultsByStudent(String studentId) async {
 
     final db = await database;

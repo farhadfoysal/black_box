@@ -54,7 +54,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
         _isOnline = result != ConnectivityResult.none;
       });
       if (_isOnline) {
-        // _syncWithFirebase();
+        _syncWithFirebase();
       }
     });
     _initializeDatabase();
@@ -72,10 +72,11 @@ class _ResultsScreenState extends State<ResultsScreen> {
     final prefs = await SharedPreferences.getInstance();
     _databaseService = DatabaseService(prefs);
 
-    if (widget.initialResults != null) {
+    if (widget.omrSheetFilter != null) {
+
+      _loadSheetResults();
+
       setState(() {
-        _allResults = widget.initialResults!;
-        _filteredResults = widget.initialResults!;
         _calculateStatistics();
         _isLoading = false;
       });
@@ -83,6 +84,84 @@ class _ResultsScreenState extends State<ResultsScreen> {
       await _loadResults();
     }
   }
+
+
+  Future<void> _loadSheetResults() async {
+
+    setState(() => _isLoading = true);
+
+    try {
+
+      if (_isOnline) {
+        await _loadFromFirebase();
+      } else {
+        await _loadFromSQLite();
+      }
+
+
+    } catch (e) {
+
+      print("Sheet result error: $e");
+
+      await _loadFromSQLite();
+
+    }
+    _calculateStatistics();
+    setState(() => _isLoading = false);
+
+  }
+
+  /// FIREBASE
+  Future<void> _loadFromFirebase() async {
+
+    final snapshot = await _firestore
+        .collection('courses')
+        .doc(widget.schoolId)
+        .collection('exam_results')
+        .where('omrSheetId', isEqualTo: widget.omrSheetFilter?.uniqueId ?? '')
+        .orderBy('percentage', descending: true)
+        .get();
+
+    final results = snapshot.docs.map((doc) {
+
+      final data = doc.data();
+
+      return ExamResult.fromMap({
+        ...data,
+        'id': doc.id,
+        'scannedAt': data['scannedAt'] is String
+            ? data['scannedAt']
+            : data['scannedAt'].toDate().toIso8601String(),
+      });
+
+    }).toList();
+
+    setState(() {
+      _allResults = results;
+      _filteredResults = results;
+    });
+
+    /// cache locally
+    for (var r in results) {
+      await StudentDatabase.insertExamResult(r);
+    }
+
+  }
+
+  /// SQLITE
+  Future<void> _loadFromSQLite() async {
+
+    final results =
+    await StudentDatabase.getExamResultsBySheet(widget.omrSheetFilter?.uniqueId??'');
+
+    setState(() {
+      _allResults = results;
+      _filteredResults = results;
+    });
+
+  }
+
+
 
   Future<void> _loadResults() async {
 
@@ -99,7 +178,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
         await _loadResultsFromLocalDatabase();
 
       }
-
+      _calculateStatistics();
     } catch (e) {
 
       print("Result load error: $e");
@@ -131,11 +210,29 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
       final data = doc.data();
 
+      dynamic scannedAtValue = data['scannedAt'];
+
+      String scannedAt;
+
+      if (scannedAtValue is Timestamp) {
+        scannedAt = scannedAtValue.toDate().toIso8601String();
+      } else if (scannedAtValue is String) {
+        scannedAt = scannedAtValue;
+      } else {
+        scannedAt = DateTime.now().toIso8601String();
+      }
+
       return ExamResult.fromMap({
         ...data,
         'id': doc.id,
-        'scannedAt': data['scannedAt'].toDate().toIso8601String(),
+        'scannedAt': scannedAt,
       });
+
+      // return ExamResult.fromMap({
+      //   ...data,
+      //   'id': doc.id,
+      //   'scannedAt': data['scannedAt'].toDate().toIso8601String(),
+      // });
 
     }).toList();
 
@@ -305,19 +402,60 @@ class _ResultsScreenState extends State<ResultsScreen> {
           ),
         ],
       ),
+
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : Column(
-              children: [
-                _buildSearchBar(),
-                _buildStatisticsSection(),
-                Expanded(
-                  child: _filteredResults.isEmpty
-                      ? _buildEmptyState()
-                      : _buildResultsList(),
+        children: [
+
+          _buildSearchBar(),
+
+          Expanded(
+            child: CustomScrollView(
+              slivers: [
+
+                SliverToBoxAdapter(
+                  child: _buildStatisticsSection(),
                 ),
+
+                _filteredResults.isEmpty
+                    ? SliverFillRemaining(
+                  child: _buildEmptyState(),
+                )
+                    : SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                      final result = _filteredResults[index];
+                      return ResultCardWidget(
+                        result: result,
+                        onTap: () => _showResultDetails(result),
+                      );
+                    },
+                    childCount: _filteredResults.length,
+                  ),
+                ),
+
               ],
             ),
+          ),
+        ],
+      ),
+
+      // body: SingleChildScrollView(
+      //   child: _isLoading
+      //       ? Center(child: CircularProgressIndicator())
+      //       :  Column(
+      //           children: [
+      //             _buildSearchBar(),
+      //             _buildStatisticsSection(),
+      //             Expanded(
+      //               child: _filteredResults.isEmpty
+      //                   ? _buildEmptyState()
+      //                   : _buildResultsList(),
+      //             ),
+      //           ],
+      //         ),
+      // ),
     );
   }
 

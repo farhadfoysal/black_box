@@ -8,6 +8,7 @@ import 'package:black_box/extra/quiz/quiz_four.dart';
 import 'package:black_box/extra/quiz/quiz_three.dart';
 import 'package:black_box/extra/quiz/quiz_two.dart';
 import 'package:black_box/quiz/quiz_screen.dart';
+import 'package:black_box/screen_page/course/my_courses_page.dart';
 import 'package:black_box/screen_page/course/omr_fv/screens/search_omr_sheet.dart';
 import 'package:black_box/screen_page/exam/exam_list.dart';
 import 'package:black_box/screen_page/tutor/tutor_main_screen.dart';
@@ -22,6 +23,9 @@ import '../../model/course/teacher.dart';
 import '../../model/school/school.dart';
 import '../../model/user/user.dart';
 import '../../preference/logout.dart';
+import '../../screen_page/course/enrolled_courses.dart';
+import '../../screen_page/course/omr_fv/screens/search_student_result_page.dart';
+import '../../screen_page/course/omr_fv/screens/student_result_page.dart';
 import '../../screen_page/mess/mess_manager_page.dart';
 import '../../utility/bluetooth/b_page.dart';
 import '../../utility/bluetooth/ble_page.dart';
@@ -49,13 +53,17 @@ class HomeView extends StatelessWidget {
         '/tuition-finder': (context) => const TuitionFinderPage(),
         '/budget-tracker': (context) =>  ExamAttemptPage(),
         '/bazar-list': (context) =>  ExamAttemptPagee(),
-        '/course-finder': (context) => SearchOMRSheet(),
+        '/course-finder': (context) => MyCoursesPage(),
         '/exam-management': (context) => ExamListPage(),
         '/seba-manager': (context) => const HC05BluetoothControllerPage(),
         '/hisab-manager': (context) => const BluetoothControllerPage(),
-        '/vocabulary-manager': (context) => const HC05BluetoothControllerA(),
+        '/vocabulary-manager': (context) => SearchOMRSheet(),
+        '/omr-result': (context) => SearchStudentResultPage(),
+        '/omr-search': (context) => SearchOMRSheet(),
+        '/enrolled-courses': (context) => EnrolledCourses(),
+        '/bluetooth-manager': (context) => const HC05BluetoothControllerA(),
         '/calculation-manager': (context) => const TuitionFinderPage(),
-        '/iot-manager': (context) => const ScrollableBluetoothController(),
+        '/iot-manager': (context) => const EnrolledCourses(),
       },
     );
   }
@@ -136,56 +144,56 @@ class _HomeViewState extends State<HomePage> with TickerProviderStateMixin{
     ),
     DashboardItem(
       title: 'Tuition',
-      icon: MdiIcons.magnify,
+      icon: MdiIcons.pencilBox,
       color: Colors.orangeAccent,
       route: '/tuition-finder',
       subtitle: 'Discover Learning Centers',
     ),
     DashboardItem(
       title: 'Budget Tracker',
-      icon: MdiIcons.magnify,
+      icon: MdiIcons.listBox,
       color: Colors.teal,
       route: '/budget-tracker',
       subtitle: 'Discover Learning Centers',
     ),
     DashboardItem(
       title: 'Bazar List',
-      icon: MdiIcons.magnify,
+      icon: MdiIcons.cart,
       color: Colors.cyan,
       route: '/bazar-list',
       subtitle: 'Discover Learning Centers',
     ),
     DashboardItem(
       title: 'Courses',
-      icon: MdiIcons.magnify,
+      icon: MdiIcons.bookSearch,
       color: Colors.deepPurpleAccent,
       route: '/course-finder',
       subtitle: 'Discover Learning Centers',
     ),
     DashboardItem(
       title: 'Exam Management',
-      icon: MdiIcons.magnify,
+      icon: MdiIcons.bookEducation,
       color: Colors.blue,
       route: '/exam-management',
       subtitle: 'Discover Learning Centers',
     ),
     DashboardItem(
       title: 'Seba Manger',
-      icon: MdiIcons.magnify,
+      icon: MdiIcons.settingsHelper,
       color: Colors.teal,
       route: '/seba-manager',
       subtitle: 'Discover Learning Centers',
     ),
     DashboardItem(
       title: 'Hisab Manager',
-      icon: MdiIcons.magnify,
+      icon: MdiIcons.calculatorVariantOutline,
       color: Colors.pinkAccent,
       route: '/hisab-manager',
       subtitle: 'Discover Learning Centers',
     ),
     DashboardItem(
       title: 'Calculation',
-      icon: MdiIcons.magnify,
+      icon: MdiIcons.calculator,
       color: Colors.red,
       route: '/calculation-manager',
       subtitle: 'Discover Learning Centers',
@@ -204,6 +212,35 @@ class _HomeViewState extends State<HomePage> with TickerProviderStateMixin{
       route: '/iot-manager',
       subtitle: 'Discover Learning Centers',
     ),
+    DashboardItem(
+      title: 'OMR',
+      icon: MdiIcons.pencil,
+      color: Colors.yellow,
+      route: '/omr-search',
+      subtitle: 'Discover Learning Centers',
+    ),
+    DashboardItem(
+      title: 'Result',
+      icon: MdiIcons.googleSpreadsheet,
+      color: Colors.deepPurpleAccent,
+      route: '/omr-result',
+      subtitle: 'Discover Learning Centers',
+    ),
+    DashboardItem(
+      title: 'Enrolled',
+      icon: MdiIcons.book,
+      color: Colors.pinkAccent,
+      route: '/enrolled-courses',
+      subtitle: 'Discover Learning Centers',
+    ),
+    DashboardItem(
+      title: 'Bluetooth',
+      icon: MdiIcons.bluetooth,
+      color: Colors.red,
+      route: '/bluetooth-manager',
+      subtitle: 'Discover Learning Centers',
+    ),
+
   ];
 
   void _navigateToFeature(String routeName) {
@@ -407,7 +444,7 @@ class _HomeViewState extends State<HomePage> with TickerProviderStateMixin{
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 6),
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),

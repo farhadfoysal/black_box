@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ExamResult {
   final String id;
   final String studentId;
@@ -96,22 +98,111 @@ class ExamResult {
   }
 
   factory ExamResult.fromMap(Map<String, dynamic> map) {
+
+    DateTime parsedDate;
+
+    final scannedAtValue = map['scannedAt'];
+
+    if (scannedAtValue is String) {
+      parsedDate = DateTime.parse(scannedAtValue);
+    } else if (scannedAtValue is Timestamp) {
+      parsedDate = scannedAtValue.toDate();
+    } else {
+      parsedDate = DateTime.now();
+    }
+
     return ExamResult(
-      id: map['id'],
-      studentId: map['studentId'],
-      schoolId: map['schoolId'],
-      omrSheetId: map['omrSheetId'],
-      studentName: map['studentName'],
-      examName: map['examName'],
-      studentAnswers: List<String>.from(jsonDecode(map['studentAnswers'])),
-      correctAnswers: List<String>.from(jsonDecode(map['correctAnswers'])),
-      totalQuestions: map['totalQuestions'],
-      correctCount: map['correctCount'],
-      wrongCount: map['wrongCount'],
-      unansweredCount: map['unansweredCount'],
-      percentage: (map['percentage'] as num).toDouble(),
-      scannedAt: DateTime.parse(map['scannedAt']),
+      id: map['id'] ?? '',
+      studentId: map['studentId'] ?? '',
+      schoolId: map['schoolId'] ?? '',
+      omrSheetId: map['omrSheetId'] ?? '',
+      studentName: map['studentName'] ?? '',
+      examName: map['examName'] ?? '',
+
+      studentAnswers: map['studentAnswers'] == null
+          ? []
+          : (map['studentAnswers'] is String
+          ? List<String>.from(jsonDecode(map['studentAnswers']))
+          : List<String>.from(map['studentAnswers'])),
+
+      correctAnswers: map['correctAnswers'] == null
+          ? []
+          : (map['correctAnswers'] is String
+          ? List<String>.from(jsonDecode(map['correctAnswers']))
+          : List<String>.from(map['correctAnswers'])),
+
+      totalQuestions: map['totalQuestions'] ?? 0,
+      correctCount: map['correctCount'] ?? 0,
+      wrongCount: map['wrongCount'] ?? 0,
+      unansweredCount: map['unansweredCount'] ?? 0,
+
+      percentage: (map['percentage'] ?? 0).toDouble(),
+
+      scannedAt: parsedDate,
+
       scannedImagePath: map['scannedImagePath'],
     );
   }
+
+  // factory ExamResult.fromMap(Map<String, dynamic> map) {
+  //
+  //   DateTime parsedDate;
+  //
+  //   if (map['scannedAt'] is String) {
+  //     parsedDate = DateTime.parse(map['scannedAt']);
+  //   } else if (map['scannedAt'] is Timestamp) {
+  //     parsedDate = map['scannedAt'].toDate();
+  //   } else {
+  //     parsedDate = DateTime.now();
+  //   }
+  //
+  //   return ExamResult(
+  //     id: map['id'],
+  //     studentId: map['studentId'],
+  //     schoolId: map['schoolId'],
+  //     omrSheetId: map['omrSheetId'],
+  //     studentName: map['studentName'],
+  //     examName: map['examName'],
+  //     studentAnswers: List<String>.from(jsonDecode(map['studentAnswers'])),
+  //     correctAnswers: List<String>.from(jsonDecode(map['correctAnswers'])),
+  //     totalQuestions: map['totalQuestions'],
+  //     correctCount: map['correctCount'],
+  //     wrongCount: map['wrongCount'],
+  //     unansweredCount: map['unansweredCount'],
+  //     percentage: (map['percentage'] as num).toDouble(),
+  //     scannedAt: parsedDate,
+  //     scannedImagePath: map['scannedImagePath'],
+  //   );
+  // }
+
+  // factory ExamResult.fromMap(Map<String, dynamic> map) {
+  //
+  //   DateTime parsedDate;
+  //
+  //   if (map['scannedAt'] is String) {
+  //     parsedDate = DateTime.parse(map['scannedAt']);
+  //   } else if (map['scannedAt'] is Timestamp) {
+  //     parsedDate = map['scannedAt'].toDate();
+  //   } else {
+  //     parsedDate = DateTime.now();
+  //   }
+  //
+  //   return ExamResult(
+  //     id: map['id'],
+  //     studentId: map['studentId'],
+  //     omrSheetId: map['omrSheetId'],
+  //     studentName: map['studentName'],
+  //     examName: map['examName'],
+  //     studentAnswers: List<String>.from(jsonDecode(map['studentAnswers'])),
+  //     correctAnswers: List<String>.from(jsonDecode(map['correctAnswers'])),
+  //     totalQuestions: map['totalQuestions'],
+  //     correctCount: map['correctCount'],
+  //     wrongCount: map['wrongCount'],
+  //     unansweredCount: map['unansweredCount'],
+  //     percentage: (map['percentage'] as num).toDouble(),
+  //     scannedAt: parsedDate,
+  //     scannedImagePath: map['scannedImagePath'],
+  //   );
+  // }
+
 }
