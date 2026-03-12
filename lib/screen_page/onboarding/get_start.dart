@@ -28,14 +28,14 @@ class GetStartState extends State<GetStart> {
               children: [
                 Container(
                   width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height / 1.6,
+                  height: MediaQuery.of(context).size.height / 1.4999,
                   decoration: const BoxDecoration(
                     color: Colors.white,
                   ),
                 ),
                 Container(
                   width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height / 1.6,
+                  height: MediaQuery.of(context).size.height / 1.4999,
                   decoration: const BoxDecoration(
                       color: Color(0xFF005F73),
                       borderRadius:
@@ -57,7 +57,7 @@ class GetStartState extends State<GetStart> {
               alignment: Alignment.bottomCenter,
               child: Container(
                 width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height / 2.999,
+                height: MediaQuery.of(context).size.height / 2.99999,
                 decoration: const BoxDecoration(
                   color: Color(0xFF005F73),
                 ),
@@ -67,17 +67,14 @@ class GetStartState extends State<GetStart> {
               alignment: Alignment.bottomCenter,
               child: Container(
                 width: MediaQuery.of(context).size.width,
-                height: MediaQuery.of(context).size.height / 2.999,
-                padding: const EdgeInsets.only(top: 40, bottom: 30),
+                height: MediaQuery.of(context).size.height / 2.9999,
+                padding: const EdgeInsets.only(top: 25, bottom: 30),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(topLeft: Radius.circular(70)),
                 ),
                 child: Column(
                   children: [
-                    const SizedBox(
-                      height: 2,
-                    ),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 40),
                       child: Text(
