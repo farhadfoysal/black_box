@@ -61,18 +61,18 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
       categoriesJSON.map((e) => e['name'] as String).toList();
 
   final List<CourseModel> allCourses = [
-    CourseModel(
-      courseName: 'Flutter Beginner',
-      totalVideo: 10,
-      totalRating: 4.5,
-      totalTime: '2h 30m',
-      courseImage:
-      'https://fastly.picsum.photos/id/870/200/300.jpg?blur=2&grayscale&hmac=ujRymp644uYVjdKJM7kyLDSsrqNSMVRPnGU99cKl6Vs',
-      level: 'Beginner',
-      countStudents: 120,
-      createdAt: DateTime.now(),
-      status: 'active',
-    ),
+    // CourseModel(
+    //   courseName: 'Flutter Beginner',
+    //   totalVideo: 10,
+    //   totalRating: 4.5,
+    //   totalTime: '2h 30m',
+    //   courseImage:
+    //   'https://fastly.picsum.photos/id/870/200/300.jpg?blur=2&grayscale&hmac=ujRymp644uYVjdKJM7kyLDSsrqNSMVRPnGU99cKl6Vs',
+    //   level: 'Beginner',
+    //   countStudents: 120,
+    //   createdAt: DateTime.now(),
+    //   status: 'active',
+    // ),
   ];
 
   List<CourseModel> filteredCourses = [];
@@ -89,11 +89,181 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
     _initializeData();
   }
 
+  // Future<void> _initializeData() async {
+  //   // First load user data
+  //   await _loadUserData();
+  //   _loadCoursesData();
+  // }
+
   Future<void> _initializeData() async {
-    // First load user data
     await _loadUserData();
+
+    if (_user?.userid != null) {
+      await syncEnrolledCoursesFromFirebase(_user!.userid!);
+    }
+
     _loadCoursesData();
   }
+
+  Future<void> syncEnrolledCoursesFromFirebase(String userId) async {
+    try {
+      final hasConnection =
+      await InternetConnectionChecker.instance.hasConnection;
+
+      if (!hasConnection) {
+        print("Offline → skipping Firebase sync");
+        return;
+      }
+
+      final enrollRef = FirebaseDatabase.instance.ref("enrollments");
+
+      final enrollSnapshot =
+      await enrollRef.orderByChild("user_id").equalTo(userId).once();
+
+      if (!enrollSnapshot.snapshot.exists) {
+        print("No enrollments found in Firebase");
+        return;
+      }
+
+      final enrollments =
+      enrollSnapshot.snapshot.value as Map<dynamic, dynamic>;
+
+      for (var entry in enrollments.entries) {
+        final enrollMap = Map<String, dynamic>.from(entry.value);
+
+        final courseId = enrollMap['course_id'];
+        final uniqueId = enrollMap['unique_id'];
+        final status = enrollMap['status'] ?? "active";
+
+        if (courseId == null) continue;
+
+        /// 1️⃣ Save enrollment to Sqflite
+        await CourseEnrollmentDAO().enrollCourse(
+          uniqueId: uniqueId,
+          userId: userId,
+          courseId: courseId,
+          status: status,
+        );
+
+        /// 2️⃣ Check if course already exists locally
+        final existingCourse =
+        await CourseDAO().getCourseByUniqueId(courseId);
+
+        if (existingCourse != null) {
+          continue; // already synced
+        }
+
+        /// 3️⃣ Fetch course details from Firebase
+        final courseRef =
+        FirebaseDatabase.instance.ref("courses").child(courseId);
+
+        final courseSnapshot = await courseRef.once();
+
+        if (!courseSnapshot.snapshot.exists) continue;
+
+        final courseMap = Map<String, dynamic>.from(
+            courseSnapshot.snapshot.value as Map);
+
+        final courseModel = CourseModel.fromJson(courseMap);
+
+        /// 4️⃣ Insert into Sqflite
+        await CourseDAO().insertCourse(courseModel);
+      }
+
+      print("Courses & enrollments synced successfully");
+    } catch (e) {
+      print("Sync failed: $e");
+    }
+  }
+
+  // Future<void> _loadCoursesData() async {
+  //   if (await InternetConnectionChecker.instance.hasConnection) {
+  //     setState(() {
+  //       isLoading = true;
+  //     });
+  //
+  //     DatabaseReference teachersRef = _databaseRef.child('courses');
+  //
+  //     Query query = teachersRef.orderByChild('user_id').equalTo(_user?.userid);
+  //
+  //     query.once().then((DatabaseEvent event) {
+  //       final dataSnapshot = event.snapshot;
+  //
+  //       if (dataSnapshot.exists) {
+  //         final Map<dynamic, dynamic> coursesData =
+  //             dataSnapshot.value as Map<dynamic, dynamic>;
+  //
+  //         setState(() {
+  //           filteredCourses.clear();
+  //
+  //           filteredCourses = coursesData.entries.map((entry) {
+  //             // Convert each entry's value to Map<String, dynamic>
+  //             final courseMap = Map<String, dynamic>.from(entry.value as Map);
+  //
+  //             return CourseModel.fromJson(courseMap);
+  //           }).toList();
+  //
+  //           // Convert the students data into a list of TutorStudent objects
+  //           // students = studentsData.entries.map((entry) {
+  //           //   Map<String, dynamic> studentMap = {
+  //           //     'id': entry.value['id'] ?? null,
+  //           //     'unique_id': entry.value['unique_id'] ?? null,
+  //           //     'user_id': entry.value['user_id'] ?? null,
+  //           //     'name': entry.value['name'] ?? null,
+  //           //     'phone': entry.value['phone'] ?? null,
+  //           //     'gaurdian_phone': entry.value['gaurdian_phone'] ?? null,
+  //           //     'phone_pass': entry.value['phone_pass'] ?? null,
+  //           //     'dob': entry.value['dob'] ?? null,
+  //           //     'education': entry.value['education'] ?? null,
+  //           //     'address': entry.value['address'] ?? null,
+  //           //     'active_status': entry.value['active_status'] ?? null,
+  //           //     'admitted_date': entry.value['admitted_date'] ?? null,
+  //           //     'img': entry.value['img'] ?? null,
+  //           //     'days': entry.value['days'] != null
+  //           //         ? (entry.value['days'] as List)
+  //           //         .map((day) => TutorWeekDay.fromJson(day))
+  //           //         .toList()
+  //           //         : null,
+  //           //   };
+  //           //   return TutorStudent.fromJson(studentMap);
+  //           // }).toList();
+  //
+  //           isLoading = false;
+  //         });
+  //       } else {
+  //         print(_user?.userid);
+  //         print('No Course data available for the current User.');
+  //         setState(() {
+  //           isLoading = false;
+  //         });
+  //       }
+  //     }).catchError((error) {
+  //       print('Failed to load Course data: $error');
+  //       setState(() {
+  //         isLoading = false;
+  //       });
+  //     });
+  //   } else {
+  //     List<CourseModel> courseList =
+  //         await CourseDAO().getCoursesByUserId(_user!.userid!);
+  //
+  //     if (!courseList.isEmpty) {
+  //       setState(() {
+  //         filteredCourses.clear();
+  //         filteredCourses = courseList;
+  //         isLoading = false;
+  //       });
+  //     } else {
+  //       showSnackBarMsg(context,
+  //           "You are in Offline mode now, Please, connect to the Internet!");
+  //       setState(() {
+  //         // teachers = data.map((json) => Teacher.fromJson(json)).toList();
+  //         isLoading = false;
+  //       });
+  //     }
+  //   }
+  // }
+
 
   Future<void> _loadCoursesData() async {
     if (await InternetConnectionChecker.instance.hasConnection) {
@@ -101,87 +271,81 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
         isLoading = true;
       });
 
-      DatabaseReference teachersRef = _databaseRef.child('courses');
+      DatabaseReference coursesRef = _databaseRef.child('courses');
 
-      Query query = teachersRef.orderByChild('user_id').equalTo(_user?.userid);
+      Query query = coursesRef.orderByChild('user_id').equalTo(_user?.userid);
 
-      query.once().then((DatabaseEvent event) {
+      query.once().then((DatabaseEvent event) async {
         final dataSnapshot = event.snapshot;
 
         if (dataSnapshot.exists) {
           final Map<dynamic, dynamic> coursesData =
-              dataSnapshot.value as Map<dynamic, dynamic>;
+          dataSnapshot.value as Map<dynamic, dynamic>;
+
+          List<CourseModel> loadedCourses = [];
+
+          for (var entry in coursesData.entries) {
+            final courseMap = Map<String, dynamic>.from(entry.value as Map);
+
+            CourseModel course = CourseModel.fromJson(courseMap);
+
+            loadedCourses.add(course);
+
+            /// 🔹 SAVE TO SQFLITE (sync)
+            final existingCourse =
+            await CourseDAO().getCourseByUniqueId(course.uniqueId!);
+
+            if (existingCourse == null) {
+              await CourseDAO().insertCourse(course);
+            } else {
+              await CourseDAO().updateCourse(course);
+            }
+          }
 
           setState(() {
             filteredCourses.clear();
-
-            filteredCourses = coursesData.entries.map((entry) {
-              // Convert each entry's value to Map<String, dynamic>
-              final courseMap = Map<String, dynamic>.from(entry.value as Map);
-
-              return CourseModel.fromJson(courseMap);
-            }).toList();
-
-            // Convert the students data into a list of TutorStudent objects
-            // students = studentsData.entries.map((entry) {
-            //   Map<String, dynamic> studentMap = {
-            //     'id': entry.value['id'] ?? null,
-            //     'unique_id': entry.value['unique_id'] ?? null,
-            //     'user_id': entry.value['user_id'] ?? null,
-            //     'name': entry.value['name'] ?? null,
-            //     'phone': entry.value['phone'] ?? null,
-            //     'gaurdian_phone': entry.value['gaurdian_phone'] ?? null,
-            //     'phone_pass': entry.value['phone_pass'] ?? null,
-            //     'dob': entry.value['dob'] ?? null,
-            //     'education': entry.value['education'] ?? null,
-            //     'address': entry.value['address'] ?? null,
-            //     'active_status': entry.value['active_status'] ?? null,
-            //     'admitted_date': entry.value['admitted_date'] ?? null,
-            //     'img': entry.value['img'] ?? null,
-            //     'days': entry.value['days'] != null
-            //         ? (entry.value['days'] as List)
-            //         .map((day) => TutorWeekDay.fromJson(day))
-            //         .toList()
-            //         : null,
-            //   };
-            //   return TutorStudent.fromJson(studentMap);
-            // }).toList();
-
+            filteredCourses = loadedCourses;
             isLoading = false;
           });
         } else {
           print(_user?.userid);
           print('No Course data available for the current User.');
+
           setState(() {
             isLoading = false;
           });
         }
       }).catchError((error) {
         print('Failed to load Course data: $error');
+
         setState(() {
           isLoading = false;
         });
       });
     } else {
+      /// 🔹 OFFLINE → Load from Sqflite
       List<CourseModel> courseList =
-          await CourseDAO().getCoursesByUserId(_user!.userid!);
+      await CourseDAO().getCoursesByUserId(_user!.userid!);
 
-      if (!courseList.isEmpty) {
+      if (courseList.isNotEmpty) {
         setState(() {
           filteredCourses.clear();
           filteredCourses = courseList;
           isLoading = false;
         });
       } else {
-        showSnackBarMsg(context,
-            "You are in Offline mode now, Please, connect to the Internet!");
+        showSnackBarMsg(
+          context,
+          "You are in Offline mode now, Please connect to the Internet!",
+        );
+
         setState(() {
-          // teachers = data.map((json) => Teacher.fromJson(json)).toList();
           isLoading = false;
         });
       }
     }
   }
+
 
   Future<void> _loadUserData() async {
     Logout logout = Logout();

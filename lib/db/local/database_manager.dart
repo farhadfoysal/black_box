@@ -3,6 +3,7 @@ import 'package:black_box/model/mess/mess_main.dart';
 import 'package:black_box/model/mess/mess_user.dart';
 import 'package:black_box/model/tutor/tutor_month.dart';
 import 'package:black_box/model/tutor/tutor_student.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -197,6 +198,119 @@ class DatabaseManager {
     }
   }
 
+  // Future<void> insertOrUpdateTutorStudent(TutorStudent student) async {
+  //   final db = await await DatabaseHelper().database;
+  //
+  //   final existing = await db.query(
+  //     'tutor_student',
+  //     where: 'unique_id = ?',
+  //     whereArgs: [student.uniqueId],
+  //     limit: 1,
+  //   );
+  //
+  //   if (existing.isEmpty) {
+  //     await db.insert('tutor_student', student.toMap());
+  //   } else {
+  //     await db.update(
+  //       'tutor_student',
+  //       student.toMap(),
+  //       where: 'unique_id = ?',
+  //       whereArgs: [student.uniqueId],
+  //     );
+  //   }
+  // }
+
+  Future<void> insertOrUpdateTutorStudent(TutorStudent student) async {
+    final db = await DatabaseHelper().database;
+
+    final existing = await db.query(
+      'tutor_students',
+      where: 'unique_id = ?',
+      whereArgs: [student.uniqueId],
+      limit: 1,
+    );
+
+    if (existing.isEmpty) {
+      await db.insert(
+        'tutor_students',
+        student.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } else {
+      await db.update(
+        'tutor_students',
+        student.toMap(),
+        where: 'unique_id = ?',
+        whereArgs: [student.uniqueId],
+      );
+    }
+  }
+
+  Future<void> insertOrUpdateTutorStudentDay(TutorStudent student) async {
+    final db = await DatabaseHelper().database;
+
+    await db.transaction((txn) async {
+
+      final existing = await txn.query(
+        'tutor_students',
+        where: 'unique_id = ?',
+        whereArgs: [student.uniqueId],
+        limit: 1,
+      );
+
+      if (existing.isEmpty) {
+        await txn.insert(
+          'tutor_students',
+          student.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      } else {
+        await txn.update(
+          'tutor_students',
+          student.toMap(),
+          where: 'unique_id = ?',
+          whereArgs: [student.uniqueId],
+        );
+      }
+
+      /// delete old days
+      await txn.delete(
+        'tutor_week_days',
+        where: 'student_id = ?',
+        whereArgs: [student.uniqueId],
+      );
+
+      /// insert new days
+      if (student.days != null) {
+        for (var day in student.days!) {
+          await txn.insert(
+            'tutor_week_days',
+            day.toMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      }
+    });
+  }
+
+  Future<void> syncTutorStudentsFromFirebase(String userId) async {
+    final ref = FirebaseDatabase.instance.ref("tutor_student");
+
+    final snapshot =
+    await ref.orderByChild("user_id").equalTo(userId).once();
+
+    if (!snapshot.snapshot.exists) return;
+
+    final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+
+    for (var entry in data.entries) {
+      final studentMap = Map<String, dynamic>.from(entry.value);
+
+      TutorStudent student = TutorStudent.fromJson(studentMap);
+
+      await insertOrUpdateTutorStudentDay(student);
+    }
+  }
 
   Future<int> insertTutorStudentDayNot(TutorStudent tutorStudent) async {
     final db = await DatabaseHelper().database;

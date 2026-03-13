@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:black_box/db/course/course_db.dart';
 
@@ -19,6 +20,16 @@ class CourseEnrollmentDAO {
       'enrolled_at': DateTime.now().toIso8601String(),
       'status': status,
     });
+  }
+
+  Future<void> insertEnrollment(Map<String, dynamic> data) async {
+    final database = await db;
+
+    await database.insert(
+      'enrollments',
+      data,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   /// Disenroll (remove enrollment)
@@ -53,6 +64,50 @@ class CourseEnrollmentDAO {
       whereArgs: [userId, 'active'],
     );
     return result.map((e) => e['course_id'] as String).toList();
+  }
+
+  Future<void> syncEnrollmentsFromFirebase(String userId) async {
+    final database = await db;
+
+    try {
+      final enrollRef = FirebaseDatabase.instance.ref("enrollments");
+
+      final snapshot =
+      await enrollRef.orderByChild("user_id").equalTo(userId).once();
+
+      if (!snapshot.snapshot.exists) return;
+
+      final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+
+      for (var entry in data.values) {
+        final enroll = Map<String, dynamic>.from(entry);
+
+        final uniqueId = enroll['unique_id'];
+        final courseId = enroll['course_id'];
+        final status = enroll['status'] ?? 'active';
+        final enrolledAt = enroll['enrolled_at'];
+
+        // check if already exists locally
+        final existing = await database.query(
+          'enrollments',
+          where: 'unique_id = ?',
+          whereArgs: [uniqueId],
+          limit: 1,
+        );
+
+        if (existing.isEmpty) {
+          await database.insert('enrollments', {
+            'unique_id': uniqueId,
+            'user_id': userId,
+            'course_id': courseId,
+            'enrolled_at': enrolledAt,
+            'status': status,
+          });
+        }
+      }
+    } catch (e) {
+      print("Enrollment sync failed: $e");
+    }
   }
 
   // Future<List<String>> getEnrolledCourseIds(String userId) async {

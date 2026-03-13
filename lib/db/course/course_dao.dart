@@ -96,6 +96,22 @@ class CourseDAO {
     return result.map((e) => CourseModel.fromJson(e)).toList();
   }
 
+  Future<void> insertOrUpdateCourse(CourseModel course) async {
+    final database = await db;
+
+    final existing = await getCourseByUniqueId(course.uniqueId!);
+
+    if (existing == null) {
+      await database.insert('courses', course.toMap());
+    } else {
+      await database.update(
+        'courses',
+        course.toMap(),
+        where: 'unique_id = ?',
+        whereArgs: [course.uniqueId],
+      );
+    }
+  }
 
 }
 

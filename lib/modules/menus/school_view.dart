@@ -18,6 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../components/components.dart';
 import '../../db/course/course_dao.dart';
+import '../../db/course/course_db.dart';
 import '../../db/course/course_enrollment_dao.dart';
 import '../../db/course/course_favorite_dao.dart';
 import '../../dummies/categories_d.dart';
@@ -59,6 +60,7 @@ class SchoolViewState extends State<SchoolView> {
   bool isLoading = false;
 
   final _databaseRef = FirebaseDatabase.instance.ref();
+  final db = CourseDb.instance.database;
 
   late User user;
   final categories = <Category>[];
@@ -66,54 +68,54 @@ class SchoolViewState extends State<SchoolView> {
   final popularCourses = <VideoCourse>[];
 
   final List<CourseModel> allCourses = [
-    CourseModel(
-      courseName: 'Flutter Beginner',
-      totalVideo: 10,
-      totalRating: 4.5,
-      totalTime: '2h 30m',
-      courseImage:
-          'https://fastly.picsum.photos/id/870/200/300.jpg?blur=2&grayscale&hmac=ujRymp644uYVjdKJM7kyLDSsrqNSMVRPnGU99cKl6Vs',
-      level: 'Beginner',
-      countStudents: 120,
-      createdAt: DateTime.now(),
-      status: 'active',
-    ),
-    CourseModel(
-      courseName: 'Dart Fundamentals',
-      totalVideo: 8,
-      totalRating: 4.2,
-      totalTime: '1h 50m',
-      courseImage:
-          'https://fastly.picsum.photos/id/50/200/300.jpg?hmac=wlHRGoenBSt-gzxGvJp3cBEIUD71NKbWEXmiJC2mQYE',
-      level: 'Beginner',
-      countStudents: 95,
-      createdAt: DateTime.now(),
-      status: 'active',
-    ),
-    CourseModel(
-      courseName: 'Mobile App Security',
-      totalVideo: 7,
-      totalRating: 4.8,
-      totalTime: '3h 20m',
-      courseImage:
-          'https://fastly.picsum.photos/id/443/200/300.jpg?grayscale&hmac=3KGsrU5Oo_hghp3-Xuzs6myA2cu1cKEvgsz05yWhKWA',
-      level: 'Intermediate',
-      countStudents: 80,
-      createdAt: DateTime.now(),
-      status: 'inactive',
-    ),
-    CourseModel(
-      courseName: 'Backend Development',
-      totalVideo: 12,
-      totalRating: 4.7,
-      totalTime: '2h 45m',
-      courseImage:
-          'https://fastly.picsum.photos/id/866/200/300.jpg?hmac=rcadCENKh4rD6MAp6V_ma-AyWv641M4iiOpe1RyFHeI',
-      level: 'Intermediate',
-      countStudents: 150,
-      createdAt: DateTime.now(),
-      status: 'active',
-    ),
+    // CourseModel(
+    //   courseName: 'Flutter Beginner',
+    //   totalVideo: 10,
+    //   totalRating: 4.5,
+    //   totalTime: '2h 30m',
+    //   courseImage:
+    //       'https://fastly.picsum.photos/id/870/200/300.jpg?blur=2&grayscale&hmac=ujRymp644uYVjdKJM7kyLDSsrqNSMVRPnGU99cKl6Vs',
+    //   level: 'Beginner',
+    //   countStudents: 120,
+    //   createdAt: DateTime.now(),
+    //   status: 'active',
+    // ),
+    // CourseModel(
+    //   courseName: 'Dart Fundamentals',
+    //   totalVideo: 8,
+    //   totalRating: 4.2,
+    //   totalTime: '1h 50m',
+    //   courseImage:
+    //       'https://fastly.picsum.photos/id/50/200/300.jpg?hmac=wlHRGoenBSt-gzxGvJp3cBEIUD71NKbWEXmiJC2mQYE',
+    //   level: 'Beginner',
+    //   countStudents: 95,
+    //   createdAt: DateTime.now(),
+    //   status: 'active',
+    // ),
+    // CourseModel(
+    //   courseName: 'Mobile App Security',
+    //   totalVideo: 7,
+    //   totalRating: 4.8,
+    //   totalTime: '3h 20m',
+    //   courseImage:
+    //       'https://fastly.picsum.photos/id/443/200/300.jpg?grayscale&hmac=3KGsrU5Oo_hghp3-Xuzs6myA2cu1cKEvgsz05yWhKWA',
+    //   level: 'Intermediate',
+    //   countStudents: 80,
+    //   createdAt: DateTime.now(),
+    //   status: 'inactive',
+    // ),
+    // CourseModel(
+    //   courseName: 'Backend Development',
+    //   totalVideo: 12,
+    //   totalRating: 4.7,
+    //   totalTime: '2h 45m',
+    //   courseImage:
+    //       'https://fastly.picsum.photos/id/866/200/300.jpg?hmac=rcadCENKh4rD6MAp6V_ma-AyWv641M4iiOpe1RyFHeI',
+    //   level: 'Intermediate',
+    //   countStudents: 150,
+    //   createdAt: DateTime.now(),
+    //   status: 'active',
+    // ),
   ];
 
   List<CourseModel> filteredCourses = [];
@@ -142,9 +144,21 @@ class SchoolViewState extends State<SchoolView> {
       ..addAll(categories);
   }
 
+  // Future<void> _initializeData() async {
+  //   // First load user data
+  //   await _loadUserData();
+  //   loadEnrolledCourses();
+  //   loadFavoriteCourses();
+  // }
+
   Future<void> _initializeData() async {
-    // First load user data
     await _loadUserData();
+
+    if (_user?.userid != null) {
+      await syncCoursesFromFirebase();
+      await CourseEnrollmentDAO().syncEnrollmentsFromFirebase(_user!.userid!);
+    }
+
     loadEnrolledCourses();
     loadFavoriteCourses();
   }
@@ -234,6 +248,75 @@ class SchoolViewState extends State<SchoolView> {
     await AppRouter.logoutUser(context);
   }
 
+  Future<void> syncEnrollmentsFromFirebase(String userId) async {
+    final database = await db;
+
+    try {
+      final enrollRef = FirebaseDatabase.instance.ref("enrollments");
+
+      final snapshot =
+      await enrollRef.orderByChild("user_id").equalTo(userId).once();
+
+      if (!snapshot.snapshot.exists) return;
+
+      final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+
+      for (var entry in data.values) {
+        final enroll = Map<String, dynamic>.from(entry);
+
+        final uniqueId = enroll['unique_id'];
+        final courseId = enroll['course_id'];
+        final status = enroll['status'] ?? 'active';
+        final enrolledAt = enroll['enrolled_at'];
+
+        // check if already exists locally
+        final existing = await database.query(
+          'enrollments',
+          where: 'unique_id = ?',
+          whereArgs: [uniqueId],
+          limit: 1,
+        );
+
+        if (existing.isEmpty) {
+          await database.insert('enrollments', {
+            'unique_id': uniqueId,
+            'user_id': userId,
+            'course_id': courseId,
+            'enrolled_at': enrolledAt,
+            'status': status,
+          });
+        }
+      }
+    } catch (e) {
+      print("Enrollment sync failed: $e");
+    }
+  }
+
+  Future<void> syncCoursesFromFirebase() async {
+    final database = await db;
+
+    final snapshot =
+    await FirebaseDatabase.instance.ref("courses").once();
+
+    if (!snapshot.snapshot.exists) return;
+
+    final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+
+    for (var entry in data.entries) {
+      final courseId = entry.key;
+      final courseMap = Map<String, dynamic>.from(entry.value);
+
+      final existing = await database.query(
+        'courses',
+        where: 'unique_id = ?',
+        whereArgs: [courseId],
+      );
+
+      if (existing.isEmpty) {
+        await database.insert('courses', courseMap);
+      }
+    }
+  }
 
 
   @override
@@ -270,39 +353,66 @@ class SchoolViewState extends State<SchoolView> {
       }
 
       final hasConnection =
-          await InternetConnectionChecker.instance.hasConnection;
+      await InternetConnectionChecker.instance.hasConnection;
 
       if (hasConnection) {
-        //  ONLINE: Load from Firebase
+        /// ONLINE
         final enrollRef = FirebaseDatabase.instance.ref("enrollments");
         final snapshot =
-            await enrollRef.orderByChild("user_id").equalTo(userId).once();
+        await enrollRef.orderByChild("user_id").equalTo(userId).once();
 
         if (snapshot.snapshot.exists) {
           final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
 
-          // Extract courseIds from enrollment entries
-          final List<String> courseIds = data.values
-              .map((e) => (e as Map)['course_id']?.toString())
-              .where((id) => id != null)
-              .cast<String>()
-              .toList();
+          List<String> courseIds = [];
+          List<Map<String, dynamic>> enrollments = [];
 
-          // Fetch course details from Firebase "courses" node
+          /// Extract enrollments
+          for (var entry in data.values) {
+            final enroll = Map<String, dynamic>.from(entry);
+
+            final courseId = enroll['course_id']?.toString();
+            if (courseId != null) {
+              courseIds.add(courseId);
+              enrollments.add(enroll);
+            }
+          }
+
+          /// Save enrollments to Sqflite
+          for (var enroll in enrollments) {
+            await CourseEnrollmentDAO().insertEnrollment(enroll);
+          }
+
+          /// Fetch courses
           final coursesRef = FirebaseDatabase.instance.ref("courses");
           final allCoursesSnapshot = await coursesRef.once();
 
           if (allCoursesSnapshot.snapshot.exists) {
             final allCoursesData =
-                allCoursesSnapshot.snapshot.value as Map<dynamic, dynamic>;
+            allCoursesSnapshot.snapshot.value as Map<dynamic, dynamic>;
 
-            // Filter by courseId list
             final enrolledCourses = allCoursesData.entries
                 .where((entry) => courseIds.contains(entry.key))
-                .map((entry) => CourseModel.fromJson(
-                      Map<String, dynamic>.from(entry.value),
-                    ))
-                .toList();
+                .map((entry) {
+              final courseMap =
+              Map<String, dynamic>.from(entry.value as Map);
+
+              final course = CourseModel.fromJson(courseMap);
+
+              return course;
+            }).toList();
+
+            /// Save courses to Sqflite
+            for (var course in enrolledCourses) {
+              final existing =
+              await CourseDAO().getCourseByUniqueId(course.uniqueId!);
+
+              if (existing == null) {
+                await CourseDAO().insertCourse(course);
+              } else {
+                await CourseDAO().updateCourse(course);
+              }
+            }
 
             setState(() {
               filteredCourses = enrolledCourses;
@@ -314,15 +424,16 @@ class SchoolViewState extends State<SchoolView> {
           showSnackBarMsg(context, "You have not enrolled in any courses.");
         }
       } else {
-        //  OFFLINE: Load from Sqflite
+        /// OFFLINE
         final localCourseIds =
-            await CourseEnrollmentDAO().getEnrolledCourseIds(userId);
+        await CourseEnrollmentDAO().getEnrolledCourseIds(userId);
 
         if (localCourseIds.isEmpty) {
           showSnackBarMsg(context, "Offline: No enrolled courses found.");
         } else {
           final localCourses =
-              await CourseDAO().getCoursesByIds(localCourseIds);
+          await CourseDAO().getCoursesByIds(localCourseIds);
+
           setState(() {
             filteredCourses = localCourses;
           });
@@ -335,6 +446,85 @@ class SchoolViewState extends State<SchoolView> {
       setState(() => isLoading = false);
     }
   }
+
+
+  // Future<void> loadEnrolledCourses() async {
+  //   setState(() => isLoading = true);
+  //
+  //   try {
+  //     final userId = _user?.userid;
+  //     if (userId == null) {
+  //       showSnackBarMsg(context, "User ID not found.");
+  //       setState(() => isLoading = false);
+  //       return;
+  //     }
+  //
+  //     final hasConnection =
+  //         await InternetConnectionChecker.instance.hasConnection;
+  //
+  //     if (hasConnection) {
+  //       //  ONLINE: Load from Firebase
+  //       final enrollRef = FirebaseDatabase.instance.ref("enrollments");
+  //       final snapshot =
+  //           await enrollRef.orderByChild("user_id").equalTo(userId).once();
+  //
+  //       if (snapshot.snapshot.exists) {
+  //         final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+  //
+  //         // Extract courseIds from enrollment entries
+  //         final List<String> courseIds = data.values
+  //             .map((e) => (e as Map)['course_id']?.toString())
+  //             .where((id) => id != null)
+  //             .cast<String>()
+  //             .toList();
+  //
+  //         // Fetch course details from Firebase "courses" node
+  //         final coursesRef = FirebaseDatabase.instance.ref("courses");
+  //         final allCoursesSnapshot = await coursesRef.once();
+  //
+  //         if (allCoursesSnapshot.snapshot.exists) {
+  //           final allCoursesData =
+  //               allCoursesSnapshot.snapshot.value as Map<dynamic, dynamic>;
+  //
+  //           // Filter by courseId list
+  //           final enrolledCourses = allCoursesData.entries
+  //               .where((entry) => courseIds.contains(entry.key))
+  //               .map((entry) => CourseModel.fromJson(
+  //                     Map<String, dynamic>.from(entry.value),
+  //                   ))
+  //               .toList();
+  //
+  //           setState(() {
+  //             filteredCourses = enrolledCourses;
+  //           });
+  //         } else {
+  //           showSnackBarMsg(context, "No courses found in database.");
+  //         }
+  //       } else {
+  //         showSnackBarMsg(context, "You have not enrolled in any courses.");
+  //       }
+  //     } else {
+  //       //  OFFLINE: Load from Sqflite
+  //       final localCourseIds =
+  //           await CourseEnrollmentDAO().getEnrolledCourseIds(userId);
+  //
+  //       if (localCourseIds.isEmpty) {
+  //         showSnackBarMsg(context, "Offline: No enrolled courses found.");
+  //       } else {
+  //         final localCourses =
+  //             await CourseDAO().getCoursesByIds(localCourseIds);
+  //         setState(() {
+  //           filteredCourses = localCourses;
+  //         });
+  //       }
+  //     }
+  //   } catch (e) {
+  //     print("Error loading enrolled courses: $e");
+  //     showSnackBarMsg(context, "Something went wrong while loading courses.");
+  //   } finally {
+  //     setState(() => isLoading = false);
+  //   }
+  // }
 
   Future<void> loadFavoriteCourses() async {
     setState(() => isLoading = true);

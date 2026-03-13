@@ -58,12 +58,59 @@ class _TutorMainScreenState extends State<TutorMainScreen> {
     _initializeData();
   }
 
+  // Future<void> _initializeData() async {
+  //   // First load user data
+  //   await _loadUserData();
+  //
+  //   _loadTutorStudentsData();
+  // }
+
   Future<void> _initializeData() async {
-    // First load user data
     await _loadUserData();
+
+    if (_user?.userid != null) {
+      await syncTutorStudentsFromFirebase(_user!.userid!);
+    }
 
     _loadTutorStudentsData();
   }
+
+  Future<void> syncTutorStudentsFromFirebase(String userId) async {
+    try {
+      final hasConnection =
+      await InternetConnectionChecker.instance.hasConnection;
+
+      if (!hasConnection) {
+        print("Offline → skipping tutor student sync");
+        return;
+      }
+
+      final ref = FirebaseDatabase.instance.ref("tutor_student");
+
+      final snapshot =
+      await ref.orderByChild("user_id").equalTo(userId).once();
+
+      if (!snapshot.snapshot.exists) return;
+
+      final data = snapshot.snapshot.value as Map<dynamic, dynamic>;
+
+      for (var entry in data.entries) {
+        final studentMap = Map<String, dynamic>.from(entry.value);
+
+        TutorStudent student = TutorStudent.fromJson(studentMap);
+
+        /// Save to SQLite
+        // await DatabaseManager().insertOrUpdateTutorStudent(student);
+        await DatabaseManager().insertOrUpdateTutorStudentDay(student);
+      }
+
+      print("Tutor students synced successfully");
+    } catch (e) {
+      print("Tutor student sync error: $e");
+    }
+  }
+
+
 
   Future<void> _loadTutorStudentsData() async {
     if (await InternetConnectionChecker.instance.hasConnection) {
@@ -82,15 +129,34 @@ class _TutorMainScreenState extends State<TutorMainScreen> {
           final Map<dynamic, dynamic> studentsData =
           dataSnapshot.value as Map<dynamic, dynamic>;
 
-          setState(() {
+          setState(() async {
             students.clear();
 
-            students = studentsData.entries.map((entry) {
-              // Convert each entry's value to Map<String, dynamic>
+            List<TutorStudent> loadedStudents = [];
+
+            for (var entry in studentsData.entries) {
               final studentMap = Map<String, dynamic>.from(entry.value as Map);
 
-              return TutorStudent.fromJson(studentMap);
-            }).toList();
+              TutorStudent student = TutorStudent.fromJson(studentMap);
+
+              loadedStudents.add(student);
+
+              /// Save to Sqflite
+              // await DatabaseManager().insertOrUpdateTutorStudent(student);
+              await DatabaseManager().insertOrUpdateTutorStudentDay(student);
+            }
+
+            setState(() {
+              students = loadedStudents;
+            });
+
+            // students = studentsData.entries.map((entry) {
+            //   // Convert each entry's value to Map<String, dynamic>
+            //   final studentMap = Map<String, dynamic>.from(entry.value as Map);
+            //
+            //   return TutorStudent.fromJson(studentMap);
+            // }).toList();
+
 
             // Convert the students data into a list of TutorStudent objects
             // students = studentsData.entries.map((entry) {
