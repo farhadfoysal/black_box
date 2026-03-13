@@ -61,7 +61,7 @@ class CourseDb {
       category TEXT,
       description TEXT,
       total_video INTEGER,
-      total_time TEXT,
+      total_times TEXT,
       total_rating REAL,
       fee REAL,
       tracking_number TEXT,
