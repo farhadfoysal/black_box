@@ -183,8 +183,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () async {
                   await Navigator.push(
                     context,
-                    // MaterialPageRoute(builder: (_) => StudentManagementScreen()),
-                    MaterialPageRoute(builder: (_) => StudentsListScreen(schoolId: '${widget.schoolId}', userId: '${widget.userId}', userType: '${widget.userType}',)));
+                    MaterialPageRoute(builder: (_) => StudentManagementScreen(schoolId: '${widget.schoolId}', userId: '${widget.userId}', userType: '${widget.userType}',)));
+                    // MaterialPageRoute(builder: (_) => StudentsListScreen(schoolId: '${widget.schoolId}', userId: '${widget.userId}', userType: '${widget.userType}',)));
                   _loadData();
                 },
               ),

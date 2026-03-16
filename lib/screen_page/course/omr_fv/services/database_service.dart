@@ -227,8 +227,8 @@ class DatabaseService {
       ),
       Course(
         id: '2',
-        name: 'Arts',
-        code: 'ART',
+        name: 'Humanities',
+        code: 'HUM',
         subjects: ['History', 'Geography', 'Political Science', 'Sociology'],
       ),
     ];
