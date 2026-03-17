@@ -236,11 +236,36 @@ class StudentDatabase {
     );
   }
 
+  // static Future<int> updateStudentByUniqueId(
+  //   String id,
+  //   Map<String, dynamic> student,
+  // ) async {
+  //   final db = await database;
+  //   return await db.update(
+  //     'students',
+  //     student,
+  //     where: 'uniqueId = ?',
+  //     whereArgs: [id],
+  //   );
+  // }
+
+
   static Future<int> updateStudentByUniqueId(
-    String id,
-    Map<String, dynamic> student,
-  ) async {
+      String id,
+      Map<String, dynamic> student,
+      ) async {
     final db = await database;
+
+    /// 🔥 Remove dangerous fields
+    student.remove('id'); // just in case
+    // student.remove('uniqueId'); // don't update primary identifier
+
+    /// 🔥 Remove null values (CRITICAL FIX)
+    student.removeWhere((key, value) => value == null);
+
+    /// Optional: Debug print
+    print('UPDATE DATA: $student');
+
     return await db.update(
       'students',
       student,
@@ -248,6 +273,7 @@ class StudentDatabase {
       whereArgs: [id],
     );
   }
+
 
   static Future<int> deleteStudent(int id) async {
     final db = await database;

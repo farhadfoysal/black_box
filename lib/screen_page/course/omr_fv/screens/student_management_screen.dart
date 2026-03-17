@@ -297,18 +297,18 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
 
     return showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(title),
         content: Text(msg),
         actions: [
 
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false), // ✅ FIX
             child: const Text("Cancel"),
           ),
 
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true), // ✅ FIX
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text("Delete"),
           )
@@ -419,70 +419,199 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
   }
 
   Widget _studentList() {
-
     return ListView.builder(
-
       padding: const EdgeInsets.all(16),
-
       itemCount: _filteredStudents.length,
-
-      itemBuilder: (_, i) {
-
+      itemBuilder: (context, i) {
         final s = _filteredStudents[i];
 
-        return Card(
-
-          child: ListTile(
-
-            leading: CircleAvatar(
-              child: Text((s.stdName ?? "S")[0].toUpperCase()),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Card(
+            elevation: 4,
+            shadowColor: Colors.black12,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
 
-            title: Text(s.stdName ?? ""),
+              // 🔵 Avatar
+              leading: CircleAvatar(
+                radius: 26,
+                backgroundColor: Colors.blue.shade100,
+                child: Text(
+                  (s.stdName ?? "S")[0].toUpperCase(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
 
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              // 🧑 Name
+              title: Text(
+                s.stdName ?? "",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
 
-                Text("ID: ${s.studentId ?? ''}"),
-                Text("Class: ${s.major ?? ''}"),
-                Text("Mobile: ${s.stdPhone ?? ''}"),
+              // 📄 Info Section
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
 
-              ],
+                    Row(
+                      children: [
+                        const Icon(Icons.badge, size: 16, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Text("ID: ${s.stdId ?? ''}"),
+                      ],
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    Row(
+                      children: [
+                        const Icon(Icons.school, size: 16, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Text("Class: ${s.major ?? ''}"),
+                      ],
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    Row(
+                      children: [
+                        const Icon(Icons.phone, size: 16, color: Colors.grey),
+                        const SizedBox(width: 6),
+                        Text(s.stdPhone ?? ''),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              isThreeLine: true,
+
+              // ⚙️ Menu
+              trailing: PopupMenuButton<String>(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                icon: const Icon(Icons.more_vert),
+
+                onSelected: (v) {
+                  if (v == "edit") {
+                    _studentDialog(student: s);
+                  } else if (v == "delete") {
+                    _deleteStudent(s);
+                  }
+                },
+
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: "edit",
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit, size: 18),
+                        SizedBox(width: 8),
+                        Text("Edit"),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: "delete",
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete, size: 18, color: Colors.red),
+                        SizedBox(width: 8),
+                        Text("Delete"),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-
-            isThreeLine: true,
-
-            trailing: PopupMenuButton(
-
-              onSelected: (v) {
-
-                if (v == "edit") {
-                  _studentDialog(student: s);
-                }
-
-                if (v == "delete") {
-                  _deleteStudent(s);
-                }
-
-              },
-
-              itemBuilder: (_) => const [
-
-                PopupMenuItem(value: "edit", child: Text("Edit")),
-                PopupMenuItem(value: "delete", child: Text("Delete")),
-
-              ],
-
-            ),
-
           ),
         );
-
       },
     );
-
   }
+
+  // Widget _studentList() {
+  //
+  //   return ListView.builder(
+  //
+  //     padding: const EdgeInsets.all(16),
+  //
+  //     itemCount: _filteredStudents.length,
+  //
+  //     itemBuilder: (_, i) {
+  //
+  //       final s = _filteredStudents[i];
+  //
+  //       return Card(
+  //
+  //         child: ListTile(
+  //
+  //           leading: CircleAvatar(
+  //             child: Text((s.stdName ?? "S")[0].toUpperCase()),
+  //           ),
+  //
+  //           title: Text(s.stdName ?? ""),
+  //
+  //           subtitle: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //
+  //               Text("ID: ${s.stdId ?? ''}"),
+  //               Text("Class: ${s.major ?? ''}"),
+  //               Text("Mobile: ${s.stdPhone ?? ''}"),
+  //
+  //             ],
+  //           ),
+  //
+  //           isThreeLine: true,
+  //
+  //           trailing: PopupMenuButton(
+  //
+  //             onSelected: (v) {
+  //
+  //               if (v == "edit") {
+  //                 _studentDialog(student: s);
+  //               }
+  //
+  //               if (v == "delete") {
+  //                 _deleteStudent(s);
+  //               }
+  //
+  //             },
+  //
+  //             itemBuilder: (_) => const [
+  //
+  //               PopupMenuItem(value: "edit", child: Text("Edit")),
+  //               PopupMenuItem(value: "delete", child: Text("Delete")),
+  //
+  //             ],
+  //
+  //           ),
+  //
+  //         ),
+  //       );
+  //
+  //     },
+  //   );
+  //
+  // }
 
   // ================= DIALOGS =================
 
@@ -497,38 +626,30 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
     final editing = student != null;
 
     showDialog(
-
       context: context,
-
-      builder: (_) => AlertDialog(
-
+      builder: (dialogContext) => AlertDialog(
         title: Text(editing ? "Edit Student" : "Add Student"),
 
         content: SingleChildScrollView(
           child: Column(
             children: [
-
               _field(name, "Name"),
               _field(id, "Student ID"),
               _field(mobile, "Mobile"),
               _field(cls, "Class"),
               _field(email, "Email"),
-
             ],
           ),
         ),
 
         actions: [
-
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext), // ✅ FIXED
             child: const Text("Cancel"),
           ),
 
           ElevatedButton(
-
             child: Text(editing ? "Update" : "Add"),
-
             onPressed: () async {
 
               final s = Student(
@@ -542,20 +663,16 @@ class _StudentManagementScreenState extends State<StudentManagementScreen> {
                 addDate: student?.addDate,
               );
 
-              Navigator.pop(context);
+              Navigator.pop(dialogContext); // ✅ FIXED
 
               if (editing) {
                 await _updateStudent(s);
               } else {
                 await _createStudent(s);
               }
-
             },
-
           )
-
         ],
-
       ),
     );
 

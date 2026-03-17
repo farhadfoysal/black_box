@@ -1279,7 +1279,6 @@ class StudentDetailsSheet extends StatelessWidget {
   }
 }
 
-// ============= STUDENT FORM SCREEN =============
 class StudentFormScreen extends StatefulWidget {
   final Student? student;
   final String schoolId;
@@ -1298,318 +1297,255 @@ class StudentFormScreen extends StatefulWidget {
 
 class _StudentFormScreenState extends State<StudentFormScreen> {
   final _formKey = GlobalKey<FormState>();
+
   late Student _student;
   File? _imageFile;
   bool _isLoading = false;
+
   final Color _primaryColor = const Color(0xFF667eea);
   final Color _secondaryColor = const Color(0xFF764ba2);
+
+  // ✅ CONTROLLERS (FIX)
+  late TextEditingController nameCtrl;
+  late TextEditingController idCtrl;
+  late TextEditingController phoneCtrl;
+  late TextEditingController emailCtrl;
+  late TextEditingController addressCtrl;
+  late TextEditingController dobCtrl;
+  late TextEditingController majorCtrl;
+
+  late TextEditingController fatherCtrl;
+  late TextEditingController motherCtrl;
+  late TextEditingController gPhoneCtrl;
+  late TextEditingController gEmailCtrl;
+
+  String? gender;
+  String status = 'Active';
 
   @override
   void initState() {
     super.initState();
+
     _student = widget.student ?? Student();
+
+    nameCtrl = TextEditingController(text: _student.stdName);
+    idCtrl = TextEditingController(text: _student.stdId);
+    phoneCtrl = TextEditingController(text: _student.stdPhone);
+    emailCtrl = TextEditingController(text: _student.stdEmail);
+    addressCtrl = TextEditingController(text: _student.address);
+    dobCtrl = TextEditingController(text: _student.dob);
+    majorCtrl = TextEditingController(text: _student.major);
+
+    fatherCtrl = TextEditingController(text: _student.fatherName);
+    motherCtrl = TextEditingController(text: _student.motherName);
+    gPhoneCtrl = TextEditingController(text: _student.gPhone);
+    gEmailCtrl = TextEditingController(text: _student.gEmail);
+
+    gender = _student.gender;
+    status = _student.aStatus == 1 ? 'Active' : 'Inactive';
   }
+
+  @override
+  void dispose() {
+    nameCtrl.dispose();
+    idCtrl.dispose();
+    phoneCtrl.dispose();
+    emailCtrl.dispose();
+    addressCtrl.dispose();
+    dobCtrl.dispose();
+    majorCtrl.dispose();
+    fatherCtrl.dispose();
+    motherCtrl.dispose();
+    gPhoneCtrl.dispose();
+    gEmailCtrl.dispose();
+    super.dispose();
+  }
+
+  // ================= IMAGE =================
 
   Future<void> _pickImage() async {
     try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
+      final picker = ImagePicker();
+      final image = await picker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 800,
         imageQuality: 85,
       );
+
       if (image != null) {
-        setState(() {
-          _imageFile = File(image.path);
-        });
+        setState(() => _imageFile = File(image.path));
       }
-    } catch (e) {
-      print('Error picking image: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
-      );
-    }
-  }
-
-  Future<void> _saveStudent() async {
-    if (!_formKey.currentState!.validate()) return;
-    _formKey.currentState!.save();
-
-    setState(() => _isLoading = true);
-
-    try {
-      // Save image locally if picked
-      if (_imageFile != null) {
-        final studentId = _student.stdId ?? DateTime.now().millisecondsSinceEpoch.toString();
-        final imagePath = await ImageHandler.saveImageLocally(_imageFile!, studentId);
-        _student.imagePath = imagePath;
-        _student.imageSyncStatus = widget.isOnline ? 1 : 0;
-
-        // Convert to base64 for Firebase if online
-        if (widget.isOnline) {
-          final base64Image = await ImageHandler.convertImageToBase64(imagePath);
-          if (base64Image != null) {
-            _student.stdImg = base64Image;
-          }
-        }
-      }
-
-      Navigator.pop(context, _student);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving student: $e')),
-      );
-    } finally {
-      setState(() => _isLoading = false);
+    } catch (_) {
+      _showError('Image pick failed');
     }
   }
 
   Widget _buildImageWidget() {
     if (_imageFile != null) {
-      return ClipOval(
-        child: Image.file(
-          _imageFile!,
+      return _circleImage(Image.file(_imageFile!, fit: BoxFit.cover));
+    }
+
+    if (_student.stdImg?.startsWith('http') == true) {
+      return _circleImage(
+        CachedNetworkImage(
+          imageUrl: _student.stdImg!,
           fit: BoxFit.cover,
-          width: 120,
-          height: 120,
         ),
-      );
-    } else if (_student.stdImg != null && _student.stdImg!.isNotEmpty) {
-      if (_student.stdImg!.startsWith('http')) {
-        return ClipOval(
-          child: CachedNetworkImage(
-            imageUrl: _student.stdImg!,
-            fit: BoxFit.cover,
-            width: 120,
-            height: 120,
-            placeholder: (context, url) => Container(
-              color: Colors.grey[200],
-              child: Icon(Icons.person, size: 40, color: Colors.grey),
-            ),
-            errorWidget: (context, url, error) => Container(
-              color: Colors.grey[200],
-              child: Icon(Icons.error, size: 40, color: Colors.grey),
-            ),
-          ),
-        );
-      } else {
-        // Base64 image from Firebase
-        return Container(
-          color: Colors.grey[200],
-          child: Icon(Icons.person, size: 40, color: Colors.grey),
-        );
-      }
-    } else if (_student.imagePath != null) {
-      return ClipOval(
-        child: Image.file(
-          File(_student.imagePath!),
-          fit: BoxFit.cover,
-          width: 120,
-          height: 120,
-          errorBuilder: (context, error, stackTrace) => Container(
-            color: Colors.grey[200],
-            child: Icon(Icons.person, size: 40, color: Colors.grey),
-          ),
-        ),
-      );
-    } else {
-      return Container(
-        width: 120,
-        height: 120,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.grey[200],
-        ),
-        child: Icon(Icons.camera_alt, color: Colors.white, size: 40),
       );
     }
+
+    if (_student.imagePath != null) {
+      return _circleImage(
+        Image.file(File(_student.imagePath!), fit: BoxFit.cover),
+      );
+    }
+
+    return _placeholder();
   }
+
+  Widget _circleImage(Widget child) {
+    return ClipOval(
+      child: SizedBox(width: 120, height: 120, child: child),
+    );
+  }
+
+  Widget _placeholder() {
+    return Container(
+      color: Colors.grey[200],
+      child: Icon(Icons.person, size: 40, color: Colors.grey),
+    );
+  }
+
+  // ================= SAVE =================
+
+  Future<void> _saveStudent() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      _student.stdName = nameCtrl.text;
+      _student.stdId = idCtrl.text;
+      _student.stdPhone = phoneCtrl.text;
+      _student.stdEmail = emailCtrl.text;
+      _student.address = addressCtrl.text;
+      _student.dob = dobCtrl.text;
+      _student.major = majorCtrl.text;
+
+      _student.fatherName = fatherCtrl.text;
+      _student.motherName = motherCtrl.text;
+      _student.gPhone = gPhoneCtrl.text;
+      _student.gEmail = gEmailCtrl.text;
+
+      _student.gender = gender;
+      _student.aStatus = status == 'Active' ? 1 : 0;
+
+      if (_imageFile != null) {
+        final id = _student.stdId ??
+            DateTime.now().millisecondsSinceEpoch.toString();
+
+        final path =
+        await ImageHandler.saveImageLocally(_imageFile!, id);
+
+        _student.imagePath = path;
+      }
+
+      if (!mounted) return;
+      Navigator.pop(context, _student);
+    } catch (e) {
+      _showError('Save failed');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  // ================= UI =================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              _primaryColor.withOpacity(0.1),
-              _secondaryColor.withOpacity(0.05),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              Expanded(
-                child: Form(
-                  key: _formKey,
-                  child: ListView(
-                    padding: EdgeInsets.all(20),
-                    children: [
-                      _buildImagePicker(),
-                      SizedBox(height: 24),
-                      _buildSection('Personal Information', [
-                        _buildTextField(
-                          label: 'Full Name *',
-                          icon: Icons.person,
-                          initialValue: _student.stdName,
-                          onSaved: (value) => _student.stdName = value,
-                          validator: (value) =>
-                          value?.isEmpty == true ? 'Required' : null,
-                        ),
-                        _buildTextField(
-                          label: 'Student ID *',
-                          icon: Icons.badge,
-                          initialValue: _student.stdId,
-                          onSaved: (value) => _student.stdId = value,
-                          validator: (value) =>
-                          value?.isEmpty == true ? 'Required' : null,
-                        ),
-                        _buildDropdown(
-                          label: 'Gender *',
-                          icon: Icons.wc,
-                          value: _student.gender,
-                          items: ['Male', 'Female', 'Other'],
-                          onChanged: (value) => _student.gender = value,
-                        ),
-                        _buildTextField(
-                          label: 'Date of Birth',
-                          icon: Icons.cake,
-                          initialValue: _student.dob,
-                          onSaved: (value) => _student.dob = value,
-                          readOnly: true,
-                          onTap: () async {
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: DateTime.now(),
-                              firstDate: DateTime(1950),
-                              lastDate: DateTime.now(),
-                            );
-                            if (date != null) {
-                              setState(() {
-                                _student.dob =
-                                    DateFormat('yyyy-MM-dd').format(date);
-                              });
-                            }
-                          },
-                        ),
-                        _buildTextField(
-                          label: 'Email',
-                          icon: Icons.email,
-                          initialValue: _student.stdEmail,
-                          keyboardType: TextInputType.emailAddress,
-                          onSaved: (value) => _student.stdEmail = value,
-                        ),
-                        _buildTextField(
-                          label: 'Phone *',
-                          icon: Icons.phone,
-                          initialValue: _student.stdPhone,
-                          keyboardType: TextInputType.phone,
-                          onSaved: (value) => _student.stdPhone = value,
-                          validator: (value) =>
-                          value?.isEmpty == true ? 'Required' : null,
-                        ),
-                        _buildTextField(
-                          label: 'Address',
-                          icon: Icons.home,
-                          initialValue: _student.address,
-                          maxLines: 3,
-                          onSaved: (value) => _student.address = value,
-                        ),
-                      ]),
-                      SizedBox(height: 24),
-                      _buildSection('Academic Information', [
-                        _buildTextField(
-                          label: 'Major/Class',
-                          icon: Icons.school,
-                          initialValue: _student.major,
-                          onSaved: (value) => _student.major = value,
-                        ),
-                        _buildDropdown(
-                          label: 'Status',
-                          icon: Icons.check_circle,
-                          value: _student.aStatus == 1 ? 'Active' : 'Inactive',
-                          items: ['Active', 'Inactive'],
-                          onChanged: (value) =>
-                          _student.aStatus = value == 'Active' ? 1 : 0,
-                        ),
-                      ]),
-                      SizedBox(height: 24),
-                      _buildSection('Guardian Information', [
-                        _buildTextField(
-                          label: 'Father Name',
-                          icon: Icons.man,
-                          initialValue: _student.fatherName,
-                          onSaved: (value) => _student.fatherName = value,
-                        ),
-                        _buildTextField(
-                          label: 'Mother Name',
-                          icon: Icons.woman,
-                          initialValue: _student.motherName,
-                          onSaved: (value) => _student.motherName = value,
-                        ),
-                        _buildTextField(
-                          label: 'Guardian Phone',
-                          icon: Icons.phone,
-                          initialValue: _student.gPhone,
-                          keyboardType: TextInputType.phone,
-                          onSaved: (value) => _student.gPhone = value,
-                        ),
-                        _buildTextField(
-                          label: 'Guardian Email',
-                          icon: Icons.email,
-                          initialValue: _student.gEmail,
-                          keyboardType: TextInputType.emailAddress,
-                          onSaved: (value) => _student.gEmail = value,
-                        ),
-                      ]),
-                      SizedBox(height: 100),
-                    ],
-                  ),
+      bottomNavigationBar: _buildBottomBar(),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(),
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    _buildImagePicker(),
+
+                    const SizedBox(height: 24),
+
+                    _section("Personal Information", [
+                      _field(nameCtrl, "Full Name *", Icons.person, required: true),
+                      _field(idCtrl, "Student ID *", Icons.badge, required: true),
+
+                      _dropdown(
+                        label: "Gender",
+                        value: gender,
+                        items: ["Male", "Female", "Other"],
+                        onChanged: (v) => setState(() => gender = v),
+                      ),
+
+                      _dobField(),
+
+                      _field(emailCtrl, "Email", Icons.email),
+                      _field(phoneCtrl, "Phone *", Icons.phone, required: true),
+                      _field(addressCtrl, "Address", Icons.home, maxLines: 3),
+                    ]),
+
+                    _section("Academic", [
+                      _field(majorCtrl, "Major", Icons.school),
+                      _dropdown(
+                        label: "Status",
+                        value: status,
+                        items: ["Active", "Inactive"],
+                        onChanged: (v) => setState(() => status = v!),
+                      ),
+                    ]),
+
+                    _section("Guardian", [
+                      _field(fatherCtrl, "Father", Icons.man),
+                      _field(motherCtrl, "Mother", Icons.woman),
+                      _field(gPhoneCtrl, "Guardian Phone", Icons.phone),
+                      _field(gEmailCtrl, "Guardian Email", Icons.email),
+                    ]),
+
+                    const SizedBox(height: 100),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-      bottomNavigationBar: _buildBottomBar(),
     );
   }
 
+  // ================= UI HELPERS =================
+
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [_primaryColor, _secondaryColor],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: _primaryColor.withOpacity(0.3),
-            blurRadius: 20,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.all(20),
+      color: _primaryColor,
       child: Row(
         children: [
           IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
           ),
-          Expanded(
-            child: Text(
-              widget.student == null ? 'Add Student' : 'Edit Student',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          Text(
+            widget.student == null ? "Add Student" : "Edit Student",
+            style: const TextStyle(color: Colors.white, fontSize: 20),
+          )
         ],
       ),
     );
@@ -1619,55 +1555,20 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
     return Center(
       child: GestureDetector(
         onTap: _pickImage,
-        child: Container(
+        child: SizedBox(
           width: 140,
           height: 140,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [_primaryColor, _secondaryColor],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _primaryColor.withOpacity(0.3),
-                blurRadius: 20,
-                offset: Offset(0, 10),
-              ),
-            ],
-          ),
           child: Stack(
             children: [
-              Positioned.fill(
-                child: ClipOval(
-                  child: Container(
-                    color: Colors.white.withOpacity(0.1),
-                    child: _buildImageWidget(),
-                  ),
-                ),
-              ),
+              Positioned.fill(child: _buildImageWidget()),
               Positioned(
                 bottom: 0,
                 right: 0,
-                child: Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.camera_alt,
-                    color: _primaryColor,
-                    size: 20,
-                  ),
+                child: CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.camera_alt, color: _primaryColor),
                 ),
-              ),
+              )
             ],
           ),
         ),
@@ -1675,142 +1576,639 @@ class _StudentFormScreenState extends State<StudentFormScreen> {
     );
   }
 
-  Widget _buildSection(String title, List<Widget> children) {
+  Widget _section(String title, List<Widget> children) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: _primaryColor,
-          ),
-        ),
-        SizedBox(height: 16),
+        Text(title,
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: _primaryColor)),
+        const SizedBox(height: 12),
         ...children,
+        const SizedBox(height: 20),
       ],
     );
   }
 
-  Widget _buildTextField({
-    required String label,
-    required IconData icon,
-    String? initialValue,
-    FormFieldSetter<String>? onSaved,
-    FormFieldValidator<String>? validator,
-    TextInputType? keyboardType,
-    int maxLines = 1,
-    bool readOnly = false,
-    VoidCallback? onTap,
-  }) {
+  Widget _field(
+      TextEditingController c,
+      String label,
+      IconData icon, {
+        bool required = false,
+        int maxLines = 1,
+      }) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
-        initialValue: initialValue,
+        controller: c,
+        maxLines: maxLines,
+        validator: required ? (v) => v!.isEmpty ? "Required" : null : null,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: _primaryColor),
-          filled: true,
-          fillColor: Colors.white,
+          prefixIcon: Icon(icon),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(color: Colors.grey.shade200),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(color: _primaryColor, width: 2),
-          ),
+              borderRadius: BorderRadius.circular(12)),
         ),
-        onSaved: onSaved,
-        validator: validator,
-        keyboardType: keyboardType,
-        maxLines: maxLines,
-        readOnly: readOnly,
-        onTap: onTap,
       ),
     );
   }
 
-  Widget _buildDropdown({
+  Widget _dropdown({
     required String label,
-    required IconData icon,
-    String? value,
+    required String? value,
     required List<String> items,
     required ValueChanged<String?> onChanged,
   }) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 16),
-      child: DropdownButtonFormField<String>(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: DropdownButtonFormField(
         value: value,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, color: _primaryColor),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(color: Colors.grey.shade200),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(color: _primaryColor, width: 2),
-          ),
-        ),
         items: items
-            .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
             .toList(),
         onChanged: onChanged,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
+
+  Widget _dobField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextFormField(
+        controller: dobCtrl,
+        readOnly: true,
+        decoration: InputDecoration(
+          labelText: "Date of Birth",
+          prefixIcon: const Icon(Icons.cake),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12)),
+        ),
+        onTap: () async {
+          final date = await showDatePicker(
+            context: context,
+            initialDate: DateTime.now(),
+            firstDate: DateTime(1950),
+            lastDate: DateTime.now(),
+          );
+
+          if (date != null) {
+            dobCtrl.text = DateFormat('yyyy-MM-dd').format(date);
+          }
+        },
       ),
     );
   }
 
   Widget _buildBottomBar() {
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, -5),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: ElevatedButton(
-          onPressed: _isLoading ? null : _saveStudent,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _primaryColor,
-            padding: EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-          ),
-          child: _isLoading
-              ? SizedBox(
-            height: 20,
-            width: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation(Colors.white),
-            ),
-          )
-              : Text(
-            widget.student == null ? 'Add Student' : 'Update Student',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _saveStudent,
+        child: _isLoading
+            ? const CircularProgressIndicator(color: Colors.white)
+            : Text(widget.student == null ? "Add Student" : "Update Student"),
       ),
     );
   }
 }
+
+// // ============= STUDENT FORM SCREEN =============
+// class StudentFormScreen extends StatefulWidget {
+//   final Student? student;
+//   final String schoolId;
+//   final bool isOnline;
+//
+//   const StudentFormScreen({
+//     Key? key,
+//     this.student,
+//     required this.schoolId,
+//     required this.isOnline,
+//   }) : super(key: key);
+//
+//   @override
+//   State<StudentFormScreen> createState() => _StudentFormScreenState();
+// }
+//
+// class _StudentFormScreenState extends State<StudentFormScreen> {
+//   final _formKey = GlobalKey<FormState>();
+//   late Student _student;
+//   File? _imageFile;
+//   bool _isLoading = false;
+//   final Color _primaryColor = const Color(0xFF667eea);
+//   final Color _secondaryColor = const Color(0xFF764ba2);
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//     _student = widget.student ?? Student();
+//   }
+//
+//   Future<void> _pickImage() async {
+//     try {
+//       final ImagePicker picker = ImagePicker();
+//       final XFile? image = await picker.pickImage(
+//         source: ImageSource.gallery,
+//         maxWidth: 800,
+//         imageQuality: 85,
+//       );
+//       if (image != null) {
+//         setState(() {
+//           _imageFile = File(image.path);
+//         });
+//       }
+//     } catch (e) {
+//       print('Error picking image: $e');
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text('Error picking image: $e')),
+//       );
+//     }
+//   }
+//
+//   Future<void> _saveStudent() async {
+//     if (!_formKey.currentState!.validate()) return;
+//     _formKey.currentState!.save();
+//
+//     setState(() => _isLoading = true);
+//
+//     try {
+//       // Save image locally if picked
+//       if (_imageFile != null) {
+//         final studentId = _student.stdId ?? DateTime.now().millisecondsSinceEpoch.toString();
+//         final imagePath = await ImageHandler.saveImageLocally(_imageFile!, studentId);
+//         _student.imagePath = imagePath;
+//         _student.imageSyncStatus = widget.isOnline ? 1 : 0;
+//
+//         // Convert to base64 for Firebase if online
+//         if (widget.isOnline) {
+//           final base64Image = await ImageHandler.convertImageToBase64(imagePath);
+//           if (base64Image != null) {
+//             _student.stdImg = base64Image;
+//           }
+//         }
+//       }
+//
+//       Navigator.pop(context, _student);
+//     } catch (e) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text('Error saving student: $e')),
+//       );
+//     } finally {
+//       setState(() => _isLoading = false);
+//     }
+//   }
+//
+//   Widget _buildImageWidget() {
+//     if (_imageFile != null) {
+//       return ClipOval(
+//         child: Image.file(
+//           _imageFile!,
+//           fit: BoxFit.cover,
+//           width: 120,
+//           height: 120,
+//         ),
+//       );
+//     } else if (_student.stdImg != null && _student.stdImg!.isNotEmpty) {
+//       if (_student.stdImg!.startsWith('http')) {
+//         return ClipOval(
+//           child: CachedNetworkImage(
+//             imageUrl: _student.stdImg!,
+//             fit: BoxFit.cover,
+//             width: 120,
+//             height: 120,
+//             placeholder: (context, url) => Container(
+//               color: Colors.grey[200],
+//               child: Icon(Icons.person, size: 40, color: Colors.grey),
+//             ),
+//             errorWidget: (context, url, error) => Container(
+//               color: Colors.grey[200],
+//               child: Icon(Icons.error, size: 40, color: Colors.grey),
+//             ),
+//           ),
+//         );
+//       } else {
+//         // Base64 image from Firebase
+//         return Container(
+//           color: Colors.grey[200],
+//           child: Icon(Icons.person, size: 40, color: Colors.grey),
+//         );
+//       }
+//     } else if (_student.imagePath != null) {
+//       return ClipOval(
+//         child: Image.file(
+//           File(_student.imagePath!),
+//           fit: BoxFit.cover,
+//           width: 120,
+//           height: 120,
+//           errorBuilder: (context, error, stackTrace) => Container(
+//             color: Colors.grey[200],
+//             child: Icon(Icons.person, size: 40, color: Colors.grey),
+//           ),
+//         ),
+//       );
+//     } else {
+//       return Container(
+//         width: 120,
+//         height: 120,
+//         decoration: BoxDecoration(
+//           shape: BoxShape.circle,
+//           color: Colors.grey[200],
+//         ),
+//         child: Icon(Icons.camera_alt, color: Colors.white, size: 40),
+//       );
+//     }
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       body: Container(
+//         decoration: BoxDecoration(
+//           gradient: LinearGradient(
+//             begin: Alignment.topLeft,
+//             end: Alignment.bottomRight,
+//             colors: [
+//               _primaryColor.withOpacity(0.1),
+//               _secondaryColor.withOpacity(0.05),
+//             ],
+//           ),
+//         ),
+//         child: SafeArea(
+//           child: Column(
+//             children: [
+//               _buildHeader(),
+//               Expanded(
+//                 child: Form(
+//                   key: _formKey,
+//                   child: ListView(
+//                     padding: EdgeInsets.all(20),
+//                     children: [
+//                       _buildImagePicker(),
+//                       SizedBox(height: 24),
+//                       _buildSection('Personal Information', [
+//                         _buildTextField(
+//                           label: 'Full Name *',
+//                           icon: Icons.person,
+//                           initialValue: _student.stdName,
+//                           onSaved: (value) => _student.stdName = value,
+//                           validator: (value) =>
+//                           value?.isEmpty == true ? 'Required' : null,
+//                         ),
+//                         _buildTextField(
+//                           label: 'Student ID *',
+//                           icon: Icons.badge,
+//                           initialValue: _student.stdId,
+//                           onSaved: (value) => _student.stdId = value,
+//                           validator: (value) =>
+//                           value?.isEmpty == true ? 'Required' : null,
+//                         ),
+//                         _buildDropdown(
+//                           label: 'Gender *',
+//                           icon: Icons.wc,
+//                           value: _student.gender,
+//                           items: ['Male', 'Female', 'Other'],
+//                           onChanged: (value) => _student.gender = value,
+//                         ),
+//                         _buildTextField(
+//                           label: 'Date of Birth',
+//                           icon: Icons.cake,
+//                           initialValue: _student.dob,
+//                           onSaved: (value) => _student.dob = value,
+//                           readOnly: true,
+//                           onTap: () async {
+//                             final date = await showDatePicker(
+//                               context: context,
+//                               initialDate: DateTime.now(),
+//                               firstDate: DateTime(1950),
+//                               lastDate: DateTime.now(),
+//                             );
+//                             if (date != null) {
+//                               setState(() {
+//                                 _student.dob =
+//                                     DateFormat('yyyy-MM-dd').format(date);
+//                               });
+//                             }
+//                           },
+//                         ),
+//                         _buildTextField(
+//                           label: 'Email',
+//                           icon: Icons.email,
+//                           initialValue: _student.stdEmail,
+//                           keyboardType: TextInputType.emailAddress,
+//                           onSaved: (value) => _student.stdEmail = value,
+//                         ),
+//                         _buildTextField(
+//                           label: 'Phone *',
+//                           icon: Icons.phone,
+//                           initialValue: _student.stdPhone,
+//                           keyboardType: TextInputType.phone,
+//                           onSaved: (value) => _student.stdPhone = value,
+//                           validator: (value) =>
+//                           value?.isEmpty == true ? 'Required' : null,
+//                         ),
+//                         _buildTextField(
+//                           label: 'Address',
+//                           icon: Icons.home,
+//                           initialValue: _student.address,
+//                           maxLines: 3,
+//                           onSaved: (value) => _student.address = value,
+//                         ),
+//                       ]),
+//                       SizedBox(height: 24),
+//                       _buildSection('Academic Information', [
+//                         _buildTextField(
+//                           label: 'Major/Class',
+//                           icon: Icons.school,
+//                           initialValue: _student.major,
+//                           onSaved: (value) => _student.major = value,
+//                         ),
+//                         _buildDropdown(
+//                           label: 'Status',
+//                           icon: Icons.check_circle,
+//                           value: _student.aStatus == 1 ? 'Active' : 'Inactive',
+//                           items: ['Active', 'Inactive'],
+//                           onChanged: (value) =>
+//                           _student.aStatus = value == 'Active' ? 1 : 0,
+//                         ),
+//                       ]),
+//                       SizedBox(height: 24),
+//                       _buildSection('Guardian Information', [
+//                         _buildTextField(
+//                           label: 'Father Name',
+//                           icon: Icons.man,
+//                           initialValue: _student.fatherName,
+//                           onSaved: (value) => _student.fatherName = value,
+//                         ),
+//                         _buildTextField(
+//                           label: 'Mother Name',
+//                           icon: Icons.woman,
+//                           initialValue: _student.motherName,
+//                           onSaved: (value) => _student.motherName = value,
+//                         ),
+//                         _buildTextField(
+//                           label: 'Guardian Phone',
+//                           icon: Icons.phone,
+//                           initialValue: _student.gPhone,
+//                           keyboardType: TextInputType.phone,
+//                           onSaved: (value) => _student.gPhone = value,
+//                         ),
+//                         _buildTextField(
+//                           label: 'Guardian Email',
+//                           icon: Icons.email,
+//                           initialValue: _student.gEmail,
+//                           keyboardType: TextInputType.emailAddress,
+//                           onSaved: (value) => _student.gEmail = value,
+//                         ),
+//                       ]),
+//                       SizedBox(height: 100),
+//                     ],
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//       bottomNavigationBar: _buildBottomBar(),
+//     );
+//   }
+//
+//   Widget _buildHeader() {
+//     return Container(
+//       padding: EdgeInsets.all(20),
+//       decoration: BoxDecoration(
+//         gradient: LinearGradient(
+//           colors: [_primaryColor, _secondaryColor],
+//         ),
+//         boxShadow: [
+//           BoxShadow(
+//             color: _primaryColor.withOpacity(0.3),
+//             blurRadius: 20,
+//             offset: Offset(0, 10),
+//           ),
+//         ],
+//       ),
+//       child: Row(
+//         children: [
+//           IconButton(
+//             icon: Icon(Icons.arrow_back, color: Colors.white),
+//             onPressed: () => Navigator.pop(context),
+//           ),
+//           Expanded(
+//             child: Text(
+//               widget.student == null ? 'Add Student' : 'Edit Student',
+//               style: TextStyle(
+//                 color: Colors.white,
+//                 fontSize: 24,
+//                 fontWeight: FontWeight.bold,
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+//
+//   Widget _buildImagePicker() {
+//     return Center(
+//       child: GestureDetector(
+//         onTap: _pickImage,
+//         child: Container(
+//           width: 140,
+//           height: 140,
+//           decoration: BoxDecoration(
+//             shape: BoxShape.circle,
+//             gradient: LinearGradient(
+//               colors: [_primaryColor, _secondaryColor],
+//             ),
+//             boxShadow: [
+//               BoxShadow(
+//                 color: _primaryColor.withOpacity(0.3),
+//                 blurRadius: 20,
+//                 offset: Offset(0, 10),
+//               ),
+//             ],
+//           ),
+//           child: Stack(
+//             children: [
+//               Positioned.fill(
+//                 child: ClipOval(
+//                   child: Container(
+//                     color: Colors.white.withOpacity(0.1),
+//                     child: _buildImageWidget(),
+//                   ),
+//                 ),
+//               ),
+//               Positioned(
+//                 bottom: 0,
+//                 right: 0,
+//                 child: Container(
+//                   padding: EdgeInsets.all(8),
+//                   decoration: BoxDecoration(
+//                     color: Colors.white,
+//                     shape: BoxShape.circle,
+//                     boxShadow: [
+//                       BoxShadow(
+//                         color: Colors.black.withOpacity(0.2),
+//                         blurRadius: 4,
+//                         offset: Offset(0, 2),
+//                       ),
+//                     ],
+//                   ),
+//                   child: Icon(
+//                     Icons.camera_alt,
+//                     color: _primaryColor,
+//                     size: 20,
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+//
+//   Widget _buildSection(String title, List<Widget> children) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Text(
+//           title,
+//           style: TextStyle(
+//             fontSize: 18,
+//             fontWeight: FontWeight.bold,
+//             color: _primaryColor,
+//           ),
+//         ),
+//         SizedBox(height: 16),
+//         ...children,
+//       ],
+//     );
+//   }
+//
+//   Widget _buildTextField({
+//     required String label,
+//     required IconData icon,
+//     String? initialValue,
+//     FormFieldSetter<String>? onSaved,
+//     FormFieldValidator<String>? validator,
+//     TextInputType? keyboardType,
+//     int maxLines = 1,
+//     bool readOnly = false,
+//     VoidCallback? onTap,
+//   }) {
+//     return Padding(
+//       padding: EdgeInsets.only(bottom: 16),
+//       child: TextFormField(
+//         initialValue: initialValue,
+//         decoration: InputDecoration(
+//           labelText: label,
+//           prefixIcon: Icon(icon, color: _primaryColor),
+//           filled: true,
+//           fillColor: Colors.white,
+//           border: OutlineInputBorder(
+//             borderRadius: BorderRadius.circular(15),
+//             borderSide: BorderSide.none,
+//           ),
+//           enabledBorder: OutlineInputBorder(
+//             borderRadius: BorderRadius.circular(15),
+//             borderSide: BorderSide(color: Colors.grey.shade200),
+//           ),
+//           focusedBorder: OutlineInputBorder(
+//             borderRadius: BorderRadius.circular(15),
+//             borderSide: BorderSide(color: _primaryColor, width: 2),
+//           ),
+//         ),
+//         onSaved: onSaved,
+//         validator: validator,
+//         keyboardType: keyboardType,
+//         maxLines: maxLines,
+//         readOnly: readOnly,
+//         onTap: onTap,
+//       ),
+//     );
+//   }
+//
+//   Widget _buildDropdown({
+//     required String label,
+//     required IconData icon,
+//     String? value,
+//     required List<String> items,
+//     required ValueChanged<String?> onChanged,
+//   }) {
+//     return Padding(
+//       padding: EdgeInsets.only(bottom: 16),
+//       child: DropdownButtonFormField<String>(
+//         value: value,
+//         decoration: InputDecoration(
+//           labelText: label,
+//           prefixIcon: Icon(icon, color: _primaryColor),
+//           filled: true,
+//           fillColor: Colors.white,
+//           border: OutlineInputBorder(
+//             borderRadius: BorderRadius.circular(15),
+//             borderSide: BorderSide.none,
+//           ),
+//           enabledBorder: OutlineInputBorder(
+//             borderRadius: BorderRadius.circular(15),
+//             borderSide: BorderSide(color: Colors.grey.shade200),
+//           ),
+//           focusedBorder: OutlineInputBorder(
+//             borderRadius: BorderRadius.circular(15),
+//             borderSide: BorderSide(color: _primaryColor, width: 2),
+//           ),
+//         ),
+//         items: items
+//             .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+//             .toList(),
+//         onChanged: onChanged,
+//       ),
+//     );
+//   }
+//
+//   Widget _buildBottomBar() {
+//     return Container(
+//       padding: EdgeInsets.all(20),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.05),
+//             blurRadius: 10,
+//             offset: Offset(0, -5),
+//           ),
+//         ],
+//       ),
+//       child: SafeArea(
+//         child: ElevatedButton(
+//           onPressed: _isLoading ? null : _saveStudent,
+//           style: ElevatedButton.styleFrom(
+//             backgroundColor: _primaryColor,
+//             padding: EdgeInsets.symmetric(vertical: 16),
+//             shape: RoundedRectangleBorder(
+//               borderRadius: BorderRadius.circular(15),
+//             ),
+//           ),
+//           child: _isLoading
+//               ? SizedBox(
+//             height: 20,
+//             width: 20,
+//             child: CircularProgressIndicator(
+//               strokeWidth: 2,
+//               valueColor: AlwaysStoppedAnimation(Colors.white),
+//             ),
+//           )
+//               : Text(
+//             widget.student == null ? 'Add Student' : 'Update Student',
+//             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
