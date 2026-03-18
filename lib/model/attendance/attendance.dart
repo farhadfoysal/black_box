@@ -1,123 +1,85 @@
 class Attendance {
   int? _id;
   String _uniqueId;
-  String _userId;
-  String _sheetId;
-  String _sId;
-  String _time;
-  int _exitIn; // '1', '0', '3', or '2'
+  String _studentId;
+  String _sCourseId;
   DateTime _attendDate;
   String _date;
-  String _status; // 'p present', 'a absent', 'e exit', or 'i in'
+  String _status; // P / A
+  int _marks; // ✅ FIXED
+  int? _syncStatus;
 
-  // Constructor
+
   Attendance({
     int? id,
     required String uniqueId,
-    required String userId,
-    required String sheetId,
-    required String sId,
-    required String time,
-    required int exitIn,
+    required String studentId,
+    required String sCourseId,
     required DateTime attendDate,
     required String date,
     required String status,
+    int marks = 0, // ✅ default
+    int? syncStatus,
   })  : _id = id,
         _uniqueId = uniqueId,
-        _userId = userId,
-        _sheetId = sheetId,
-        _sId = sId,
-        _time = time,
-        _exitIn = exitIn,
+        _studentId = studentId,
+        _sCourseId = sCourseId,
         _attendDate = attendDate,
         _date = date,
-        _status = status;
+        _status = status,
+        _marks = marks,
+        _syncStatus = syncStatus;
 
   // Getters
   int? get id => _id;
   String get uniqueId => _uniqueId;
-  String get userId => _userId;
-  String get sheetId => _sheetId;
-  String get sId => _sId;
-  String get time => _time;
-  int get exitIn => _exitIn;
+  String get studentId => _studentId;
+  String get sCourseId => _sCourseId;
   DateTime get attendDate => _attendDate;
   String get date => _date;
   String get status => _status;
+  int get marks => _marks;
 
   // Setters
   set id(int? id) => _id = id;
-  set uniqueId(String uniqueId) => _uniqueId = uniqueId;
-  set userId(String userId) => _userId = userId;
-  set sheetId(String sheetId) => _sheetId = sheetId;
-  set messId(String sId) => _sId = _sId;
-  set time(String time) => _time = time;
-  set exitIn(int exitIn) => _exitIn = exitIn;
-  set attendDate(DateTime attendDate) => _attendDate = attendDate;
-  set date(String date) => _date = date;
-  set status(String status) => _status = status;
+  set uniqueId(String v) => _uniqueId = v;
+  set studentId(String v) => _studentId = v;
+  set sCourseId(String v) => _sCourseId = v;
+  set attendDate(DateTime v) => _attendDate = v;
+  set date(String v) => _date = v;
+  set status(String v) => _status = v;
+  set marks(int v) => _marks = v;
+  set syncStatus(int v) => _syncStatus = v;
 
-  // Convert to Map
+  // Map
   Map<String, dynamic> toMap() {
     return {
       'id': _id,
       'unique_id': _uniqueId,
-      'user_id': _userId,
-      'sheet_id': _sheetId,
-      'sId': _sId,
-      'time': _time,
-      'exit_in': _exitIn,
+      'student_id': _studentId,
+      'sCourseId': _sCourseId,
       'attend_date': _attendDate.toIso8601String(),
       'date': _date,
       'status': _status,
+      'marks': _marks, // ✅ added
+      'sync_status': _syncStatus,
     };
   }
 
-  // Convert from Map
-  static Attendance fromMap(Map<String, dynamic> map) {
+  // From Map
+  factory Attendance.fromMap(Map<String, dynamic> map) {
     return Attendance(
       id: map['id'],
       uniqueId: map['unique_id'] ?? '',
-      userId: map['user_id'] ?? '',
-      sheetId: map['sheet_id'] ?? '',
-      sId: map['_sId'] ?? '',
-      time: map['time'] ?? '',
-      exitIn: map['exit_in'] ?? 0,
-      attendDate: DateTime.parse(map['attend_date'] ?? ''),
+      studentId: map['student_id'] ?? '',
+      sCourseId: map['sCourseId'] ?? '',
+      attendDate: map['attend_date'] != null
+          ? DateTime.parse(map['attend_date'])
+          : DateTime.now(),
       date: map['date'] ?? '',
-      status: map['status'] ?? '',
-    );
-  }
-
-  // Convert to JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'id': _id,
-      'unique_id': _uniqueId,
-      'user_id': _userId,
-      'sheet_id': _sheetId,
-      'sId': _sId,
-      'time': _time,
-      'exit_in': _exitIn,
-      'attend_date': _attendDate.toIso8601String(),
-      'date': _date,
-      'status': _status,
-    };
-  }
-
-  // Convert from JSON
-  factory Attendance.fromJson(Map<String, dynamic> json) {
-    return Attendance(
-      id: json['id'],
-      uniqueId: json['unique_id'] ?? '',
-      userId: json['user_id'] ?? '',
-      sheetId: json['sheet_id'] ?? '',
-      sId: json['_sId'] ?? '',
-      time: json['time'] ?? '',
-      exitIn: json['exit_in'] ?? 0,
-      attendDate: DateTime.parse(json['attend_date'] ?? ''),
-      date: json['date'] ?? '',
-      status: json['status'] ?? '',
+      status: map['status'] ?? 'P',
+      marks: map['marks'] ?? 0,
+      syncStatus: map['sync_status'],
     );
   }
 }

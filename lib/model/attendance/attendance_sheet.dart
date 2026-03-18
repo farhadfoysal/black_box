@@ -7,7 +7,7 @@ class AttendanceSheet {
   String? _subjectId;
   int? _secId;
   String? _sectionId;
-  String? _clsId;
+  String? _cId;
   String? _teacherId;
   String? _date;
   String? _time;
@@ -25,7 +25,7 @@ class AttendanceSheet {
     String? subjectId,
     int? secId,
     String? sectionId,
-    String? clsId,
+    String? cId,
     String? teacherId,
     String? date,
     String? time,
@@ -41,7 +41,7 @@ class AttendanceSheet {
         _subjectId = subjectId,
         _secId = secId,
         _sectionId = sectionId,
-        _clsId = clsId,
+        _cId = cId,
         _teacherId = teacherId,
         _date = date,
         _time = time,
@@ -59,7 +59,7 @@ class AttendanceSheet {
   String? get subjectId => _subjectId;
   int? get secId => _secId;
   String? get sectionId => _sectionId;
-  String? get clsId => _clsId;
+  String? get cId => _cId;
   String? get teacherId => _teacherId;
   String? get date => _date;
   String? get time => _time;
@@ -77,7 +77,7 @@ class AttendanceSheet {
   set subjectId(String? subjectId) => _subjectId = subjectId;
   set secId(int? secId) => _secId = secId;
   set sectionId(String? sectionId) => _sectionId = sectionId;
-  set clsId(String? clsId) => _clsId = clsId;
+  set cId(String? cId) => _cId = cId;
   set teacherId(String? teacherId) => _teacherId = teacherId;
   set date(String? date) => _date = date;
   set time(String? time) => _time = time;
@@ -96,7 +96,7 @@ class AttendanceSheet {
       'subjectId': _subjectId,
       'secId': _secId,
       'sectionId': _sectionId,
-      'clsId': _clsId,
+      'cId': _cId,
       'teacherId': _teacherId,
       'date': _date,
       'time': _time,
@@ -117,7 +117,7 @@ class AttendanceSheet {
       subjectId: map['subjectId'],
       secId: map['secId'],
       sectionId: map['sectionId'],
-      clsId: map['clsId'],
+      cId: map['cId'],
       teacherId: map['teacherId'],
       date: map['date'],
       time: map['time'],

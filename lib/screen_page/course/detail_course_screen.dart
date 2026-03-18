@@ -30,6 +30,7 @@ import '../../style/color/app_color.dart';
 import '../../utility/unique.dart';
 import '../exam/exam_results_page.dart';
 import 'course_manager_page.dart';
+import 'omr_fv/screens/attendance_performance_screen.dart';
 
 class DetailCourseScreen extends StatefulWidget {
   final CourseModel course;
@@ -547,6 +548,21 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
     }
   }
 
+  void goToAttendance({
+    required BuildContext context,
+    required String courseId,
+  }) {
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AttendancePerformanceScreen(
+          courseId: courseId ?? '',
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -620,54 +636,81 @@ class _DetailCourseScreenState extends State<DetailCourseScreen>
                       ),
                       textAlign: TextAlign.center,
                     ),
+
                     const SizedBox(height: 16),
-                    TextButton.icon(
-                      onPressed: () {
-                        final firstVideoUrl =
-                            course.sections?.first.materials?.first.url ?? '';
-                        final videoId =
-                            YoutubePlayer.convertUrlToId(firstVideoUrl);
-                        if (videoId != null) {
-                          showDialog(
-                            context: context,
-                            builder: (_) => SimpleDialog(
-                              contentPadding: EdgeInsets.zero,
-                              children: [
-                                SizedBox(
-                                  height: 200,
-                                  child: YoutubePlayer(
-                                    controller: YoutubePlayerController(
-                                      initialVideoId: videoId,
-                                      flags: const YoutubePlayerFlags(
-                                          autoPlay: true),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () {
+                            final firstVideoUrl =
+                                course.sections?.first.materials?.first.url ?? '';
+                            final videoId =
+                                YoutubePlayer.convertUrlToId(firstVideoUrl);
+                            if (videoId != null) {
+                              showDialog(
+                                context: context,
+                                builder: (_) => SimpleDialog(
+                                  contentPadding: EdgeInsets.zero,
+                                  children: [
+                                    SizedBox(
+                                      height: 200,
+                                      child: YoutubePlayer(
+                                        controller: YoutubePlayerController(
+                                          initialVideoId: videoId,
+                                          flags: const YoutubePlayerFlags(
+                                              autoPlay: true),
+                                        ),
+                                        bottomActions: const [
+                                          CurrentPosition(),
+                                          ProgressBar(isExpanded: true),
+                                          RemainingDuration(),
+                                        ],
+                                      ),
                                     ),
-                                    bottomActions: const [
-                                      CurrentPosition(),
-                                      ProgressBar(isExpanded: true),
-                                      RemainingDuration(),
-                                    ],
-                                  ),
+                                  ],
                                 ),
-                              ],
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.play_circle_outline_outlined,
+                              color: AppColors.textLight),
+                          label: const Text(
+                            'Preview Course',
+                            style: TextStyle(
+                              color: AppColors.textLight,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
                             ),
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.play_circle_outline_outlined,
-                          color: AppColors.textLight),
-                      label: const Text(
-                        'Preview Course',
-                        style: TextStyle(
-                          color: AppColors.textLight,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                          ),
                         ),
-                      ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
+                        const SizedBox(height: 16),
+                        TextButton.icon(
+                          onPressed: () {
+                              goToAttendance(context: context, courseId: widget.course.uniqueId ?? '');
+                          },
+                          icon: const Icon(Icons.present_to_all_rounded,
+                              color: AppColors.textLight),
+                          label: const Text(
+                            'Preview Attendance',
+                            style: TextStyle(
+                              color: AppColors.textLight,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 14,
+                            ),
+                          ),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
