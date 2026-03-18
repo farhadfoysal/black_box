@@ -2,6 +2,7 @@ import 'package:black_box/screen_page/course/omr_fv/screens/course_management_sc
 import 'package:black_box/screen_page/course/omr_fv/screens/student_management_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../utility/clean.dart';
 import '../../screen/course_students.dart';
 import '../services/database_service.dart';
 import '../models/omr_sheet_model.dart';
@@ -197,6 +198,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 subtitle: 'View course',
                 color: Color(0xFFEEA5FF),
                 onTap: () {
+
+                  // confirmFullReset(context);
+
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => CourseManagementScreen()),
