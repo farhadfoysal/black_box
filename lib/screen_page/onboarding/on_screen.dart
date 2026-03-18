@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import '../../preference/logout.dart';
+import '../../routes/routes.dart';
 import 'get_start.dart';
 import 'screen/intro_four.dart';
 import 'screen/intro_one.dart';
@@ -28,6 +31,33 @@ class OnScreenState extends State<OnScreen> {
   String buttonText = "Skip";
   int currentPage = 0;
   PageController pageController = PageController();
+
+  @override
+  Future<void> initState() async {
+    await checkLoginStatus();
+    super.initState();
+  }
+
+  Future<void> checkLoginStatus() async {
+
+    bool isLoggedIn = await Logout().isLoggedIn();
+
+    if (isLoggedIn) {
+
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => HomeScreen(),
+      //   ),
+      // );
+
+      context.goNamed(Routes.homePage);
+
+    } else {
+      // User is not logged in, stay on the sign-in screen
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
