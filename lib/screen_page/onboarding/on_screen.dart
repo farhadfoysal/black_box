@@ -33,8 +33,8 @@ class OnScreenState extends State<OnScreen> {
   PageController pageController = PageController();
 
   @override
-  Future<void> initState() async {
-    await checkLoginStatus();
+  void initState() {
+    checkLoginStatus();
     super.initState();
   }
 

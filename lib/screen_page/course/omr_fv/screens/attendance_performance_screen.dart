@@ -13,10 +13,7 @@ import '../../../../services/attendance/attendance_sync.dart';
 class AttendancePerformanceScreen extends StatefulWidget {
   final String courseId;
 
-  const AttendancePerformanceScreen({
-    super.key,
-    required this.courseId,
-  });
+  const AttendancePerformanceScreen({super.key, required this.courseId});
 
   @override
   State<AttendancePerformanceScreen> createState() =>
@@ -35,6 +32,7 @@ class _AttendancePerformanceScreenState
 
   bool _isLoadingStudents = false;
   bool _isLoadingAttendance = false;
+  Map<String, TextEditingController> _controllers = {};
 
   @override
   void initState() {
@@ -83,10 +81,7 @@ class _AttendancePerformanceScreenState
         .get();
 
     _students = snapshot.docs
-        .map((doc) => Student.fromMap({
-      ...doc.data(),
-      'uniqueId': doc.id,
-    }))
+        .map((doc) => Student.fromMap({...doc.data(), 'uniqueId': doc.id}))
         .toList();
 
     for (var s in _students) {
@@ -106,8 +101,7 @@ class _AttendancePerformanceScreenState
 
     final date = DateFormat('yyyy-MM-dd').format(selectedDate);
 
-    final local =
-    await AttendanceDatabase.getByDate(date, widget.courseId);
+    final local = await AttendanceDatabase.getByDate(date, widget.courseId);
 
     attendanceMap.clear();
 
@@ -117,8 +111,7 @@ class _AttendancePerformanceScreenState
         attendanceMap[a.studentId] = a;
       }
     } else if (isOnline) {
-      final remote =
-      await AttendanceService().getByDate(date, widget.courseId);
+      final remote = await AttendanceService().getByDate(date, widget.courseId);
 
       for (var a in remote) {
         attendanceMap[a.studentId] = a;
@@ -133,7 +126,7 @@ class _AttendancePerformanceScreenState
 
       attendanceMap.putIfAbsent(
         id,
-            () => Attendance(
+        () => Attendance(
           uniqueId: "${id}_$date",
           studentId: id,
           sCourseId: widget.courseId,
@@ -162,8 +155,9 @@ class _AttendancePerformanceScreenState
       }
     }
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text("Saved")));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Saved")));
   }
 
   // ================= DELETE =================
@@ -192,8 +186,19 @@ class _AttendancePerformanceScreenState
     final a = attendanceMap[id];
     if (a == null) return;
 
-    setState(() => a.marks = (a.marks + d).clamp(0, 100));
+    setState(() {
+      a.marks = (a.marks + d).clamp(0, 100);
+
+      _controllers[id]?.text = a.marks.toString();
+    });
   }
+
+  // void changeMarks(String id, int d) {
+  //   final a = attendanceMap[id];
+  //   if (a == null) return;
+  //
+  //   setState(() => a.marks = (a.marks + d).clamp(0, 100));
+  // }
 
   Future<void> pickDate() async {
     final d = await showDatePicker(
@@ -234,20 +239,30 @@ class _AttendancePerformanceScreenState
     );
   }
 
+  @override
+  void dispose() {
+    for (var c in _controllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
   // ================= UI =================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton:
-      FloatingActionButton(onPressed: _save, child: const Icon(Icons.save)),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _save,
+        child: const Icon(Icons.save),
+      ),
       appBar: AppBar(
         title: const Text("Attendance"),
         actions: [
           IconButton(
             icon: const Icon(Icons.sync),
             onPressed: () => AttendanceSync.sync(widget.courseId),
-          )
+          ),
         ],
       ),
       body: Stack(
@@ -262,9 +277,7 @@ class _AttendancePerformanceScreenState
 
               // ✅ EMPTY STATE
               if (_students.isEmpty)
-                const Expanded(
-                  child: Center(child: Text("No students found")),
-                )
+                const Expanded(child: Center(child: Text("No students found")))
               else
                 Expanded(
                   child: RefreshIndicator(
@@ -279,15 +292,17 @@ class _AttendancePerformanceScreenState
                           return const SizedBox();
                         }
 
-                        final a = attendanceMap[studentId] ??
+                        final a =
+                            attendanceMap[studentId] ??
                             Attendance(
                               uniqueId:
-                              "${studentId}_${selectedDate.toString()}",
+                                  "${studentId}_${selectedDate.toString()}",
                               studentId: studentId,
                               sCourseId: widget.courseId,
                               attendDate: selectedDate,
-                              date: DateFormat('yyyy-MM-dd')
-                                  .format(selectedDate),
+                              date: DateFormat(
+                                'yyyy-MM-dd',
+                              ).format(selectedDate),
                               status: 'P',
                               marks: 0,
                             );
@@ -296,44 +311,102 @@ class _AttendancePerformanceScreenState
                           margin: const EdgeInsets.all(8),
                           child: ListTile(
                             title: Text(s.stdName ?? ""),
-                            // subtitle: Text("Marks: ${a.marks}"),
                             subtitle: Row(
-                          children: [
-                          const Text("Marks: "),
+                              children: [
+                                const Text("Marks: "),
 
-                          // ➖ Decrease button
-                          IconButton(
-                            icon: const Icon(Icons.remove),
-                            onPressed: () => changeMarks(studentId, -1),
-                          ),
+                                // ➖ Decrease button
+                                IconButton(
+                                  icon: const Icon(Icons.remove),
+                                  onPressed: () => changeMarks(studentId, -1),
+                                ),
 
-                          // 🔢 Input field
-                          SizedBox(
-                            width: 50,
-                            child: TextFormField(
-                              initialValue: a.marks.toString(),
-                              keyboardType: TextInputType.number,
-                              textAlign: TextAlign.center,
-                              onChanged: (value) {
-                                final val = int.tryParse(value) ?? 0;
-                                setState(() {
-                                  a.marks = val.clamp(0, 100);
-                                });
-                              },
-                              decoration: const InputDecoration(
-                                contentPadding: EdgeInsets.symmetric(vertical: 4),
-                                border: OutlineInputBorder(),
-                              ),
+                                // 🔢 Input field with controller
+                                SizedBox(
+                                  width: 60,
+                                  child: Builder(
+                                    builder: (_) {
+                                      _controllers.putIfAbsent(
+                                        studentId,
+                                            () => TextEditingController(text: a.marks.toString()),
+                                      );
+
+                                      final controller = _controllers[studentId]!;
+
+                                      // ✅ Sync controller with latest value
+                                      controller.value = controller.value.copyWith(
+                                        text: a.marks.toString(),
+                                        selection: TextSelection.collapsed(
+                                          offset: a.marks.toString().length,
+                                        ),
+                                      );
+
+                                      return TextFormField(
+                                        controller: controller,
+                                        keyboardType: TextInputType.number,
+                                        textAlign: TextAlign.center,
+                                        onChanged: (value) {
+                                          final val = int.tryParse(value) ?? 0;
+                                          a.marks = val.clamp(0, 100);
+                                        },
+                                        decoration: const InputDecoration(
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+
+                                // ➕ Increase button
+                                IconButton(
+                                  icon: const Icon(Icons.add),
+                                  onPressed: () => changeMarks(studentId, 1),
+                                ),
+                              ],
                             ),
-                          ),
+                            // subtitle: Text("Marks: ${a.marks}"),
+                            // subtitle: Row(
+                            //   children: [
+                            //     const Text("Marks: "),
+                            //
+                            //     // ➖ Decrease button
+                            //     IconButton(
+                            //       icon: const Icon(Icons.remove),
+                            //       onPressed: () => changeMarks(studentId, -1),
+                            //     ),
+                            //
+                            //     // 🔢 Input field
+                            //     SizedBox(
+                            //       width: 50,
+                            //       child: TextFormField(
+                            //         initialValue: a.marks.toString(),
+                            //         keyboardType: TextInputType.number,
+                            //         textAlign: TextAlign.center,
+                            //         onChanged: (value) {
+                            //           final val = int.tryParse(value) ?? 0;
+                            //           setState(() {
+                            //             a.marks = val.clamp(0, 100);
+                            //           });
+                            //         },
+                            //         decoration: const InputDecoration(
+                            //           contentPadding: EdgeInsets.symmetric(
+                            //             vertical: 4,
+                            //           ),
+                            //           border: OutlineInputBorder(),
+                            //         ),
+                            //       ),
+                            //     ),
+                            //
+                            //     // ➕ Increase button
+                            //     IconButton(
+                            //       icon: const Icon(Icons.add),
+                            //       onPressed: () => changeMarks(studentId, 1),
+                            //     ),
+                            //   ],
+                            // ),
 
-                          // ➕ Increase button
-                          IconButton(
-                            icon: const Icon(Icons.add),
-                            onPressed: () => changeMarks(studentId, 1),
-                          ),
-                          ],
-                        ),
                             leading: CircleAvatar(
                               child: Text(a.status),
                               backgroundColor: a.status == 'P'
@@ -357,7 +430,7 @@ class _AttendancePerformanceScreenState
                                 IconButton(
                                   icon: const Icon(Icons.delete),
                                   onPressed: () => _delete(a),
-                                )
+                                ),
                               ],
                             ),
                           ),
@@ -365,7 +438,7 @@ class _AttendancePerformanceScreenState
                       }).toList(),
                     ),
                   ),
-                )
+                ),
             ],
           ),
 
@@ -377,7 +450,6 @@ class _AttendancePerformanceScreenState
     );
   }
 }
-
 
 // import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:flutter/material.dart';
@@ -689,7 +761,6 @@ class _AttendancePerformanceScreenState
 //     );
 //   }
 // }
-
 
 // import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:flutter/material.dart';
