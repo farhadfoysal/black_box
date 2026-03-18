@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.edu.black_box.black_box"
+    namespace = "com.farhad.foysal.black.box"
     compileSdk = flutter.compileSdkVersion
 //    compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
@@ -23,7 +23,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.edu.black_box.black_box"
+        applicationId = "com.farhad.foysal.black.box"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 26

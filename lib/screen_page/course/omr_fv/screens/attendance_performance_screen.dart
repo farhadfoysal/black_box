@@ -296,7 +296,44 @@ class _AttendancePerformanceScreenState
                           margin: const EdgeInsets.all(8),
                           child: ListTile(
                             title: Text(s.stdName ?? ""),
-                            subtitle: Text("Marks: ${a.marks}"),
+                            // subtitle: Text("Marks: ${a.marks}"),
+                            subtitle: Row(
+                          children: [
+                          const Text("Marks: "),
+
+                          // ➖ Decrease button
+                          IconButton(
+                            icon: const Icon(Icons.remove),
+                            onPressed: () => changeMarks(studentId, -1),
+                          ),
+
+                          // 🔢 Input field
+                          SizedBox(
+                            width: 50,
+                            child: TextFormField(
+                              initialValue: a.marks.toString(),
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              onChanged: (value) {
+                                final val = int.tryParse(value) ?? 0;
+                                setState(() {
+                                  a.marks = val.clamp(0, 100);
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                contentPadding: EdgeInsets.symmetric(vertical: 4),
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+
+                          // ➕ Increase button
+                          IconButton(
+                            icon: const Icon(Icons.add),
+                            onPressed: () => changeMarks(studentId, 1),
+                          ),
+                          ],
+                        ),
                             leading: CircleAvatar(
                               child: Text(a.status),
                               backgroundColor: a.status == 'P'
@@ -307,16 +344,16 @@ class _AttendancePerformanceScreenState
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                IconButton(
-                                  icon: const Icon(Icons.remove),
-                                  onPressed: () =>
-                                      changeMarks(studentId, -1),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.add),
-                                  onPressed: () =>
-                                      changeMarks(studentId, 1),
-                                ),
+                                // IconButton(
+                                //   icon: const Icon(Icons.remove),
+                                //   onPressed: () =>
+                                //       changeMarks(studentId, -1),
+                                // ),
+                                // IconButton(
+                                //   icon: const Icon(Icons.add),
+                                //   onPressed: () =>
+                                //       changeMarks(studentId, 1),
+                                // ),
                                 IconButton(
                                   icon: const Icon(Icons.delete),
                                   onPressed: () => _delete(a),

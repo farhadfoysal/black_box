@@ -1,4 +1,4 @@
-package com.edu.black_box.black_box;
+package com.farhad.foysal.black.box;
 
 import io.flutter.embedding.android.FlutterActivity;
 
