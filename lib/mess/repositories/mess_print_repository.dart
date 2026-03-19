@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:black_box/mess/data/model/model_extensions.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../model/mess/account_print.dart';
 import '../services/local/sqlite_mess_print_service.dart';
 import '../services/online/firebase_mess_print_service.dart';

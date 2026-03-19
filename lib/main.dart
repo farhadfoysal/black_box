@@ -5,7 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart';
 import 'controller/connectivity_controller.dart';
 import 'db/local/deletion_sync_manager.dart';
 import 'firebase_options.dart';
@@ -48,7 +48,7 @@ Future<void> main() async {
   );
   await DeletionSyncManager().init();
 
-  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
+  // await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
 
 
   // Get.put(ConnectivityController());
