@@ -1,3 +1,4 @@
+import 'package:black_box/screen_page/course/omr_fv/screens/advanced_monthly_report_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -259,6 +260,15 @@ class _AttendancePerformanceScreenState
       appBar: AppBar(
         title: const Text("Attendance"),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.report_outlined),
+            onPressed: () => {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => AdvancedMonthlyReportScreen(courseId: widget.courseId)),
+              )
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.sync),
             onPressed: () => AttendanceSync.sync(widget.courseId),

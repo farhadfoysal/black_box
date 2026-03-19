@@ -1,6 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
+import '../../model/attendance/monthly_report.dart';
+
 class AttendanceDatabase {
   static Database? _db;
 
@@ -27,12 +29,25 @@ class AttendanceDatabase {
           attend_date TEXT,
           status TEXT,
           marks INTEGER,
-          sync_status INTEGER
+          sync_status INTEGER DEFAULT 0
         )
         ''');
       },
     );
   }
+
+  // CREATE TABLE attendance(
+  // id INTEGER PRIMARY KEY AUTOINCREMENT,
+  // unique_id TEXT,
+  // student_id TEXT,
+  // sCourseId TEXT,
+  // date TEXT,
+  // attend_date TEXT,
+  // status TEXT,
+  // marks INTEGER,
+  // sync_status INTEGER DEFAULT 0,
+  // UNIQUE(student_id, date, sCourseId)
+  // );
 
   // CREATE / UPDATE
   static Future<void> upsert(Map<String, dynamic> data) async {
@@ -83,6 +98,77 @@ class AttendanceDatabase {
       whereArgs: [id],
     );
   }
+
+  Stream<List<Map<String, dynamic>>> watchByDate(
+      String date, String courseId) async* {
+    final database = await db;
+
+    yield await getByDate(date, courseId);
+  }
+
+  static Future<void> clear() async {
+    final database = await db;
+    await database.delete('attendance');
+  }
+
+  static Future<List<Map<String, dynamic>>> studentMonthlyReport(
+      String courseId, String month) async {
+    final database = await db;
+
+    return await database.rawQuery('''
+    SELECT 
+      student_id,
+      COUNT(*) as total_classes,
+      SUM(CASE WHEN status='P' THEN 1 ELSE 0 END) as present,
+      SUM(CASE WHEN status='A' THEN 1 ELSE 0 END) as absent,
+      AVG(marks) as avg_marks
+    FROM attendance
+    WHERE sCourseId = ?
+    AND date LIKE ?
+    GROUP BY student_id
+  ''', [courseId, '$month%']);
+  }
+
+  static Future<Map<String, dynamic>> courseMonthlyReport(
+      String courseId, String month) async {
+    final database = await db;
+
+    final result = await database.rawQuery('''
+    SELECT 
+      COUNT(*) as total_classes,
+      SUM(CASE WHEN status='P' THEN 1 ELSE 0 END) as present,
+      SUM(CASE WHEN status='A' THEN 1 ELSE 0 END) as absent,
+      AVG(marks) as avg_marks
+    FROM attendance
+    WHERE sCourseId = ?
+    AND date LIKE ?
+  ''', [courseId, '$month%']);
+
+    return result.first;
+  }
+
+  List<MonthlyReport> mapStudentReports(
+      List<Map<String, dynamic>> data,
+      Map<String, String> studentNames) {
+
+    return data.map((e) {
+      final total = e['total_classes'] ?? 0;
+      final present = e['present'] ?? 0;
+      final absent = e['absent'] ?? 0;
+
+      return MonthlyReport(
+        id: e['student_id'],
+        name: studentNames[e['student_id']] ?? "Unknown",
+        totalClasses: total,
+        present: present,
+        absent: absent,
+        attendancePercent:
+        total == 0 ? 0 : (present / total) * 100,
+        avgMarks: (e['avg_marks'] ?? 0).toDouble(),
+      );
+    }).toList();
+  }
+
 }
 
 
