@@ -137,3 +137,28 @@ class MonthlyReport {
 //   }
 //
 // }
+
+
+// ============================================================
+// monthly_report.dart
+// ============================================================
+
+// class MonthlyReport {
+//   final String id;
+//   final String name;
+//   int totalClasses;
+//   int present;
+//   int absent;
+//   double attendancePercent;
+//   double avgMarks;
+//
+//   MonthlyReport({
+//     required this.id,
+//     required this.name,
+//     required this.totalClasses,
+//     required this.present,
+//     required this.absent,
+//     required this.attendancePercent,
+//     required this.avgMarks,
+//   });
+// }
